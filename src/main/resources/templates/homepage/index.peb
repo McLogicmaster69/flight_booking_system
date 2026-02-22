@@ -1,0 +1,10 @@
+{% extends "_layout/base.peb" %}
+
+{% block content %}
+<br>
+<h2 style="text-align: center;">Welcome to the system!</h2>
+
+<p>Welcome to the homepage for our lovely system!</p>
+<p>I really hope somebody comes and updates this page!!!</p>
+
+{% endblock %}

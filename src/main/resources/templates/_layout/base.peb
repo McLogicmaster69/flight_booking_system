@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Flight Booking System{% endblock %}</title>
+
+    <link rel="stylesheet" href="/static/css/custom.css">
+
+    <script src="/static/js/htmx-1.9.12.min.js" defer></script>
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    <div id="status" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <h1 style="text-align: center;">Flight Booking System</h1>
+
+
+    <main id="main" tabindex="-1">
+        {% block content %}
+        {% endblock %}
+    </main>
+</body>
+</html>
