@@ -10,6 +10,7 @@ import io.ktor.server.response.*
 import io.pebbletemplates.pebble.PebbleEngine
 import routes.homepageRoutes
 import routes.configureHealthCheck
+import data.DatabaseManager
 import utils.SessionData
 import java.io.StringWriter
 import io.ktor.util.*
@@ -17,6 +18,8 @@ import io.ktor.util.*
 fun main() {
     val port = System.getenv("PORT")?.toIntOrNull() ?: 8080
     val host = "0.0.0.0"
+
+    DatabaseManager.createTables()
 
     embeddedServer(Netty, port = port, host = host) {
         configureLogging()
