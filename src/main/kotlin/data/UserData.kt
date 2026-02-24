@@ -38,6 +38,9 @@ data class UserData(
         )
     }
 
+    override fun debugData() {
+        println("User data: (\"$id\", \"$firstName\", \"$lastName\", \"$verifiedAccount\", \"$loginId\")")
+    }
 
     companion object {
         val EMPTY : UserData

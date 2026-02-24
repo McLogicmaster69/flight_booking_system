@@ -10,4 +10,6 @@ abstract class DataClass {
     abstract fun mapDataToKeys () : Map<String, Any?>
 
     abstract fun insertIntoDatabase()
+
+    abstract fun debugData()
 }
