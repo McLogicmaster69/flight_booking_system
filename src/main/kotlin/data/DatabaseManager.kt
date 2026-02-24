@@ -7,6 +7,8 @@ import java.sql.SQLException
 import data.DataClass
 import data.UserData
 
+fun anyToBool(i : Any?) : Boolean? = (i as? Int)?.let { it != 0}
+
 object DatabaseManager {
     private val dbFilePath : String = "data/database.db"
     private val connection : Connection
@@ -21,16 +23,6 @@ object DatabaseManager {
         dbPath.parentFile?.mkdirs()
         val url = "jdbc:sqlite:$dbFilePath"
         return DriverManager.getConnection(url)
-    }
-
-    fun createTables(){
-        val dataClasses: List<DataClass> = listOf(UserData.EMPTY)
-        for (data in dataClasses) {
-            DatabaseManager.createTable(
-                data.tableName,
-                data.tableColumns
-            )
-        }
     }
 
     fun executeSQL(sql : String) {
@@ -49,6 +41,16 @@ object DatabaseManager {
         """.trimIndent()
 
         executeSQL(sql)
+    }
+
+    fun createTables() {
+        val dataClasses: List<DataClass> = listOf(UserData.EMPTY)
+        for (data in dataClasses) {
+            DatabaseManager.createTable(
+                data.tableName,
+                data.tableCreateSQL
+            )
+        }
     }
 
     fun insertIntoTable(table : String, values : Map<String, Any?>) {
