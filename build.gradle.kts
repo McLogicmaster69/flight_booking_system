@@ -40,6 +40,9 @@ dependencies {
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")
     testImplementation("io.ktor:ktor-client-content-negotiation-jvm:$ktorVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:2.2.21")
+
+    // SQL
+    implementation("org.xerial:sqlite-jdbc:3.41.2.1")
 }
 
 application {

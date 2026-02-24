@@ -13,10 +13,15 @@ import routes.configureHealthCheck
 import utils.SessionData
 import java.io.StringWriter
 import io.ktor.util.*
+import data.DatabaseManager
+import data.DataClass
+import data.UserData
 
 fun main() {
     val port = System.getenv("PORT")?.toIntOrNull() ?: 8080
     val host = "0.0.0.0"
+
+    DatabaseManager.createTables()
 
     embeddedServer(Netty, port = port, host = host) {
         configureLogging()
