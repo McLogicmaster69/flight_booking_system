@@ -1,0 +1,23 @@
+ts_iso,session_id,request_id,task_code,step,outcome,ms,http_status,js_mode
+2026-02-24T16:56:51.029397100Z,d88a8cf4-c72f-48b8-9ea4-968eb04df6ea,r_806cd73d,T0_homepage_load,success,,195,200,off
+2026-02-24T16:57:16.494233400Z,d88a8cf4-c72f-48b8-9ea4-968eb04df6ea,r_3945b5b9,T0_homepage_load,success,,8,200,off
+2026-02-24T16:57:20.404176900Z,d88a8cf4-c72f-48b8-9ea4-968eb04df6ea,r_e2bc5f71,T0_page_Book,success,,6,200,off
+2026-02-24T16:57:21.440694100Z,d88a8cf4-c72f-48b8-9ea4-968eb04df6ea,r_166202ff,T0_page_Manage,success,,5,200,off
+2026-02-24T16:57:22.077561200Z,d88a8cf4-c72f-48b8-9ea4-968eb04df6ea,r_0de4515e,T0_page_Loyalty Rewards,success,,6,200,off
+2026-02-24T16:57:23.466914900Z,d88a8cf4-c72f-48b8-9ea4-968eb04df6ea,r_bbcff3c5,T0_page_Settings,success,,4,200,off
+2026-02-24T16:57:24.912004100Z,d88a8cf4-c72f-48b8-9ea4-968eb04df6ea,r_879560bc,T0_page_Help,success,,4,200,off
+2026-02-24T16:57:25.401405700Z,d88a8cf4-c72f-48b8-9ea4-968eb04df6ea,r_546e2eee,T0_page_Login / Sign up,success,,4,200,off
+2026-02-24T16:57:25.919714400Z,d88a8cf4-c72f-48b8-9ea4-968eb04df6ea,r_358593c5,T0_page_Login / Sign up,success,,3,200,off
+2026-02-24T16:57:26.890470300Z,d88a8cf4-c72f-48b8-9ea4-968eb04df6ea,r_49a7e2cb,T0_page_Login / Sign up,success,,3,200,off
+2026-02-24T17:38:40.507054100Z,d88a8cf4-c72f-48b8-9ea4-968eb04df6ea,r_d3c09910,T0_page_Settings,success,,66,200,off
+2026-02-24T17:38:45.335982100Z,d88a8cf4-c72f-48b8-9ea4-968eb04df6ea,r_5da91dc7,T0_page_Settings,success,,5,200,off
+2026-02-24T17:38:48.359871300Z,d88a8cf4-c72f-48b8-9ea4-968eb04df6ea,r_af1e2412,T0_homepage_load,success,,5,200,off
+2026-02-24T17:38:54.052836900Z,d88a8cf4-c72f-48b8-9ea4-968eb04df6ea,r_4e1c5a8b,T0_homepage_load,success,,5,200,off
+2026-02-24T17:38:54.891946700Z,d88a8cf4-c72f-48b8-9ea4-968eb04df6ea,r_ebd7f29a,T0_homepage_load,success,,3,200,off
+2026-02-24T17:38:56.543512900Z,d88a8cf4-c72f-48b8-9ea4-968eb04df6ea,r_990c195c,T0_page_Book,success,,8,200,off
+2026-02-24T17:38:57.812258500Z,d88a8cf4-c72f-48b8-9ea4-968eb04df6ea,r_1eaad48d,T0_page_Manage,success,,4,200,off
+2026-02-24T17:38:58.982350200Z,d88a8cf4-c72f-48b8-9ea4-968eb04df6ea,r_be1fd121,T0_page_Loyalty Rewards,success,,3,200,off
+2026-02-24T17:39:00.036818400Z,d88a8cf4-c72f-48b8-9ea4-968eb04df6ea,r_5d53cff6,T0_page_Settings,success,,3,200,off
+2026-02-24T17:39:00.923775Z,d88a8cf4-c72f-48b8-9ea4-968eb04df6ea,r_cef74263,T0_page_Help,success,,2,200,off
+2026-02-24T17:39:02.159725500Z,d88a8cf4-c72f-48b8-9ea4-968eb04df6ea,r_9002ed85,T0_page_Login / Sign up,success,,4,200,off
+2026-02-24T17:39:03.133385500Z,d88a8cf4-c72f-48b8-9ea4-968eb04df6ea,r_94c991c2,T0_page_Login / Sign up,success,,5,200,off

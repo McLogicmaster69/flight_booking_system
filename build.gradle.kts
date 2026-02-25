@@ -59,7 +59,7 @@ tasks.withType<JavaExec> {
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(17)
 }
 
 // Code quality: Detekt (static analysis)

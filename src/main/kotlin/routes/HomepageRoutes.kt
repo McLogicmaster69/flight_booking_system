@@ -20,7 +20,16 @@ private suspend fun ApplicationCall.handleLoadPage() {
         val pebble = getEngine()
 
         val model = mapOf(
-            "title" to "Homepage"
+            "title" to "Homepage",
+            // Temporary session flags (real auth later)
+            "isLoggedIn" to (request.queryParameters["loggedIn"] == "1"),
+            "isAdmin" to (request.queryParameters["admin"] == "1"),
+            "cookiesAccepted" to (request.queryParameters["cookies"] == "1"),
+            "language" to (request.queryParameters["lang"] ?: "en"),
+            "inNav" to true,
+            "activePage" to "home",
+            "layout" to "",
+            "headerRightText" to "",
         )
         
         val template = pebble.getTemplate("homepage/index.peb")

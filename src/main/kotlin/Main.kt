@@ -9,13 +9,12 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.pebbletemplates.pebble.PebbleEngine
 import routes.homepageRoutes
+import routes.pagesRoutes
 import routes.configureHealthCheck
+import data.DatabaseManager
 import utils.SessionData
 import java.io.StringWriter
 import io.ktor.util.*
-import data.DatabaseManager
-import data.DataClass
-import data.UserData
 
 fun main() {
     val port = System.getenv("PORT")?.toIntOrNull() ?: 8080
@@ -104,5 +103,6 @@ fun Application.configureRouting() {
         configureHealthCheck()
 
         homepageRoutes()
+        pagesRoutes()
     }
 }
