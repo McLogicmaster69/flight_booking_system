@@ -1,0 +1,87 @@
+{% extends "_layout/base.peb" %}
+
+{% set activePage = 'book' %}
+
+{% block content %}
+
+<div class="wf-box-dashed">
+  <div class="wf-row">
+    <!-- Filters column -->
+    <aside class="wf-col" style="flex: 0 0 320px;">
+      <div class="wf-box">
+        <h2 class="wf-title">Filters</h2>
+
+        <label for="tripType">Trip Type</label>
+        <select id="tripType" name="tripType">
+          <option>Round Trip</option>
+          <option>One Way</option>
+          <option>Multi-city</option>
+        </select>
+
+        <label for="maxLayovers">Max Layovers</label>
+        <select id="maxLayovers" name="maxLayovers">
+          <option>Any</option>
+          <option>Direct Only</option>
+          <option>1</option>
+          <option>2+</option>
+        </select>
+
+        <label for="maxDuration">Max Duration (Hours)</label>
+        <input id="maxDuration" name="maxDuration" type="text" placeholder="e.g. 15">
+
+        <label for="priceRange">Price Range</label>
+        <input id="priceRange" name="priceRange" type="range" min="0" max="100" value="40" aria-label="Price Range">
+
+        <label for="sortBy">Sort By</label>
+        <select id="sortBy" name="sortBy">
+          <option>Fastest to Slowest</option>
+          <option>Cheapest to Most Expensive</option>
+        </select>
+      </div>
+    </aside>
+
+    <!-- Results column -->
+    <section class="wf-col">
+      <div class="wf-box">
+        <h2 class="wf-title">Find Your Flight</h2>
+
+        <form class="wf-inline" method="get" action="/book" aria-label="Find Your Flight">
+          <div><input name="from" type="text" placeholder="Origin"></div>
+          <div><input name="to" type="text" placeholder="Destination"></div>
+          <div><input name="depart" type="text" placeholder="dd/mm/yyyy"></div>
+          <div style="flex:0 0 auto;"><button class="wf-btn" type="submit">SEARCH</button></div>
+        </form>
+
+        <div class="wf-rule"></div>
+
+        <h3 class="wf-subtitle">Available Flights</h3>
+
+        <div class="wf-list">
+          <div class="wf-flight" role="group" aria-label="Flight option 1">
+            <div>
+              <div><strong>10:00 AM - 1:00 PM</strong></div>
+              <div class="meta">Direct • 3h 00m</div>
+            </div>
+            <div>
+              <div class="price">$299</div>
+              <button class="wf-btn" type="button" onclick="location.href='/checkout'">SELECT</button>
+            </div>
+          </div>
+
+          <div class="wf-flight" role="group" aria-label="Flight option 2">
+            <div>
+              <div><strong>2:00 PM - 6:30 PM</strong></div>
+              <div class="meta">1 Layover • 4h 30m</div>
+            </div>
+            <div>
+              <div class="price">$249</div>
+              <button class="wf-btn" type="button" onclick="location.href='/checkout'">SELECT</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+{% endblock %}

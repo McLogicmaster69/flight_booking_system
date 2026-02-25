@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Flight Booking System{% endblock %}</title>
+
+    <link rel="stylesheet" href="/static/css/custom.css">
+
+    <script src="/static/js/htmx-1.9.12.min.js" defer></script>
+    <script src="/static/js/app.js" defer></script>
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    <div id="status" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    {# Header variants based on wireframes #}
+    {% if layout == "admin" %}
+        <header class="wf-header">
+            <div class="wf-brand">
+                <a href="/" class="wf-logo">[LOGO] <span class="wf-brand-name">FLIGHT BOOKING SYSTEM</span></a>
+            </div>
+            <nav class="wf-nav" aria-label="Admin">
+                <a href="/" class="{% if activePage == 'live' %}is-active{% endif %}">View Live Site</a>
+                <a href="/admin" class="{% if activePage == 'admin' %}is-active{% endif %}">Admin Dashboard</a>
+                <a href="/login">Staff Logout</a>
+            </nav>
+        </header>
+    {% elseif inNav %}
+        <header class="wf-header">
+            <div class="wf-brand">
+                <a href="/" class="wf-logo">[LOGO] <span class="wf-brand-name">FLIGHT BOOKING SYSTEM</span></a>
+            </div>
+
+            <button class="nav-toggle" type="button" aria-label="Open menu" aria-controls="mobileNav" aria-expanded="false" onclick="window.appNavToggle()">
+                ☰
+            </button>
+
+            <nav class="wf-nav wf-nav-desktop" aria-label="Primary">
+                <a href="/" class="{% if activePage == 'home' %}is-active{% endif %}">Home</a>
+                <a href="/book" class="{% if activePage == 'book' %}is-active{% endif %}">Book</a>
+                <a href="/manage" class="{% if activePage == 'manage' %}is-active{% endif %}">Manage</a>
+                <a href="/rewards" class="{% if activePage == 'rewards' %}is-active{% endif %}">Loyalty Rewards</a>
+                <a href="/settings" class="{% if activePage == 'settings' %}is-active{% endif %}">Settings</a>
+                <a href="/help" class="{% if activePage == 'help' %}is-active{% endif %}">Help</a>
+                {% if isLoggedIn %}
+                    <a href="/login" class="{% if activePage == 'auth' %}is-active{% endif %}">Logout</a>
+                {% else %}
+                    <a href="/login" class="{% if activePage == 'auth' %}is-active{% endif %}">Login / Sign Up</a>
+                {% endif %}
+                <span class="wf-lang">{{ language | upper }}</span>
+            </nav>
+        </header>
+
+        <nav id="mobileNav" class="wf-nav-mobile" aria-label="Mobile" hidden>
+            <a href="/" class="{% if activePage == 'home' %}is-active{% endif %}">Home</a>
+            <a href="/book" class="{% if activePage == 'book' %}is-active{% endif %}">Book</a>
+            <a href="/manage" class="{% if activePage == 'manage' %}is-active{% endif %}">Manage</a>
+            <a href="/rewards" class="{% if activePage == 'rewards' %}is-active{% endif %}">Loyalty Rewards</a>
+            <a href="/settings" class="{% if activePage == 'settings' %}is-active{% endif %}">Settings</a>
+            <a href="/help" class="{% if activePage == 'help' %}is-active{% endif %}">Help</a>
+            {% if isLoggedIn %}
+                <a href="/login" class="{% if activePage == 'auth' %}is-active{% endif %}">Logout</a>
+            {% else %}
+                <a href="/login" class="{% if activePage == 'auth' %}is-active{% endif %}">Login / Sign Up</a>
+            {% endif %}
+            <div class="wf-mobile-meta">
+                <span>Language: {{ language | upper }}</span>
+            </div>
+        </nav>
+    {% else %}
+        <header class="wf-header">
+            <div class="wf-brand">
+                <a href="/" class="wf-logo">[LOGO] <span class="wf-brand-name">FLIGHT BOOKING SYSTEM</span></a>
+            </div>
+            <div class="wf-header-right">{{ headerRightText }}</div>
+        </header>
+    {% endif %}
+
+
+    <main id="main" tabindex="-1">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="wf-footer">
+        <small>© 2026 Flight Booking System.</small>
+    </footer>
+</body>
+</html>

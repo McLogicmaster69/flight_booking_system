@@ -1,0 +1,55 @@
+{% extends "_layout/base.peb" %}
+
+{% set activePage = 'rewards' %}
+
+{% block content %}
+
+<div class="wf-box-dashed">
+  <div class="wf-center">
+
+    {% if not isLoggedIn %}
+      <div class="wf-box-dashed" style="margin-bottom: 14px;">
+        <strong>Disclaimer Box:</strong>
+        Redeeming points is only available to registered users.
+        <a href="/login">Login or Sign up here</a>.
+      </div>
+    {% endif %}
+
+    <div class="wf-box" style="text-align:center; margin-bottom: 18px;">
+      <div style="color: var(--wf-muted);">Your Current Balance</div>
+      <div style="font-size: 34px; font-weight: 700; margin-top: 10px;">[ 45,500 Points ]</div>
+    </div>
+
+    <h3 class="wf-subtitle">Redeemable Now</h3>
+    <div class="wf-rule"></div>
+
+    <div class="wf-row" style="margin-bottom: 22px;">
+      <div class="wf-col">
+        <div class="wf-card">
+          <div>[Icon] <strong>Free Checked Bag</strong></div>
+          <div class="muted" style="margin: 10px 0;">15,000 pts</div>
+          <button class="wf-btn" {% if not isLoggedIn %}disabled{% endif %}>REDEEM BUTTON</button>
+        </div>
+      </div>
+      <div class="wf-col">
+        <div class="wf-card">
+          <div>[Icon] <strong>Economy Flight</strong></div>
+          <div class="muted" style="margin: 10px 0;">30,000 pts</div>
+          <button class="wf-btn" {% if not isLoggedIn %}disabled{% endif %}>REDEEM BUTTON</button>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="wf-subtitle">Almost There (Within 1000 pts)</h3>
+    <div class="wf-rule"></div>
+
+    <div class="wf-card" style="max-width: 320px;">
+      <div>[Icon] <strong>Lounge Access</strong></div>
+      <div class="muted" style="margin: 10px 0;">46,000 pts</div>
+      <div class="wf-box-dashed" style="opacity: 0.6;">[DISABLED] NEED 500 MORE</div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

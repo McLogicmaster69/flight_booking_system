@@ -1,0 +1,56 @@
+{% extends "_layout/base.peb" %}
+
+{% set activePage = 'auth' %}
+
+{% block content %}
+
+<div class="wf-box-dashed">
+  <div class="wf-row">
+    <div class="wf-col">
+      <div class="wf-box">
+        <h2 class="wf-title">Login Form</h2>
+        <div class="wf-rule"></div>
+
+        <label for="loginEmail">Email Input</label>
+        <input id="loginEmail" type="email" placeholder="Email Input">
+
+        <label for="loginPw">Password Input</label>
+        <input id="loginPw" type="password" placeholder="Password Input">
+
+        <div style="margin-top: 14px;"></div>
+        <button class="wf-btn wide" type="button">LOGIN BUTTON</button>
+
+        <div class="wf-rule"></div>
+        <p style="color: var(--wf-muted); font-size: 12px;">
+          2-Factor Authentication (2FA) will be prompted on the next screen.
+        </p>
+      </div>
+    </div>
+
+    <div class="wf-col">
+      <div class="wf-box">
+        <h2 class="wf-title">Sign Up Form</h2>
+        <div class="wf-rule"></div>
+
+        <label for="fullName">Full Name Input</label>
+        <input id="fullName" type="text" placeholder="Full Name Input">
+
+        <label for="regEmail">Email Input</label>
+        <input id="regEmail" type="email" placeholder="Email Input">
+
+        <label for="regPw">Create Password Input</label>
+        <input id="regPw" type="password" placeholder="Create Password Input">
+
+        <div style="margin-top: 14px;"></div>
+        <button class="wf-btn wide" type="button">REGISTER BUTTON</button>
+
+        <div class="wf-rule"></div>
+        <p style="color: var(--wf-muted); font-size: 12px;">
+          We securely hash all passwords. A verification email will be sent upon registration.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
