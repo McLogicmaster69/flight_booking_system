@@ -4,8 +4,6 @@ import java.io.File
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
-import data.DataClass
-import data.UserData
 
 fun anyToBool(i : Any?) : Boolean? = (i as? Int)?.let { it != 0}
 
@@ -22,7 +20,13 @@ object DatabaseManager {
         println("SQLite DB absolute path: ${dbPath.absolutePath}")
         dbPath.parentFile?.mkdirs()
         val url = "jdbc:sqlite:$dbFilePath"
-        return DriverManager.getConnection(url)
+        val conn = DriverManager.getConnection(url)
+
+        conn.createStatement().use {
+            it.execute("PRAGMA foreign_keys = ON;")
+        }
+
+        return conn
     }
 
     fun executeSQL(sql : String) {
@@ -44,7 +48,12 @@ object DatabaseManager {
     }
 
     fun createTables() {
-        val dataClasses: List<DataClass> = listOf(UserData.EMPTY)
+        val dataClasses: List<DataClass<*>> = listOf(
+            UserData.EMPTY,
+            BookerData.EMPTY,
+            BookingData.EMPTY
+        )
+
         for (data in dataClasses) {
             DatabaseManager.createTable(
                 data.tableName,
@@ -53,17 +62,18 @@ object DatabaseManager {
         }
     }
 
-    fun insertIntoTable(table : String, values : Map<String, Any?>) {
+    fun insertIntoTable(table : String, values : Map<Column<*>, Any?>) {
         if (values.size == 0) return
 
-        val columns = values.keys.joinToString(", ")
-        val placeholders = values.keys.joinToString(", ") { "?" }
+        val entries = values.entries.toList()
+        val columns = values.keys.joinToString(", ") { it.name }
+        val placeholders = List(values.size) { "?" }.joinToString(", ")
 
         val sql = "INSERT INTO $table ($columns) VALUES ($placeholders)"
 
         connection.prepareStatement(sql).use { stmt ->
-            values.values.forEachIndexed { index, value ->
-                stmt.setObject(index + 1, value)
+            entries.forEachIndexed { index, entry ->
+                stmt.setObject(index + 1, entry.value)
             }
             stmt.executeUpdate()
         }

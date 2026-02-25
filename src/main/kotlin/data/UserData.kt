@@ -1,8 +1,14 @@
 package data
 
-import data.DatabaseManager
-import data.DataClass
-import data.anyToBool
+object UserColumns {
+    val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
+    val FIRSTNAME = Column<String?>("firstname", "VARCHAR")
+    val LASTNAME = Column<String?>("lastname", "VARCHAR")
+    val VERIFIED = Column<Boolean?>("verified_account", "BOOL")
+    val LOGIN_ID = Column<Int>("login_id", "INTEGER NOT NULL")
+
+    val ALL = listOf(ID, FIRSTNAME, LASTNAME, VERIFIED, LOGIN_ID)
+}
 
 data class UserData(
 
@@ -12,60 +18,38 @@ data class UserData(
     var verifiedAccount: Boolean? = null,
     var loginId: Int = 0
 
-) : DataClass() {
+) : DataClass<UserData>() {
 
-    override val tableName : String = "users"
+    override val tableName = "users"
+    override val tableColumns = UserColumns.ALL
 
-    override val tableColumns : Map<String, String> = mapOf(
-        "id" to "INTEGER PRIMARY KEY",
-        "firstname" to "VARCHAR",
-        "lastname" to "VARCHAR",
-        "verified_account" to "BOOL",
-        "login_id" to "INTEGER NOT NULL"
-    )
-
-    override fun insertIntoDatabase() {
-        UserData.insertIntoDatabase(this)
-    }
-
-    override fun mapDataToKeys () : Map<String, Any?> {
-        val keys = tableColumns.keys.toList()
-        return mapOf(
-            keys[1] to firstName,
-            keys[2] to lastName,
-            keys[3] to verifiedAccount,
-            keys[4] to loginId
+    override fun mapDataToColumns () : Map<Column<*>, Any?> =
+        mapOf(
+            UserColumns.FIRSTNAME to firstName,
+            UserColumns.LASTNAME to lastName,
+            UserColumns.VERIFIED to verifiedAccount,
+            UserColumns.LOGIN_ID to loginId
         )
-    }
 
+    override fun mapRowToData(row : Array<Any?>) : UserData =
+        UserData(
+            id = castRowElement(row, UserColumns.ID),
+            firstName = castRowElement(row, UserColumns.FIRSTNAME),
+            lastName = castRowElement(row, UserColumns.LASTNAME),
+            verifiedAccount = anyToBool(castRowElement(row, UserColumns.VERIFIED)),
+            loginId = castRowElement(row, UserColumns.LOGIN_ID)
+        )
+
+    override fun debugData() {
+        println("User data: (\"$id\", \"$firstName\", \"$lastName\", \"$verifiedAccount\", \"$loginId\")")
+    }
 
     companion object {
         val EMPTY : UserData
             get() = UserData()
 
-        fun insertIntoDatabase (data : UserData) {
-            val values = data.mapDataToKeys()
-            DatabaseManager.insertIntoTable(data.tableName, values)
-        }
-
         fun queryDatabase (whereClause : String? = null, whereArgs : List<Any?> = emptyList()) : List<UserData> {
-            val empty = EMPTY
-            val rows = DatabaseManager.queryTable(empty.tableName, empty.tableColumns.keys.toList(), whereClause, whereArgs)
-            val output : MutableList<UserData> = mutableListOf<UserData>()
-
-            for (row in rows) {
-                val data = UserData(
-                    id = row[0] as Int,
-                    firstName = row[1] as? String,
-                    lastName = row[2] as? String,
-                    verifiedAccount =  anyToBool(row[3]),
-                    loginId = row[4] as Int
-                )
-
-                output.add(data)
-            }
-
-            return output.toList()
+            return EMPTY.queryDatabase(whereClause, whereArgs)
         }
     }
 }
