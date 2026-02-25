@@ -1,7 +1,7 @@
 package data
 
 object UserColumns {
-    val ID = Column<Int>("id", "INTEGER PRIMARY KEY")
+    val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
     val FIRSTNAME = Column<String?>("firstname", "VARCHAR")
     val LASTNAME = Column<String?>("lastname", "VARCHAR")
     val VERIFIED = Column<Boolean?>("verified_account", "BOOL")

@@ -20,7 +20,13 @@ object DatabaseManager {
         println("SQLite DB absolute path: ${dbPath.absolutePath}")
         dbPath.parentFile?.mkdirs()
         val url = "jdbc:sqlite:$dbFilePath"
-        return DriverManager.getConnection(url)
+        val conn = DriverManager.getConnection(url)
+
+        conn.createStatement().use {
+            it.execute("PRAGMA foreign_keys = ON;")
+        }
+
+        return conn
     }
 
     fun executeSQL(sql : String) {
@@ -42,7 +48,12 @@ object DatabaseManager {
     }
 
     fun createTables() {
-        val dataClasses: List<DataClass<*>> = listOf(UserData.EMPTY, BookerData.EMPTY)
+        val dataClasses: List<DataClass<*>> = listOf(
+            UserData.EMPTY,
+            BookerData.EMPTY,
+            BookingData.EMPTY
+        )
+
         for (data in dataClasses) {
             DatabaseManager.createTable(
                 data.tableName,
