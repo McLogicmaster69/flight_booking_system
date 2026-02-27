@@ -14,6 +14,7 @@ import utils.logValidationError
 import utils.timed
 import auth.UserSession
 import auth.LoggedInState
+import org.mindrot.jbcrypt.BCrypt
 
 fun Route.logInRoutes() {
     get("/login") { call.handleLogInLoad() }
@@ -79,12 +80,6 @@ private suspend fun ApplicationCall.handleLogInPost() {
 
         val result : QueryResult<UserData> = query[0]
 
-        //
-        // TODO: Hash password
-        //
-
-        val passwordHash = password
-
         val column : ColumnValue? = result.getColumn(LoginData.EMPTY.tableName, LoginColumns.PASSWORD_HASH.name)
 
         if (column == null) {
@@ -94,7 +89,7 @@ private suspend fun ApplicationCall.handleLogInPost() {
 
         val stored_password : String = column.columnVal as String
 
-        if (stored_password != passwordHash){
+        if (!BCrypt.checkpw(password, stored_password)){
             respondText(createLoginStatus("Incorrect email or password"), ContentType.Text.Html, status = HttpStatusCode.OK)
             return@timed
         }

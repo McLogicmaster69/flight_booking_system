@@ -43,6 +43,10 @@ dependencies {
 
     // SQL
     implementation("org.xerial:sqlite-jdbc:3.41.2.1")
+
+    // BCrypt
+    implementation("org.mindrot:jbcrypt:0.4")
+
 }
 
 application {
