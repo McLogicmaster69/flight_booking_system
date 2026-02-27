@@ -11,19 +11,31 @@
         <h2 class="wf-title">Login Form</h2>
         <div class="wf-rule"></div>
 
-        <label for="loginEmail">Email Input</label>
-        <input id="loginEmail" type="email" placeholder="Email Input">
+        <form class="login-form"
+            method="post"
+            action="/login"
+            hx-post="/login"
+            hx-target="#log-in-status"
+            hx-swap="innerHTML">
 
-        <label for="loginPw">Password Input</label>
-        <input id="loginPw" type="password" placeholder="Password Input">
+            <label for="loginEmail">Email</label>
+            <input id="loginEmail" name="loginEmail" type="email" placeholder="Email">
 
-        <div style="margin-top: 14px;"></div>
-        <button class="wf-btn wide" type="button">LOGIN BUTTON</button>
+            <label for="loginPw">Password</label>
+            <input id="loginPw" name="loginPw" type="password" placeholder="Password">
 
-        <div class="wf-rule"></div>
-        <p style="color: var(--wf-muted); font-size: 12px;">
-          2-Factor Authentication (2FA) will be prompted on the next screen.
-        </p>
+            <div style="margin-top: 14px;"></div>
+            <button class="wf-btn wide" type="submit">Login</button>
+
+            <div class="wf-rule"></div>
+            <p style="color: var(--wf-muted); font-size: 12px;">
+              2-Factor Authentication (2FA) will be prompted on the next screen.
+            </p>
+
+            <div id="log-in-status" role="status" aria-live="polite" aria-atomic="true"></div>
+        </form>
+
+        
       </div>
     </div>
 
@@ -32,22 +44,34 @@
         <h2 class="wf-title">Sign Up Form</h2>
         <div class="wf-rule"></div>
 
-        <label for="fullName">Full Name Input</label>
-        <input id="fullName" type="text" placeholder="Full Name Input">
+        <form class="login-form"
+            method="post"
+            action="/signup"
+            hx-post="/signup"
+            hx-target="#sign-up-status"
+            hx-swap="innerHTML">
 
-        <label for="regEmail">Email Input</label>
-        <input id="regEmail" type="email" placeholder="Email Input">
+            <label for="signupFirstName">First Name</label>
+            <input id="signupFirstName" name="signupFirstName" type="text" placeholder="First Name">
 
-        <label for="regPw">Create Password Input</label>
-        <input id="regPw" type="password" placeholder="Create Password Input">
+            <label for="signupLastName">Last Name</label>
+            <input id="signupLastName" name="signupLastName" type="text" placeholder="Last Name">
 
-        <div style="margin-top: 14px;"></div>
-        <button class="wf-btn wide" type="button">REGISTER BUTTON</button>
+            <label for="signupEmail">Email</label>
+            <input id="signupEmail" name="signupEmail" type="email" placeholder="Email">
 
-        <div class="wf-rule"></div>
-        <p style="color: var(--wf-muted); font-size: 12px;">
-          We securely hash all passwords. A verification email will be sent upon registration.
-        </p>
+            <label for="signupPassword">Create Password</label>
+            <input id="signupPassword" name="signupPassword" type="password" placeholder="Password">
+
+            <div style="margin-top: 14px;"></div>
+            <button class="wf-btn wide" type="submit">Register</button>
+
+            <div class="wf-rule"></div>
+            <p style="color: var(--wf-muted); font-size: 12px;">
+              We securely hash all passwords. A verification email will be sent upon registration.
+            </p>
+            <div id="sign-up-status" role="status" aria-live="polite" aria-atomic="true"></div>
+        </form>
       </div>
     </div>
   </div>

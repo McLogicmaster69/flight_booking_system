@@ -40,8 +40,10 @@ data class BookerData(
         val EMPTY : BookerData
             get() = BookerData()
 
-        fun queryDatabase (whereClause : String? = null, whereArgs : List<Any?> = emptyList()) : List<BookerData> {
-            return EMPTY.queryDatabase(whereClause, whereArgs)
+        fun queryDatabase (
+            joinArgs : JoinArgs? = null,
+            whereArgs : WhereArgs? = null) : List<QueryResult<BookerData>> {
+            return EMPTY.queryDatabase(joinArgs, whereArgs)
         }
     }
 }

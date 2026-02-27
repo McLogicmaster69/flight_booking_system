@@ -340,3 +340,13 @@ textarea {
   width: min(640px, 100%);
   padding: 18px;
 }
+
+#log-in-status {
+  text-align: center;
+  color: #d32f2f;
+}
+
+#sign-up-status {
+  text-align: center;
+  color: #d32f2f;
+}
