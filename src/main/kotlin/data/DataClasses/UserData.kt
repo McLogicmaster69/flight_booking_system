@@ -5,7 +5,7 @@ object UserColumns {
     val FIRSTNAME = Column<String?>("firstname", "VARCHAR")
     val LASTNAME = Column<String?>("lastname", "VARCHAR")
     val VERIFIED = Column<Boolean?>("verified_account", "BOOL")
-    val LOGIN_ID = Column<Int>("login_id", "INTEGER NOT NULL")
+    val LOGIN_ID = Column<Int>("login_id", "INTEGER NOT NULL REFERENCES login_info(id)")
 
     val ALL = listOf(ID, FIRSTNAME, LASTNAME, VERIFIED, LOGIN_ID)
 }
@@ -48,8 +48,10 @@ data class UserData(
         val EMPTY : UserData
             get() = UserData()
 
-        fun queryDatabase (whereClause : String? = null, whereArgs : List<Any?> = emptyList()) : List<UserData> {
-            return EMPTY.queryDatabase(whereClause, whereArgs)
+        fun queryDatabase (
+            joinArgs : JoinArgs? = null,
+            whereArgs : WhereArgs? = null) : List<QueryResult<UserData>> {
+            return EMPTY.queryDatabase(joinArgs, whereArgs)
         }
     }
 }

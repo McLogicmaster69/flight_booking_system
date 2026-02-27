@@ -8,10 +8,9 @@ import io.ktor.server.plugins.callloging.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.pebbletemplates.pebble.PebbleEngine
-import routes.homepageRoutes
-import routes.pagesRoutes
-import routes.configureHealthCheck
-import data.DatabaseManager
+import routes.*
+import auth.*
+import data.*
 import utils.SessionData
 import java.io.StringWriter
 import io.ktor.util.*
@@ -88,10 +87,14 @@ fun ApplicationCall.isHtmxRequest(): Boolean = request.headers["HX-Request"] == 
 
 fun Application.configureSessions() {
     install(Sessions) {
-        cookie<SessionData>("COMP2850_SESSION") {
+        cookie<SessionData>("SESSION") {
             cookie.path = "/"
             cookie.httpOnly = true
             cookie.extensions["SameSite"] = "Strict"
+        };
+        cookie<UserSession>("USER_SESSION") {
+            cookie.path = "/"
+            cookie.httpOnly = true
         }
     }
 }
@@ -104,5 +107,7 @@ fun Application.configureRouting() {
 
         homepageRoutes()
         pagesRoutes()
+        logInRoutes()
+        signUpRoutes()
     }
 }

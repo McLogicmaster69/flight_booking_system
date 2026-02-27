@@ -21,7 +21,6 @@ fun Route.pagesRoutes() {
     get("/rewards") { call.render("rewards/index.peb", "Loyalty Rewards") }
     get("/settings") { call.render("settings/index.peb", "Settings") }
     get("/help") { call.render("help/index.peb", "Help") }
-    get("/login") { call.render("auth/login.peb", "Login / Sign up") }
     get("/checkout") { call.render("checkout/index.peb", "Checkout", inNav = false) }
     get("/admin") { call.render("admin/index.peb", "Admin", requireAdmin = true) }
 }
@@ -73,7 +72,7 @@ private suspend fun ApplicationCall.render(
                 "activePage" to "",
                 "layout" to "",
                 "headerRightText" to "",
-            ),
+            ) + loggedMap(),
         )
 
         respondText(writer.toString(), ContentType.Text.Html)

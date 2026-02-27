@@ -48,8 +48,10 @@ data class BookingData(
         val EMPTY : BookingData
             get() = BookingData()
 
-        fun queryDatabase (whereClause : String? = null, whereArgs : List<Any?> = emptyList()) : List<BookingData> {
-            return EMPTY.queryDatabase(whereClause, whereArgs)
+        fun queryDatabase (
+            joinArgs : JoinArgs? = null,
+            whereArgs : WhereArgs? = null) : List<QueryResult<BookingData>> {
+            return EMPTY.queryDatabase(joinArgs, whereArgs)
         }
     }
 }

@@ -51,7 +51,8 @@ object DatabaseManager {
         val dataClasses: List<DataClass<*>> = listOf(
             UserData.EMPTY,
             BookerData.EMPTY,
-            BookingData.EMPTY
+            BookingData.EMPTY,
+            LoginData.EMPTY
         )
 
         for (data in dataClasses) {
@@ -62,45 +63,63 @@ object DatabaseManager {
         }
     }
 
-    fun insertIntoTable(table : String, values : Map<Column<*>, Any?>) {
-        if (values.size == 0) return
+    fun insertIntoTable(table : String, values : Map<Column<*>, Any?>) : Int {
+        if (values.size == 0) return -1
 
         val entries = values.entries.toList()
         val columns = values.keys.joinToString(", ") { it.name }
         val placeholders = List(values.size) { "?" }.joinToString(", ")
 
         val sql = "INSERT INTO $table ($columns) VALUES ($placeholders)"
+        var id : Int = -1
 
         connection.prepareStatement(sql).use { stmt ->
             entries.forEachIndexed { index, entry ->
                 stmt.setObject(index + 1, entry.value)
             }
             stmt.executeUpdate()
+
+            stmt.generatedKeys.use { keys ->
+                if (keys.next()) {
+                    id = keys.getInt(1)
+                }
+            }
         }
+
+        return id
     }
 
     fun queryTable(
         table : String,
         columns : List<String>,
-        whereClause : String? = null,
-        whereArgs : List<Any?> = emptyList()): List<Array<Any?>> {
+        joinArgs : JoinArgs? = null,
+        whereArgs : WhereArgs? = null): List<Array<Any?>> {
 
-        val columnStr = columns.joinToString(", ")
+        var columnStr = columns.joinToString(", ") { "$table.$it" }
+        if (joinArgs != null) columnStr += ", " + joinArgs.joinSelectColumns.joinToString(", ") { "${joinArgs.joinTable}.$it" }
+
         val sql = buildString {
             append("SELECT $columnStr FROM $table")
-            if (whereClause != null) append(" WHERE $whereClause")
+            if (joinArgs != null) append(" ${joinArgs.joinType} JOIN ${joinArgs.joinTable} ON $table.${joinArgs.joinTable1Column} = ${joinArgs.joinTable}.${joinArgs.joinTable2Column}")
+            if (whereArgs != null) append(" WHERE ${whereArgs.whereClause}")
         }
 
+        var totalSize = columns.size
+        if (joinArgs != null)
+            totalSize += joinArgs.joinSelectColumns.size
+
         connection.prepareStatement(sql).use { stmt ->
-            whereArgs.forEachIndexed { i, value ->
-                stmt.setObject(i + 1, value)
+            if (whereArgs != null) {
+                whereArgs.whereArgs.forEachIndexed { i, value ->
+                    stmt.setObject(i + 1, value)
+                }
             }
 
             stmt.executeQuery().use { rs ->
                 val results = mutableListOf<Array<Any?>>()
 
                 while (rs.next()) {
-                    val row = Array(columns.size) { index ->
+                    val row = Array(totalSize) { index ->
                         rs.getObject(index + 1)
                     }
                     results.add(row)
