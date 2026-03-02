@@ -52,7 +52,8 @@ object DatabaseManager {
             UserData.EMPTY,
             BookerData.EMPTY,
             BookingData.EMPTY,
-            LoginData.EMPTY
+            LoginData.EMPTY,
+            TwoFAData.EMPTY
         )
 
         for (data in dataClasses) {
@@ -129,4 +130,25 @@ object DatabaseManager {
             }
         }
     }
+
+    fun updateInDatabase(
+        table: String,
+        id: Int,
+        values: Map<Column<*>, Any?>
+    ) {
+        if (values.isEmpty()) return
+
+        val setClause = values.keys.joinToString(", ") { "${it.name} = ?" }
+
+        val sql = "UPDATE $table SET $setClause WHERE id = ?"
+
+        connection.prepareStatement(sql).use { stmt ->
+            values.values.forEachIndexed { index, value ->
+                stmt.setObject(index + 1, value)
+            }
+            stmt.setObject(values.size + 1, id)
+            stmt.executeUpdate()
+        }
+    }
+
 }

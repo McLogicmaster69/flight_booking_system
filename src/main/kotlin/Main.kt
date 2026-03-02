@@ -96,6 +96,10 @@ fun Application.configureSessions() {
             cookie.path = "/"
             cookie.httpOnly = true
         }
+        cookie<Temp2FASession>("TEMP_2FA") {
+            cookie.path = "/"
+            cookie.httpOnly = true
+        }
     }
 }
 

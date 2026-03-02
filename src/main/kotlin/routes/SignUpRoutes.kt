@@ -32,8 +32,6 @@ private suspend fun ApplicationCall.handleSignUpPost() {
         val email = params["signupEmail"]
         val password = params["signupPassword"]
 
-        val passwordHash = BCrypt.hashpw(password, BCrypt.gensalt())
-
         if (firstname.isNullOrBlank()) {
             respondText(createSignUpStatus("Please fill in a first name"), ContentType.Text.Html, status = HttpStatusCode.OK)
             return@timed
@@ -53,6 +51,8 @@ private suspend fun ApplicationCall.handleSignUpPost() {
             respondText(createSignUpStatus("Please fill in a password"), ContentType.Text.Html, status = HttpStatusCode.OK)
             return@timed
         }
+        
+        val passwordHash = BCrypt.hashpw(password, BCrypt.gensalt())
 
         val joinArgs : JoinArgs = JoinArgs(
             joinType = "INNER",

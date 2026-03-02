@@ -47,6 +47,8 @@ dependencies {
     // BCrypt
     implementation("org.mindrot:jbcrypt:0.4")
 
+    // Java Mail/Jakarta Mail
+    implementation("com.sun.mail:jakarta.mail:2.0.1")
 }
 
 application {

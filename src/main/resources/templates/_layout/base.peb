@@ -44,8 +44,15 @@
                 <a href="/rewards" class="{% if activePage == 'rewards' %}is-active{% endif %}">Loyalty Rewards</a>
                 <a href="/settings" class="{% if activePage == 'settings' %}is-active{% endif %}">Settings</a>
                 <a href="/help" class="{% if activePage == 'help' %}is-active{% endif %}">Help</a>
-                {% if isLoggedIn %}
-                    <a href="/login" class="{% if activePage == 'auth' %}is-active{% endif %}">Logout</a>
+                {% if (user.verifiedAccount == false) and logged_in%}
+                    <form method="post" action="/send-verification" style="display:inline;">
+                        <button type="submit" class="wf-link-button {% if activePage == 'verify' %}is-active{% endif %}">
+                            Verify
+                        </button>
+                    </form>
+                {% endif %}
+                {% if logged_in %}
+                    <a href="/logout" class="{% if activePage == 'auth' %}is-active{% endif %}">Logout</a>
                 {% else %}
                     <a href="/login" class="{% if activePage == 'auth' %}is-active{% endif %}">Login / Sign Up</a>
                 {% endif %}
@@ -60,7 +67,7 @@
             <a href="/rewards" class="{% if activePage == 'rewards' %}is-active{% endif %}">Loyalty Rewards</a>
             <a href="/settings" class="{% if activePage == 'settings' %}is-active{% endif %}">Settings</a>
             <a href="/help" class="{% if activePage == 'help' %}is-active{% endif %}">Help</a>
-            {% if isLoggedIn %}
+            {% if logged_in %}
                 <a href="/login" class="{% if activePage == 'auth' %}is-active{% endif %}">Logout</a>
             {% else %}
                 <a href="/login" class="{% if activePage == 'auth' %}is-active{% endif %}">Login / Sign Up</a>
