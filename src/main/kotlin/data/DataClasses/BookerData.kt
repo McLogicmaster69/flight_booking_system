@@ -3,7 +3,7 @@ package data
 object BookerColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
     val USER_ID = Column<Int?>("user_id", "INTEGER REFERENCES users(id)")
-    val GUEST_ID = Column<Int?>("guest_id", "INTEGER")
+    val GUEST_ID = Column<Int?>("guest_id", "INTEGER REFERENCES guests(id)")
 
     val ALL = listOf(ID, USER_ID, GUEST_ID)
 }
@@ -45,5 +45,10 @@ data class BookerData(
             whereArgs : WhereArgs? = null) : List<QueryResult<BookerData>> {
             return EMPTY.queryDatabase(joinArgs, whereArgs)
         }
+
+        fun updateTable (
+            values : Map<Column<*>, Any?>,
+            whereArgs : WhereArgs
+        ) : Int = EMPTY.updateTable(values, whereArgs)
     }
 }

@@ -80,7 +80,7 @@ private suspend fun ApplicationCall.handleSignUpPost() {
             return@timed
         }
         
-        val login_id : Int = LoginData(email = email, password_hash = passwordHash).insertIntoDatabase()
+        val login_id : Int = LoginData(email = email, passwordHash = passwordHash).insertIntoDatabase()
         val userData : UserData = UserData(firstName = firstname, lastName = lastname, verifiedAccount = false, loginId = login_id)
         val user_id : Int = userData.insertIntoDatabase()
 

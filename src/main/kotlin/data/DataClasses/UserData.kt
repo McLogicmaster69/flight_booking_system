@@ -53,5 +53,10 @@ data class UserData(
             whereArgs : WhereArgs? = null) : List<QueryResult<UserData>> {
             return EMPTY.queryDatabase(joinArgs, whereArgs)
         }
+
+        fun updateTable (
+            values : Map<Column<*>, Any?>,
+            whereArgs : WhereArgs
+        ) : Int = EMPTY.updateTable(values, whereArgs)
     }
 }
