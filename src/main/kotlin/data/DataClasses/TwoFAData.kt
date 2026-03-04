@@ -25,6 +25,7 @@ data class TwoFAData(
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
+            TwoFAColumns.ID to id,
             TwoFAColumns.TTL to ttl,
             TwoFAColumns.CODE_HASH to code_hash,
             TwoFAColumns.ATTEMPTS to attempts
