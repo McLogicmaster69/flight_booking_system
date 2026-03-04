@@ -10,11 +10,11 @@ object BookerColumns {
 
 data class BookerData(
 
-    val id: Int = 0,
+    override val id: Int = 0,
     var userId : Int? = 0,
     var guestId : Int? = 0
 
-) : DataClass<BookerData>() {
+) : DataClass<BookerData>(id) {
 
     override val tableName = "bookers"
     override val tableColumns = BookerColumns.ALL
@@ -50,5 +50,9 @@ data class BookerData(
             values : Map<Column<*>, Any?>,
             whereArgs : WhereArgs
         ) : Int = EMPTY.updateTable(values, whereArgs)
+
+        fun delete(id : Int) : Int {
+            return BookerData(id = id).delete()
+        }
     }
 }

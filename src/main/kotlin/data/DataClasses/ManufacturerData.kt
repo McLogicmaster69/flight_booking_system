@@ -9,10 +9,10 @@ object ManufacturerColumns {
 
 data class ManufacturerData(
 
-    val id: Int = 0,
+    override val id: Int = 0,
     var name : String? = null,
 
-) : DataClass<ManufacturerData>() {
+) : DataClass<ManufacturerData>(id) {
 
     override val tableName = "manufacturers"
     override val tableColumns = ManufacturerColumns.ALL
@@ -46,5 +46,9 @@ data class ManufacturerData(
             values : Map<Column<*>, Any?>,
             whereArgs : WhereArgs
         ) : Int = EMPTY.updateTable(values, whereArgs)
+
+        fun delete(id : Int) : Int {
+            return ManufacturerData(id = id).delete()
+        }
     }
 }

@@ -9,10 +9,10 @@ object ClassColumns {
 
 data class ClassData(
 
-    val id: Int = 0,
+    override val id: Int = 0,
     var name : String? = null,
 
-) : DataClass<ClassData>() {
+) : DataClass<ClassData>(id) {
 
     override val tableName = "classes"
     override val tableColumns = ClassColumns.ALL
@@ -46,5 +46,9 @@ data class ClassData(
             values : Map<Column<*>, Any?>,
             whereArgs : WhereArgs
         ) : Int = EMPTY.updateTable(values, whereArgs)
+
+        fun delete(id : Int) : Int {
+            return ClassData(id = id).delete()
+        }
     }
 }

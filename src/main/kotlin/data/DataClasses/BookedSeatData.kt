@@ -10,11 +10,11 @@ object BookedSeatColumns {
 
 data class BookedSeatData(
 
-    val id: Int = 0,
+    override val id: Int = 0,
     var seatId : Int = 0,
     var bookingId : Int = 0
 
-) : DataClass<BookedSeatData>() {
+) : DataClass<BookedSeatData>(id) {
 
     override val tableName = "booked_seats"
     override val tableColumns = BookedSeatColumns.ALL
@@ -50,5 +50,9 @@ data class BookedSeatData(
             values : Map<Column<*>, Any?>,
             whereArgs : WhereArgs
         ) : Int = EMPTY.updateTable(values, whereArgs)
+
+        fun delete(id : Int) : Int {
+            return BookedSeatData(id = id).delete()
+        }
     }
 }

@@ -14,7 +14,7 @@ object PaymentMethodColumns {
 
 data class PaymentMethodData(
 
-    val id: Int = 0,
+    override val id: Int = 0,
     var userId : Int = 0,
     var paymentToken : String? = null,
     var lastFour : String? = null,
@@ -22,7 +22,7 @@ data class PaymentMethodData(
     var expMonth : Int? = null,
     var expYear : Int? = null
 
-) : DataClass<PaymentMethodData>() {
+) : DataClass<PaymentMethodData>(id) {
 
     override val tableName = "payment_methods"
     override val tableColumns = PaymentMethodColumns.ALL
@@ -66,5 +66,9 @@ data class PaymentMethodData(
             values : Map<Column<*>, Any?>,
             whereArgs : WhereArgs
         ) : Int = EMPTY.updateTable(values, whereArgs)
+
+        fun delete(id : Int) : Int {
+            return PaymentMethodData(id = id).delete()
+        }
     }
 }

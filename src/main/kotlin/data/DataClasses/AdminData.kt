@@ -9,10 +9,10 @@ object AdminColumns {
 
 data class AdminData(
 
-    val id: Int = 0,
+    override val id: Int = 0,
     var loginId : Int = 0,
 
-) : DataClass<AdminData>() {
+) : DataClass<AdminData>(id) {
 
     override val tableName = "admins"
     override val tableColumns = AdminColumns.ALL
@@ -46,5 +46,9 @@ data class AdminData(
             values : Map<Column<*>, Any?>,
             whereArgs : WhereArgs
         ) : Int = EMPTY.updateTable(values, whereArgs)
+
+        fun delete(id : Int) : Int {
+            return AdminData(id = id).delete()
+        }
     }
 }

@@ -9,10 +9,10 @@ object PlaneColumns {
 
 data class PlaneData(
 
-    val id: Int = 0,
+    override val id: Int = 0,
     var modelId : Int = 0,
 
-) : DataClass<PlaneData>() {
+) : DataClass<PlaneData>(id) {
 
     override val tableName = "planes"
     override val tableColumns = PlaneColumns.ALL
@@ -46,5 +46,9 @@ data class PlaneData(
             values : Map<Column<*>, Any?>,
             whereArgs : WhereArgs
         ) : Int = EMPTY.updateTable(values, whereArgs)
+
+        fun delete(id : Int) : Int {
+            return PlaneData(id = id).delete()
+        }
     }
 }

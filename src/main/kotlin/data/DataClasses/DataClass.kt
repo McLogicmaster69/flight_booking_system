@@ -2,7 +2,7 @@ package data
 
 import java.time.LocalDateTime
 
-abstract class DataClass<T : DataClass<T>> {
+abstract class DataClass<T : DataClass<T>> ( open val id : Int = 0 ) {
     abstract val tableName: String
     abstract val tableColumns : List<Column<*>>
 
@@ -42,10 +42,14 @@ abstract class DataClass<T : DataClass<T>> {
             )
         }
 
+    fun update() : Int = DatabaseManager.updateTable(tableName, mapDataToColumns(), WhereArgs("id = ?", listOf(id)))
+
     fun updateTable(
         values : Map<Column<*>, Any?>,
         whereArgs : WhereArgs
     ) : Int = DatabaseManager.updateTable(tableName, values, whereArgs)
+
+    fun delete() : Int = DatabaseManager.deleteFromTable(tableName, WhereArgs("id = ?", listOf(id)))
 
     fun queryDatabase (
         joinArgs : JoinArgs? = null,

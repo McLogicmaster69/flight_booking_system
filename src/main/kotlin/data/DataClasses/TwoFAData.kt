@@ -3,7 +3,8 @@ package data
 import java.sql.Timestamp
 
 object TwoFAColumns {
-    val ID = Column<Int>("id", "INTEGER PRIMARY KEY REFERENCES users(id)")
+    val ID = Column<Int>("id", "INTEGER PRIMARY KEY")
+    val USER_ID = Column<Int>("user_id", "INTEGER REFERENCES users(id)")
     val TTL = Column<Timestamp>("ttl", "TIMESTAMP NOT NULL")
     val CODE_HASH = Column<String>("code_hash", "VARCHAR NOT NULL")
     val ATTEMPTS = Column<Int>("attempts", "INTEGER NOT NULL DEFAULT 0")
@@ -13,12 +14,13 @@ object TwoFAColumns {
 
 data class TwoFAData(
 
-    val id: Int = 0,
+    override val id: Int = 0,
+    var userId : Int = 0,
     var ttl: Timestamp = Timestamp(System.currentTimeMillis()),
     var code_hash: String = "",
     var attempts: Int = 0
 
-) : DataClass<TwoFAData>() {
+) : DataClass<TwoFAData>(id) {
 
     override val tableName = "TwoFAData"
     override val tableColumns = TwoFAColumns.ALL
@@ -26,6 +28,7 @@ data class TwoFAData(
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
             TwoFAColumns.ID to id,
+            TwoFAColumns.USER_ID to userId,
             TwoFAColumns.TTL to ttl,
             TwoFAColumns.CODE_HASH to code_hash,
             TwoFAColumns.ATTEMPTS to attempts
@@ -42,6 +45,7 @@ data class TwoFAData(
 
         return TwoFAData(
             id = castRowElement(row, TwoFAColumns.ID),
+            userId = castRowElement(row, TwoFAColumns.USER_ID),
             ttl = ttlValue,
             code_hash = castRowElement(row, TwoFAColumns.CODE_HASH),
             attempts = castRowElement(row, TwoFAColumns.ATTEMPTS)
@@ -49,15 +53,7 @@ data class TwoFAData(
     }
 
     override fun debugData() {
-        println("TwoFA data: (\"$id\", \"$ttl\", \"$code_hash\", \"$attempts\")")
-    }
-
-    fun update() {
-        DatabaseManager.updateInDatabase(
-            tableName,
-            id,
-            mapDataToColumns()
-        )
+        println("TwoFA data: (\"$id\", \"$userId\", \"$ttl\", \"$code_hash\", \"$attempts\")")
     }
 
     companion object {
@@ -70,11 +66,17 @@ data class TwoFAData(
             return EMPTY.queryDatabase(joinArgs, whereArgs)
         }
 
-        fun deleteByUserId(userId: Int) {
-            DatabaseManager.executeSQL(
-                "DELETE FROM TwoFAData WHERE id = $userId"
-            )
+        fun updateTable (
+            values : Map<Column<*>, Any?>,
+            whereArgs : WhereArgs
+        ) : Int = EMPTY.updateTable(values, whereArgs)
+
+        fun delete(id : Int) : Int {
+            return TwoFAData(id = id).delete()
         }
 
+        fun deleteByUserId(userId : Int) : Int {
+            return DatabaseManager.deleteFromTable(EMPTY.tableName, WhereArgs("user_id = ?", listOf(userId)))
+        }
     }
 }

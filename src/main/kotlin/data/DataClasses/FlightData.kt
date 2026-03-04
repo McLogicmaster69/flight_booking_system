@@ -12,11 +12,11 @@ object FlightColumns {
 
 data class FlightData(
 
-    val id: Int = 0,
+    override val id: Int = 0,
     var routeId : Int = 0,
     var dateTime : LocalDateTime = LocalDateTime.now()
 
-) : DataClass<FlightData>() {
+) : DataClass<FlightData>(id) {
 
     override val tableName = "flights"
     override val tableColumns = FlightColumns.ALL
@@ -52,5 +52,9 @@ data class FlightData(
             values : Map<Column<*>, Any?>,
             whereArgs : WhereArgs
         ) : Int = EMPTY.updateTable(values, whereArgs)
+
+        fun delete(id : Int) : Int {
+            return FlightData(id = id).delete()
+        }
     }
 }

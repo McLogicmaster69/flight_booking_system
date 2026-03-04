@@ -13,14 +13,14 @@ object SeatColumns {
 
 data class SeatData(
 
-    val id: Int = 0,
+    override val id: Int = 0,
     var flightId : Int = 0,
     var classId : Int = 0,
     var typeId : Int = 0,
     var number : Int = 0,
     var price : Float = 0f,
 
-) : DataClass<SeatData>() {
+) : DataClass<SeatData>(id) {
 
     override val tableName = "seats"
     override val tableColumns = SeatColumns.ALL
@@ -62,5 +62,9 @@ data class SeatData(
             values : Map<Column<*>, Any?>,
             whereArgs : WhereArgs
         ) : Int = EMPTY.updateTable(values, whereArgs)
+
+        fun delete(id : Int) : Int {
+            return SeatData(id = id).delete()
+        }
     }
 }

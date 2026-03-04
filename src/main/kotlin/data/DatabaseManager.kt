@@ -69,7 +69,7 @@ object DatabaseManager {
             StaffData.EMPTY,
             StaffPositionData.EMPTY,
             TicketTypeData.EMPTY,
-            TwoFAData.EMPTY
+            TwoFAData.EMPTY,
             UserData.EMPTY
         )
 
@@ -137,6 +137,23 @@ object DatabaseManager {
         }
     }
 
+    fun deleteFromTable(
+        table : String,
+        whereArgs : WhereArgs
+    ) : Int {
+        require(whereArgs.whereClause.isNotBlank()) { "DELETE requires a WHERE clause" }
+
+        val sql = "DELETE FROM $table WHERE ${whereArgs.whereClause}"
+
+        connection.prepareStatement(sql).use { stmt ->
+            whereArgs.whereArgs.forEachIndexed { i, value ->
+                stmt.setObject(i + 1, value)
+            }
+
+            return stmt.executeUpdate()
+        }
+    }
+
     fun queryTable(
         table : String,
         columns : List<String>,
@@ -178,25 +195,4 @@ object DatabaseManager {
             }
         }
     }
-
-    fun updateInDatabase(
-        table: String,
-        id: Int,
-        values: Map<Column<*>, Any?>
-    ) {
-        if (values.isEmpty()) return
-
-        val setClause = values.keys.joinToString(", ") { "${it.name} = ?" }
-
-        val sql = "UPDATE $table SET $setClause WHERE id = ?"
-
-        connection.prepareStatement(sql).use { stmt ->
-            values.values.forEachIndexed { index, value ->
-                stmt.setObject(index + 1, value)
-            }
-            stmt.setObject(values.size + 1, id)
-            stmt.executeUpdate()
-        }
-    }
-
 }
