@@ -43,6 +43,12 @@ dependencies {
 
     // SQL
     implementation("org.xerial:sqlite-jdbc:3.41.2.1")
+
+    // BCrypt
+    implementation("org.mindrot:jbcrypt:0.4")
+
+    // Java Mail/Jakarta Mail
+    implementation("com.sun.mail:jakarta.mail:2.0.1")
 }
 
 application {
