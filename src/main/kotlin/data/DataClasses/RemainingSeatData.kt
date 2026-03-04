@@ -9,10 +9,10 @@ object RemainingSeatColumns {
 
 data class RemainingSeatData(
 
-    val id: Int = 0,
+    override val id: Int = 0,
     var seatId : Int = 0,
 
-) : DataClass<RemainingSeatData>() {
+) : DataClass<RemainingSeatData>(id) {
 
     override val tableName = "remaining_seats"
     override val tableColumns = RemainingSeatColumns.ALL
@@ -46,5 +46,9 @@ data class RemainingSeatData(
             values : Map<Column<*>, Any?>,
             whereArgs : WhereArgs
         ) : Int = EMPTY.updateTable(values, whereArgs)
+
+        fun delete(id : Int) : Int {
+            return RemainingSeatData(id = id).delete()
+        }
     }
 }

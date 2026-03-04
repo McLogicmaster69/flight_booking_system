@@ -10,11 +10,11 @@ object DestinationColumns {
 
 data class DestinationData(
 
-    val id: Int = 0,
+    override val id: Int = 0,
     var countryId : Int = 0,
     var cityName : String = ""
 
-) : DataClass<DestinationData>() {
+) : DataClass<DestinationData>(id) {
 
     override val tableName = "destinations"
     override val tableColumns = DestinationColumns.ALL
@@ -50,5 +50,9 @@ data class DestinationData(
             values : Map<Column<*>, Any?>,
             whereArgs : WhereArgs
         ) : Int = EMPTY.updateTable(values, whereArgs)
+
+        fun delete(id : Int) : Int {
+            return DestinationData(id = id).delete()
+        }
     }
 }

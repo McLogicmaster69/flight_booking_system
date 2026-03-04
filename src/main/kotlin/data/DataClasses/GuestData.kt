@@ -9,10 +9,10 @@ object GuestColumns {
 
 data class GuestData(
 
-    val id: Int = 0,
+    override val id: Int = 0,
     var email: String = ""
 
-) : DataClass<GuestData>() {
+) : DataClass<GuestData>(id) {
 
     override val tableName = "guests"
     override val tableColumns = GuestColumns.ALL
@@ -46,5 +46,9 @@ data class GuestData(
             values : Map<Column<*>, Any?>,
             whereArgs : WhereArgs
         ) : Int = EMPTY.updateTable(values, whereArgs)
+
+        fun delete(id : Int) : Int {
+            return GuestData(id = id).delete()
+        }
     }
 }

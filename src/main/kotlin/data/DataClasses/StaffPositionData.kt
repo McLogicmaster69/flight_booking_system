@@ -9,10 +9,10 @@ object StaffPositionColumns {
 
 data class StaffPositionData(
 
-    val id: Int = 0,
+    override val id: Int = 0,
     var name : String? = null,
 
-) : DataClass<StaffPositionData>() {
+) : DataClass<StaffPositionData>(id) {
 
     override val tableName = "staff_positions"
     override val tableColumns = StaffPositionColumns.ALL
@@ -46,5 +46,9 @@ data class StaffPositionData(
             values : Map<Column<*>, Any?>,
             whereArgs : WhereArgs
         ) : Int = EMPTY.updateTable(values, whereArgs)
+
+        fun delete(id : Int) : Int {
+            return StaffPositionData(id = id).delete()
+        }
     }
 }

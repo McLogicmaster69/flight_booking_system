@@ -10,11 +10,11 @@ object AssignedFlightStaffColumns {
 
 data class AssignedFlightStaffData(
 
-    val id: Int = 0,
+    override val id: Int = 0,
     var flightId : Int = 0,
     var staffId : Int = 0
 
-) : DataClass<AssignedFlightStaffData>() {
+) : DataClass<AssignedFlightStaffData>(id) {
 
     override val tableName = "assigned_flight_staff"
     override val tableColumns = AssignedFlightStaffColumns.ALL
@@ -50,5 +50,9 @@ data class AssignedFlightStaffData(
             values : Map<Column<*>, Any?>,
             whereArgs : WhereArgs
         ) : Int = EMPTY.updateTable(values, whereArgs)
+
+        fun delete(id : Int) : Int {
+            return AssignedFlightStaffData(id = id).delete()
+        }
     }
 }

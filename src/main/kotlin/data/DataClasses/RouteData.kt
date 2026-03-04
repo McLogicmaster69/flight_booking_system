@@ -11,12 +11,12 @@ object RouteColumns {
 
 data class RouteData(
 
-    val id: Int = 0,
+    override val id: Int = 0,
     var startDestination : Int = 0,
     var endDestination : Int = 0,
     var planeId : Int = 0
 
-) : DataClass<RouteData>() {
+) : DataClass<RouteData>(id) {
 
     override val tableName = "routes"
     override val tableColumns = RouteColumns.ALL
@@ -54,5 +54,9 @@ data class RouteData(
             values : Map<Column<*>, Any?>,
             whereArgs : WhereArgs
         ) : Int = EMPTY.updateTable(values, whereArgs)
+
+        fun delete(id : Int) : Int {
+            return RouteData(id = id).delete()
+        }
     }
 }

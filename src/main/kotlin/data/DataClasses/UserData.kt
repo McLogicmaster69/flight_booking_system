@@ -12,13 +12,13 @@ object UserColumns {
 
 data class UserData(
 
-    val id: Int = 0,
+    override val id: Int = 0,
     var firstName: String? = null,
     var lastName: String? = null,
     var verifiedAccount: Boolean? = null,
     var loginId: Int = 0
 
-) : DataClass<UserData>() {
+) : DataClass<UserData>(id) {
 
     override val tableName = "users"
     override val tableColumns = UserColumns.ALL
@@ -44,14 +44,6 @@ data class UserData(
         println("User data: (\"$id\", \"$firstName\", \"$lastName\", \"$verifiedAccount\", \"$loginId\")")
     }
 
-    fun update() {
-        DatabaseManager.updateInDatabase(
-            tableName,
-            id,
-            mapDataToColumns()
-        )
-    }
-
     companion object {
         val EMPTY : UserData
             get() = UserData()
@@ -66,5 +58,9 @@ data class UserData(
             values : Map<Column<*>, Any?>,
             whereArgs : WhereArgs
         ) : Int = EMPTY.updateTable(values, whereArgs)
+
+        fun delete(id : Int) : Int {
+            return UserData(id = id).delete()
+        }
     }
 }

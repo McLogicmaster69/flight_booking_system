@@ -10,11 +10,11 @@ object LoginColumns {
 
 data class LoginData(
 
-    val id: Int = 0,
+    override val id: Int = 0,
     var email: String = "",
     var passwordHash: String = ""
 
-) : DataClass<LoginData>() {
+) : DataClass<LoginData>(id) {
 
     override val tableName = "login_info"
     override val tableColumns = LoginColumns.ALL
@@ -50,5 +50,9 @@ data class LoginData(
             values : Map<Column<*>, Any?>,
             whereArgs : WhereArgs
         ) : Int = EMPTY.updateTable(values, whereArgs)
+
+        fun delete(id : Int) : Int {
+            return LoginData(id = id).delete()
+        }
     }
 }

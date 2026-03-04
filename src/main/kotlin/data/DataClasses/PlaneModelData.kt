@@ -11,12 +11,12 @@ object PlaneModelColumns {
 
 data class PlaneModelData(
 
-    val id : Int = 0,
+    override val id : Int = 0,
     var capacity : Int? = null,
     var name : String = "",
     var manufacturerId : Int = 0
 
-) : DataClass<PlaneModelData>() {
+) : DataClass<PlaneModelData>(id) {
 
     override val tableName = "plane_models"
     override val tableColumns = PlaneModelColumns.ALL
@@ -54,5 +54,9 @@ data class PlaneModelData(
             values : Map<Column<*>, Any?>,
             whereArgs : WhereArgs
         ) : Int = EMPTY.updateTable(values, whereArgs)
+
+        fun delete(id : Int) : Int {
+            return PlaneModelData(id = id).delete()
+        }
     }
 }

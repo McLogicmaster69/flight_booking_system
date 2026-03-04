@@ -9,10 +9,10 @@ object TicketTypeColumns {
 
 data class TicketTypeData(
 
-    val id: Int = 0,
+    override val id: Int = 0,
     var name : String? = null,
 
-) : DataClass<TicketTypeData>() {
+) : DataClass<TicketTypeData>(id) {
 
     override val tableName = "ticket_types"
     override val tableColumns = TicketTypeColumns.ALL
@@ -46,5 +46,9 @@ data class TicketTypeData(
             values : Map<Column<*>, Any?>,
             whereArgs : WhereArgs
         ) : Int = EMPTY.updateTable(values, whereArgs)
+
+        fun delete(id : Int) : Int {
+            return TicketTypeData(id = id).delete()
+        }
     }
 }
