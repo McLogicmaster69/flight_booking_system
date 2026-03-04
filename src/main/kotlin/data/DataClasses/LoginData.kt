@@ -12,7 +12,7 @@ data class LoginData(
 
     val id: Int = 0,
     var email: String = "",
-    var password_hash: String = ""
+    var passwordHash: String = ""
 
 ) : DataClass<LoginData>() {
 
@@ -22,18 +22,18 @@ data class LoginData(
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
             LoginColumns.EMAIL to email,
-            LoginColumns.PASSWORD_HASH to password_hash
+            LoginColumns.PASSWORD_HASH to passwordHash
         )
 
     override fun mapRowToData(row : Array<Any?>) : LoginData =
         LoginData(
             id = castRowElement(row, LoginColumns.ID),
             email = castRowElement(row, LoginColumns.EMAIL),
-            password_hash = castRowElement(row, LoginColumns.PASSWORD_HASH)
+            passwordHash = castRowElement(row, LoginColumns.PASSWORD_HASH)
         )
 
     override fun debugData() {
-        println("Login data: (\"$id\", \"$email\", \"$password_hash\")")
+        println("Login data: (\"$id\", \"$email\", \"$passwordHash\")")
     }
 
     companion object {
@@ -46,5 +46,9 @@ data class LoginData(
             return EMPTY.queryDatabase(joinArgs, whereArgs)
         }
 
+        fun updateTable (
+            values : Map<Column<*>, Any?>,
+            whereArgs : WhereArgs
+        ) : Int = EMPTY.updateTable(values, whereArgs)
     }
 }

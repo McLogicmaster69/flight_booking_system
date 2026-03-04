@@ -1,5 +1,7 @@
 package data
 
+import java.time.LocalDateTime
+
 abstract class DataClass<T : DataClass<T>> {
     abstract val tableName: String
     abstract val tableColumns : List<Column<*>>
@@ -20,7 +22,18 @@ abstract class DataClass<T : DataClass<T>> {
         return row[index] as K
     }
 
-    fun mapRawRows(tables : List<String>, columns : List<String>, row : Array<Any?>) : List<ColumnValue> =
+    protected fun castDateRowElement(row : Array<Any?>, column : Column<*>) : LocalDateTime {
+        val index = tableColumns.indexOf(column)
+        require(index >= 0) { "Column ${column.name} not found" }
+        @Suppress("UNCHECKED_CAST")
+        return LocalDateTime.parse(row[index] as String)
+    }
+
+    fun mapRawRows(
+        tables : List<String>,
+        columns : List<String>,
+        row : Array<Any?>
+    ) : List<ColumnValue> =
         row.indices.map { i ->
             ColumnValue(
                 tables[i],
@@ -29,9 +42,15 @@ abstract class DataClass<T : DataClass<T>> {
             )
         }
 
+    fun updateTable(
+        values : Map<Column<*>, Any?>,
+        whereArgs : WhereArgs
+    ) : Int = DatabaseManager.updateTable(tableName, values, whereArgs)
+
     fun queryDatabase (
         joinArgs : JoinArgs? = null,
-        whereArgs : WhereArgs? = null) : List<QueryResult<T>> {
+        whereArgs : WhereArgs? = null
+    ) : List<QueryResult<T>> {
 
         val columnNames = tableColumns.map { it.name }
         val rows = DatabaseManager.queryTable(
