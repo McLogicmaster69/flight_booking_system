@@ -14,6 +14,7 @@ import utils.timed
 import data.*
 import auth.UserSession
 import auth.LoggedInState
+import org.mindrot.jbcrypt.BCrypt
 
 fun Route.signUpRoutes() {
     post("/signup") { call.handleSignUpPost() }
@@ -30,12 +31,6 @@ private suspend fun ApplicationCall.handleSignUpPost() {
         val lastname = params["signupLastName"]
         val email = params["signupEmail"]
         val password = params["signupPassword"]
-
-        //
-        // TODO Hash password
-        //
-
-        val passwordHash = password
 
         if (firstname.isNullOrBlank()) {
             respondText(createSignUpStatus("Please fill in a first name"), ContentType.Text.Html, status = HttpStatusCode.OK)
@@ -56,6 +51,8 @@ private suspend fun ApplicationCall.handleSignUpPost() {
             respondText(createSignUpStatus("Please fill in a password"), ContentType.Text.Html, status = HttpStatusCode.OK)
             return@timed
         }
+        
+        val passwordHash = BCrypt.hashpw(password, BCrypt.gensalt())
 
         val joinArgs : JoinArgs = JoinArgs(
             joinType = "INNER",

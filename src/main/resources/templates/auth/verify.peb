@@ -1,0 +1,55 @@
+{% extends "_layout/base.peb" %}
+
+{% block content %}
+
+<div class="auth-container">
+
+    <h2 class="auth-title">Two-Factor Authentication</h2>
+    <p class="auth-subtitle">
+        Enter the 6-digit code sent to your email.
+    </p>
+
+    <!-- Status / Error Area -->
+    <div id="verify-status" class="auth-status" role="status" aria-live="polite" aria-atomic="true">
+        {% if error %}
+            <div class="error-message">{{ error }}</div>
+        {% endif %}
+    </div>
+
+    <form 
+        class="auth-form"
+        hx-post="/verify"
+        hx-target="#verify-status"
+        hx-swap="innerHTML"
+        method="post"
+    >
+
+        <input
+            type="text"
+            name="code"
+            class="auth-input"
+            placeholder="123456"
+            pattern="[0-9]{6}"
+            maxlength="6"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            required
+            autofocus
+        />
+
+        <button type="submit" class="auth-button">
+            Verify
+        </button>
+    </form>
+
+    <div class="auth-secondary">
+        <form hx-post="/send-verification" hx-swap="none" method="post">
+            <button type="submit" class="link-button">
+                Resend code
+            </button>
+        </form>
+    </div>
+
+</div>
+
+{% endblock %}
