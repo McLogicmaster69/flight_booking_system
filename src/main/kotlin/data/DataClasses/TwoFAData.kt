@@ -9,7 +9,7 @@ object TwoFAColumns {
     val CODE_HASH = Column<String>("code_hash", "VARCHAR NOT NULL")
     val ATTEMPTS = Column<Int>("attempts", "INTEGER NOT NULL DEFAULT 0")
 
-    val ALL = listOf(ID, TTL, CODE_HASH, ATTEMPTS)
+    val ALL = listOf(ID, USER_ID, TTL, CODE_HASH, ATTEMPTS)
 }
 
 data class TwoFAData(
