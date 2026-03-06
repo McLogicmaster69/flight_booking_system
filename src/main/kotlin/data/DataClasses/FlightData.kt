@@ -44,7 +44,8 @@ data class FlightData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null) : List<QueryResult<FlightData>> {
+            whereArgs : WhereArgs? = null
+        ) : List<QueryResult<FlightData>> {
             return EMPTY.queryDatabase(joinArgs, whereArgs)
         }
 
@@ -55,6 +56,15 @@ data class FlightData(
 
         fun delete(id : Int) : Int {
             return FlightData(id = id).delete()
+        }
+
+        fun queryDatabase(
+            routeIds : List<Int>,
+            joinArgs : JoinArgs? = null
+        ) : List<QueryResult<FlightData>> {
+            val whereClause = routeIds.joinToString(" OR ") { "${FlightColumns.ROUTE_ID.name} = ?" }
+            val whereArgs = routeIds.map { it as Any? }
+            return EMPTY.queryDatabase(joinArgs, WhereArgs(whereClause, whereArgs))
         }
     }
 }
