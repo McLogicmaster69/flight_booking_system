@@ -58,14 +58,6 @@ data class UserData(
         return update()
     }
 
-    fun update() {
-        DatabaseManager.updateInDatabase(
-            tableName,
-            id,
-            mapDataToColumns()
-        )
-    }
-
     companion object {
         val EMPTY : UserData
             get() = UserData()
