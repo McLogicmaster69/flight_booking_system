@@ -44,14 +44,6 @@ data class UserData(
         println("User data: (\"$id\", \"$firstName\", \"$lastName\", \"$verifiedAccount\", \"$loginId\")")
     }
 
-    fun update() {
-        DatabaseManager.updateInDatabase(
-            tableName,
-            id,
-            mapDataToColumns()
-        )
-    }
-
     companion object {
         val EMPTY : UserData
             get() = UserData()
