@@ -54,5 +54,15 @@ data class AssignedFlightStaffData(
         fun delete(id : Int) : Int {
             return AssignedFlightStaffData(id = id).delete()
         }
+
+        fun queryByFlightID (
+            id : Int
+        ) : List<QueryResult<AssignedFlightStaffData>> 
+            = queryDatabase(whereArgs = WhereArgs("${AssignedFlightStaffColumns.FLIGHT_ID.name} = ?", listOf(id)))
+
+        fun queryByStaffID (
+            id : Int
+        ) : List<QueryResult<AssignedFlightStaffData>> 
+            = queryDatabase(whereArgs = WhereArgs("${AssignedFlightStaffColumns.STAFF_ID.name} = ?", listOf(id)))
     }
 }

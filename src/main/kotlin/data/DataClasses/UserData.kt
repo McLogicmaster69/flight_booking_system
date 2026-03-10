@@ -5,9 +5,10 @@ object UserColumns {
     val FIRSTNAME = Column<String?>("firstname", "VARCHAR")
     val LASTNAME = Column<String?>("lastname", "VARCHAR")
     val VERIFIED = Column<Boolean?>("verified_account", "BOOL")
+    val LOYALITY_POINTS = Column<Int>("loyality_points", "INT NOT NULL")
     val LOGIN_ID = Column<Int>("login_id", "INTEGER NOT NULL REFERENCES login_info(id)")
 
-    val ALL = listOf(ID, FIRSTNAME, LASTNAME, VERIFIED, LOGIN_ID)
+    val ALL = listOf(ID, FIRSTNAME, LASTNAME, VERIFIED, LOYALITY_POINTS, LOGIN_ID)
 }
 
 data class UserData(
@@ -16,6 +17,7 @@ data class UserData(
     var firstName: String? = null,
     var lastName: String? = null,
     var verifiedAccount: Boolean? = null,
+    var loyalityPoints: Int = 0,
     var loginId: Int = 0
 
 ) : DataClass<UserData>(id) {
@@ -28,6 +30,7 @@ data class UserData(
             UserColumns.FIRSTNAME to firstName,
             UserColumns.LASTNAME to lastName,
             UserColumns.VERIFIED to verifiedAccount,
+            UserColumns.LOYALITY_POINTS to loyalityPoints,
             UserColumns.LOGIN_ID to loginId
         )
 
@@ -37,11 +40,22 @@ data class UserData(
             firstName = castRowElement(row, UserColumns.FIRSTNAME),
             lastName = castRowElement(row, UserColumns.LASTNAME),
             verifiedAccount = anyToBool(castRowElement(row, UserColumns.VERIFIED)),
+            loyalityPoints = castRowElement(row, UserColumns.LOYALITY_POINTS),
             loginId = castRowElement(row, UserColumns.LOGIN_ID)
         )
 
     override fun debugData() {
-        println("User data: (\"$id\", \"$firstName\", \"$lastName\", \"$verifiedAccount\", \"$loginId\")")
+        println("User data: (\"$id\", \"$firstName\", \"$lastName\", \"$verifiedAccount\", \"$loyalityPoints\", \"$loginId\")")
+    }
+
+    fun awardPoints(points : Int) : Int {
+        loyalityPoints += points
+        return update()
+    }
+
+    fun usePoints(points : Int) : Int {
+        loyalityPoints += points
+        return update()
     }
 
     fun update() {
@@ -58,17 +72,52 @@ data class UserData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null) : List<QueryResult<UserData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs)
-        }
+            whereArgs : WhereArgs? = null
+        ) : List<QueryResult<UserData>> = EMPTY.queryDatabase(joinArgs, whereArgs)
 
         fun updateTable (
             values : Map<Column<*>, Any?>,
             whereArgs : WhereArgs
         ) : Int = EMPTY.updateTable(values, whereArgs)
 
-        fun delete(id : Int) : Int {
-            return UserData(id = id).delete()
+        fun delete(id : Int) : Int = UserData(id = id).delete()
+
+        fun awardPoints(id : Int, points : Int) : List<Int> {
+            return queryDatabase(
+                whereArgs = WhereArgs("${UserColumns.ID.name} = ?", listOf(id))
+            ).map { result ->
+                result.dataClass.awardPoints(points)
+            }
+        }
+
+        fun usePoints(id : Int, points : Int) : List<Int> {
+            return queryDatabase(
+                whereArgs = WhereArgs("${UserColumns.ID.name} = ?", listOf(id))
+            ).map { result ->
+                result.dataClass.usePoints(points)
+            }
+        }
+
+        fun queryByLogIn(
+            email : String
+        ) : List<QueryResult<UserData>> {
+            val joinArgs : JoinArgs = JoinArgs(
+                joinType = "INNER",
+                joinTable = LoginData.EMPTY.tableName,
+                joinTable1Column = UserColumns.LOGIN_ID.name,
+                joinTable2Column = LoginColumns.ID.name,
+                joinSelectColumns = LoginColumns.ALL.map { it.name }
+            )
+
+            val whereArgs : WhereArgs = WhereArgs(
+                whereClause = "${LoginData.EMPTY.tableName}.${LoginColumns.EMAIL.name} = ?",
+                listOf(email)
+            )
+
+            return queryDatabase(
+                joinArgs = joinArgs,
+                whereArgs = whereArgs
+            )
         }
     }
 }

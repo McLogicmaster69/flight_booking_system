@@ -46,7 +46,8 @@ data class RouteData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null) : List<QueryResult<RouteData>> {
+            whereArgs : WhereArgs? = null
+        ) : List<QueryResult<RouteData>> {
             return EMPTY.queryDatabase(joinArgs, whereArgs)
         }
 
@@ -57,6 +58,39 @@ data class RouteData(
 
         fun delete(id : Int) : Int {
             return RouteData(id = id).delete()
+        }
+
+        fun queryDatabase(
+            destinationArgs : DestinationArgs,
+            joinArgs : JoinArgs? = null
+        ) : List<QueryResult<RouteData>> {
+            val whereClause = "${RouteColumns.START_DESTINATION.name} = ? AND ${RouteColumns.END_DESTINATION.name} = ?"
+            val whereArgs = listOf(destinationArgs.startDestination, destinationArgs.endDestination)
+            return EMPTY.queryDatabase(joinArgs, WhereArgs(whereClause, whereArgs))
+        }
+
+        fun getPathByLayovers(
+            destinationArgs : DestinationArgs,
+            layovers : Int = 2
+        ) : List<List<Int>> {
+            val reachable : MutableList<List<Int>> = mutableListOf(listOf(destinationArgs.startDestination))
+            for (i in 1..layovers) {
+                for (r in reachable) {
+                    val neighbours = queryDatabase(whereArgs = WhereArgs("${RouteColumns.START_DESTINATION.name} = ?", listOf(r.last())))
+                    for (neighbour in neighbours) {
+                        reachable.add(r.toList() + listOf(neighbour.dataClass.endDestination))
+                    }
+                }
+            }
+
+            val output : MutableList<List<Int>> = mutableListOf()
+            reachable.forEach { r ->
+                if (r.last() == destinationArgs.endDestination) {
+                    output.add(r)
+                }
+            }
+
+            return output.toList()
         }
     }
 }

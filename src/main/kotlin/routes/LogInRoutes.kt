@@ -63,23 +63,7 @@ private suspend fun ApplicationCall.handleLogInPost() {
             return@timed
         }
 
-        val joinArgs : JoinArgs = JoinArgs(
-            joinType = "INNER",
-            joinTable = LoginData.EMPTY.tableName,
-            joinTable1Column = UserColumns.LOGIN_ID.name,
-            joinTable2Column = LoginColumns.ID.name,
-            joinSelectColumns = LoginColumns.ALL.map { it.name }
-        )
-
-        val whereArgs : WhereArgs = WhereArgs(
-            whereClause = "${LoginData.EMPTY.tableName}.${LoginColumns.EMAIL.name} = ?",
-            listOf(email)
-        )
-
-        val query : List<QueryResult<UserData>> = UserData.queryDatabase(
-            joinArgs = joinArgs,
-            whereArgs = whereArgs
-        )
+        val query : List<QueryResult<UserData>> = UserData.queryByLogIn(email)
 
         if (query.size == 0) {
             respondText(createLoginStatus("Incorrect email or password"), ContentType.Text.Html, status = HttpStatusCode.OK)
@@ -87,7 +71,6 @@ private suspend fun ApplicationCall.handleLogInPost() {
         }
 
         val result : QueryResult<UserData> = query[0]
-
         val column : ColumnValue? = result.getColumn(LoginData.EMPTY.tableName, LoginColumns.PASSWORD_HASH.name)
 
         if (column == null) {

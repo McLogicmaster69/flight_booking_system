@@ -62,5 +62,27 @@ data class StaffData(
         fun delete(id : Int) : Int {
             return StaffData(id = id).delete()
         }
+
+        fun queryByLogIn(
+            email : String
+        ) : List<QueryResult<StaffData>> {
+            val joinArgs : JoinArgs = JoinArgs(
+                joinType = "INNER",
+                joinTable = LoginData.EMPTY.tableName,
+                joinTable1Column = StaffColumns.LOGIN_ID.name,
+                joinTable2Column = LoginColumns.ID.name,
+                joinSelectColumns = LoginColumns.ALL.map { it.name }
+            )
+
+            val whereArgs : WhereArgs = WhereArgs(
+                whereClause = "${LoginData.EMPTY.tableName}.${LoginColumns.EMAIL.name} = ?",
+                listOf(email)
+            )
+
+            return queryDatabase(
+                joinArgs = joinArgs,
+                whereArgs = whereArgs
+            )
+        }
     }
 }
