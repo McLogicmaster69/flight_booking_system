@@ -49,11 +49,28 @@ object DatabaseManager {
 
     fun createTables() {
         val dataClasses: List<DataClass<*>> = listOf(
-            UserData.EMPTY,
+            AdminData.EMPTY,
+            AssignedFlightStaffData.EMPTY,
+            BookedSeatData.EMPTY,
             BookerData.EMPTY,
             BookingData.EMPTY,
+            ClassData.EMPTY,
+            DestinationData.EMPTY,
+            FlightData.EMPTY,
+            GuestData.EMPTY,
             LoginData.EMPTY,
-            TwoFAData.EMPTY
+            ManufacturerData.EMPTY,
+            PaymentMethodData.EMPTY,
+            PlaneData.EMPTY,
+            PlaneModelData.EMPTY,
+            RemainingSeatData.EMPTY,
+            RouteData.EMPTY,
+            SeatData.EMPTY,
+            StaffData.EMPTY,
+            StaffPositionData.EMPTY,
+            TicketTypeData.EMPTY,
+            TwoFAData.EMPTY,
+            UserData.EMPTY
         )
 
         for (data in dataClasses) {
@@ -64,7 +81,11 @@ object DatabaseManager {
         }
     }
 
-    fun insertIntoTable(table : String, values : Map<Column<*>, Any?>) : Int {
+    fun insertIntoTable(
+        table : String,
+        values : Map<Column<*>, Any?>
+    ) : Int {
+
         if (values.size == 0) return -1
 
         val entries = values.entries.toList()
@@ -90,11 +111,55 @@ object DatabaseManager {
         return id
     }
 
+    fun updateTable(
+        table : String,
+        values : Map<Column<*>, Any?>,
+        whereArgs : WhereArgs
+    ): Int {
+        require(values.isNotEmpty()) { "No values where given to update" }
+        
+        val entries = values.entries.toList()
+        val setClause = entries.joinToString(", ") { "${it.key.name} = ?" }
+        val sql = "UPDATE $table SET $setClause WHERE ${whereArgs.whereClause}"
+
+        connection.prepareStatement(sql).use { stmt ->
+            var index = 1
+
+            entries.forEach {
+                stmt.setObject(index++, it.value)
+            }
+
+            whereArgs.whereArgs.forEach {
+                stmt.setObject(index++, it)
+            }
+            
+            return stmt.executeUpdate()
+        }
+    }
+
+    fun deleteFromTable(
+        table : String,
+        whereArgs : WhereArgs
+    ) : Int {
+        require(whereArgs.whereClause.isNotBlank()) { "DELETE requires a WHERE clause" }
+
+        val sql = "DELETE FROM $table WHERE ${whereArgs.whereClause}"
+
+        connection.prepareStatement(sql).use { stmt ->
+            whereArgs.whereArgs.forEachIndexed { i, value ->
+                stmt.setObject(i + 1, value)
+            }
+
+            return stmt.executeUpdate()
+        }
+    }
+
     fun queryTable(
         table : String,
         columns : List<String>,
         joinArgs : JoinArgs? = null,
-        whereArgs : WhereArgs? = null): List<Array<Any?>> {
+        whereArgs : WhereArgs? = null
+    ): List<Array<Any?>> {
 
         var columnStr = columns.joinToString(", ") { "$table.$it" }
         if (joinArgs != null) columnStr += ", " + joinArgs.joinSelectColumns.joinToString(", ") { "${joinArgs.joinTable}.$it" }

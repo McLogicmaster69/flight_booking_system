@@ -112,7 +112,7 @@ private suspend fun ApplicationCall.handleLogInPost() {
         TwoFAData.deleteByUserId(result.dataClass.id)
 
         TwoFAData(
-            id = result.dataClass.id,
+            userId = result.dataClass.id,
             ttl = expiration,
             code_hash = hashedCode,
             attempts = 0
@@ -160,7 +160,7 @@ private suspend fun ApplicationCall.handleVerifyPost() {
 
         val query = TwoFAData.queryDatabase(
             whereArgs = WhereArgs(
-                "id = ?",
+                "user_id = ?",
                 listOf(tempSession.userId)
             )
         )
@@ -278,7 +278,7 @@ private suspend fun ApplicationCall.handleSendVerification() {
     TwoFAData.deleteByUserId(user.id)
 
     TwoFAData(
-        id = user.id,
+        userId = user.id,
         ttl = expiration,
         code_hash = hashedCode,
         attempts = 0

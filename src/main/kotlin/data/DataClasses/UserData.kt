@@ -12,13 +12,13 @@ object UserColumns {
 
 data class UserData(
 
-    val id: Int = 0,
+    override val id: Int = 0,
     var firstName: String? = null,
     var lastName: String? = null,
     var verifiedAccount: Boolean? = null,
     var loginId: Int = 0
 
-) : DataClass<UserData>() {
+) : DataClass<UserData>(id) {
 
     override val tableName = "users"
     override val tableColumns = UserColumns.ALL
@@ -60,6 +60,15 @@ data class UserData(
             joinArgs : JoinArgs? = null,
             whereArgs : WhereArgs? = null) : List<QueryResult<UserData>> {
             return EMPTY.queryDatabase(joinArgs, whereArgs)
+        }
+
+        fun updateTable (
+            values : Map<Column<*>, Any?>,
+            whereArgs : WhereArgs
+        ) : Int = EMPTY.updateTable(values, whereArgs)
+
+        fun delete(id : Int) : Int {
+            return UserData(id = id).delete()
         }
     }
 }

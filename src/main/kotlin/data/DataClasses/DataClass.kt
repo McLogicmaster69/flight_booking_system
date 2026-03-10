@@ -1,6 +1,8 @@
 package data
 
-abstract class DataClass<T : DataClass<T>> {
+import java.time.LocalDateTime
+
+abstract class DataClass<T : DataClass<T>> ( open val id : Int = 0 ) {
     abstract val tableName: String
     abstract val tableColumns : List<Column<*>>
 
@@ -20,7 +22,18 @@ abstract class DataClass<T : DataClass<T>> {
         return row[index] as K
     }
 
-    fun mapRawRows(tables : List<String>, columns : List<String>, row : Array<Any?>) : List<ColumnValue> =
+    protected fun castDateRowElement(row : Array<Any?>, column : Column<*>) : LocalDateTime {
+        val index = tableColumns.indexOf(column)
+        require(index >= 0) { "Column ${column.name} not found" }
+        @Suppress("UNCHECKED_CAST")
+        return LocalDateTime.parse(row[index] as String)
+    }
+
+    fun mapRawRows(
+        tables : List<String>,
+        columns : List<String>,
+        row : Array<Any?>
+    ) : List<ColumnValue> =
         row.indices.map { i ->
             ColumnValue(
                 tables[i],
@@ -29,9 +42,19 @@ abstract class DataClass<T : DataClass<T>> {
             )
         }
 
+    fun update() : Int = DatabaseManager.updateTable(tableName, mapDataToColumns(), WhereArgs("id = ?", listOf(id)))
+
+    fun updateTable(
+        values : Map<Column<*>, Any?>,
+        whereArgs : WhereArgs
+    ) : Int = DatabaseManager.updateTable(tableName, values, whereArgs)
+
+    fun delete() : Int = DatabaseManager.deleteFromTable(tableName, WhereArgs("id = ?", listOf(id)))
+
     fun queryDatabase (
         joinArgs : JoinArgs? = null,
-        whereArgs : WhereArgs? = null) : List<QueryResult<T>> {
+        whereArgs : WhereArgs? = null
+    ) : List<QueryResult<T>> {
 
         val columnNames = tableColumns.map { it.name }
         val rows = DatabaseManager.queryTable(
