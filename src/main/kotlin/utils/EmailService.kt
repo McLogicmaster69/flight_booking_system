@@ -34,4 +34,51 @@ object EmailService {
 
         Transport.send(message)
     }
+
+    fun sendBookingConfirmation(
+        to: String,
+        reference: String,
+        startLocation: String,
+        destination: String,
+        dateTime: String
+    ) {
+
+        val props = Properties().apply {
+            put("mail.smtp.auth", "true")
+            put("mail.smtp.starttls.enable", "true")
+            put("mail.smtp.host", "smtp.gmail.com")
+            put("mail.smtp.port", "587")
+        }
+
+        val session = Session.getInstance(props, object : Authenticator() {
+            override fun getPasswordAuthentication(): PasswordAuthentication {
+                return PasswordAuthentication(FROM_EMAIL, APP_PASSWORD)
+            }
+        })
+
+        val body = """
+            Booking Confirmation
+            
+            Thank you for your booking. Your journey details are below:
+            
+            Reference: $reference
+            Starting Location: $startLocation
+            Destination: $destination
+            Date & Time: $dateTime
+            
+            Please keep this reference for your records.
+            
+            We look forward to serving you.
+        """.trimIndent()
+
+        val message = MimeMessage(session).apply {
+            setFrom(InternetAddress(FROM_EMAIL))
+            setRecipients(Message.RecipientType.TO, InternetAddress.parse(to))
+            subject = "Booking Confirmation - Ref $reference"
+            setText(body)
+        }
+
+        Transport.send(message)
+    }
+    
 }
