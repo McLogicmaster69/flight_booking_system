@@ -12,9 +12,7 @@ import java.io.StringWriter
 import utils.jsMode
 import utils.logValidationError
 import utils.timed
-import auth.UserSession
-import auth.LoggedInState
-import auth.Temp2FASession
+import auth.*
 import org.mindrot.jbcrypt.BCrypt
 import utils.EmailService
 import java.sql.Timestamp
@@ -93,17 +91,19 @@ private suspend fun ApplicationCall.handleLogInPost() {
         )
 
         TwoFAData.deleteByUserId(result.dataClass.id)
+        val token = TwoFAData.EMPTY.generateToken()
 
         TwoFAData(
             userId = result.dataClass.id,
             ttl = expiration,
             code_hash = hashedCode,
-            attempts = 0
+            attempts = 0,
+            sessionToken = token
         ).insertIntoDatabase()
 
         EmailService.send2FA(email, code)
 
-        sessions.set(Temp2FASession(result.dataClass.id))
+        sessions.set(Temp2FASession(token))
         response.headers.append("HX-Redirect", "/verify")
         respond(HttpStatusCode.OK)
         return@timed
@@ -112,7 +112,7 @@ private suspend fun ApplicationCall.handleLogInPost() {
 
 private suspend fun ApplicationCall.handleLogOut() {
     timed("T2_log_out", jsMode()) {
-        sessions.clear<UserSession>()
+        sessions.clear<SessionToken>()
         respondRedirect("/")
     }
 }
@@ -143,8 +143,8 @@ private suspend fun ApplicationCall.handleVerifyPost() {
 
         val query = TwoFAData.queryDatabase(
             whereArgs = WhereArgs(
-                "user_id = ?",
-                listOf(tempSession.userId)
+                "${TwoFAColumns.SESSION_TOKEN.name} = ?",
+                listOf(tempSession.token)
             )
         )
 
@@ -157,7 +157,6 @@ private suspend fun ApplicationCall.handleVerifyPost() {
         }
 
         val record = query[0].dataClass
-
         val now = Timestamp.from(Instant.now())
 
         if (record.ttl.before(now) || !BCrypt.checkpw(enteredCode, record.code_hash)) {
@@ -165,7 +164,7 @@ private suspend fun ApplicationCall.handleVerifyPost() {
             record.update()
 
             if (record.attempts >= MAX_ATTEMPTS) {
-                TwoFAData.deleteByUserId(tempSession.userId)
+                TwoFAData.deleteByUserId(record.userId)
                 sessions.clear<Temp2FASession>()
                 respondText(
                     "<div class='error-message'>Too Many Failed Attempts</div>",
@@ -181,14 +180,13 @@ private suspend fun ApplicationCall.handleVerifyPost() {
             return@timed
         }
 
-        TwoFAData.deleteByUserId(tempSession.userId)
-
+        TwoFAData.deleteByUserId(record.userId)
         sessions.clear<Temp2FASession>()
 
         val userQuery = UserData.queryDatabase(
             whereArgs = WhereArgs(
-                "id = ?",
-                listOf(tempSession.userId)
+                "${UserColumns.ID.name} = ?",
+                listOf(record.userId)
             )
         )
 
@@ -206,29 +204,17 @@ private suspend fun ApplicationCall.handleVerifyPost() {
             user.update()
         }
 
-        sessions.set(UserSession(
-            user.id,
-            user.firstName,
-            user.lastName,
-            user.verifiedAccount,
-            user.loginId
-        ))
-
+        sessions.set(SessionData.createSession(user.id).toTokenSession())
         response.headers.append("HX-Redirect", "/")
         respond(HttpStatusCode.OK)
     }
 }
 
 private suspend fun ApplicationCall.handleSendVerification() {
-    val userSession = sessions.get<UserSession>()
+    val userSession = sessions.get<SessionToken>()
         ?: return respondRedirect("/login")
 
-    val userQuery = UserData.queryDatabase(
-        whereArgs = WhereArgs(
-            "id = ?",
-            listOf(userSession.id)
-        )
-    )
+    val userQuery = UserData.queryByToken(userSession.token)
 
     if (userQuery.isEmpty()) {
         return respondRedirect("/")
@@ -241,7 +227,7 @@ private suspend fun ApplicationCall.handleSendVerification() {
     }
 
     val existing = TwoFAData.queryDatabase(
-        whereArgs = WhereArgs("id = ?", listOf(user.id))
+        whereArgs = WhereArgs("${TwoFAColumns.ID.name} = ?", listOf(user.id))
     )
 
     if (existing.isNotEmpty()) {
@@ -259,16 +245,18 @@ private suspend fun ApplicationCall.handleSendVerification() {
     )
 
     TwoFAData.deleteByUserId(user.id)
+    val token = TwoFAData.EMPTY.generateToken()
 
     TwoFAData(
         userId = user.id,
         ttl = expiration,
         code_hash = hashedCode,
-        attempts = 0
+        attempts = 0,
+        sessionToken = token
     ).insertIntoDatabase()
 
     val loginQuery = LoginData.queryDatabase(
-        whereArgs = WhereArgs("id = ?", listOf(user.loginId))
+        whereArgs = WhereArgs("${LoginColumns.ID.name} = ?", listOf(user.loginId))
     )
 
     if (loginQuery.isEmpty()) {
@@ -278,10 +266,7 @@ private suspend fun ApplicationCall.handleSendVerification() {
     val loginData = loginQuery.first().dataClass
 
     EmailService.send2FA(loginData.email, code)
-
-
-    sessions.set(Temp2FASession(user.id))
-
+    sessions.set(Temp2FASession(token))
     respondRedirect("/verify")
 }
 

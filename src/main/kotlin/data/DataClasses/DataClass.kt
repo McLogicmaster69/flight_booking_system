@@ -2,10 +2,13 @@ package data
 
 import java.time.LocalDate
 import java.time.LocalTime
+import java.security.SecureRandom
+import java.util.Base64
 
 abstract class DataClass<T : DataClass<T>> ( open val id : Int = 0 ) {
     abstract val tableName: String
     abstract val tableColumns : List<Column<*>>
+    private val random = SecureRandom()
 
     val tableCreateSQL : String
         get() = tableColumns.joinToString(", ") { "${it.name} ${it.sqlType}" }
@@ -91,5 +94,11 @@ abstract class DataClass<T : DataClass<T>> ( open val id : Int = 0 ) {
     fun insertIntoDatabase() : Int {
         val values = mapDataToColumns()
         return DatabaseManager.insertIntoTable(tableName, values)
+    }
+
+    fun generateToken() : String {
+        val bytes = ByteArray(32)
+        random.nextBytes(bytes)
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
     }
 }

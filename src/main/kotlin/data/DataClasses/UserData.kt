@@ -72,9 +72,13 @@ data class UserData(
             whereArgs : WhereArgs
         ) : Int = EMPTY.updateTable(values, whereArgs)
 
-        fun delete(id : Int) : Int = UserData(id = id).delete()
+        fun delete(
+            id : Int
+        ) : Int = UserData(id = id).delete()
 
-        fun awardPoints(id : Int, points : Int) : List<Int> {
+        fun awardPoints(id : Int,
+            points : Int
+        ) : List<Int> {
             return queryDatabase(
                 whereArgs = WhereArgs("${UserColumns.ID.name} = ?", listOf(id))
             ).map { result ->
@@ -82,7 +86,10 @@ data class UserData(
             }
         }
 
-        fun usePoints(id : Int, points : Int) : List<Int> {
+        fun usePoints(
+            id : Int,
+            points : Int
+        ) : List<Int> {
             return queryDatabase(
                 whereArgs = WhereArgs("${UserColumns.ID.name} = ?", listOf(id))
             ).map { result ->
@@ -103,7 +110,29 @@ data class UserData(
 
             val whereArgs : WhereArgs = WhereArgs(
                 whereClause = "${LoginData.EMPTY.tableName}.${LoginColumns.EMAIL.name} = ?",
-                listOf(email)
+                whereArgs = listOf(email)
+            )
+
+            return queryDatabase(
+                joinArgs = joinArgs,
+                whereArgs = whereArgs
+            )
+        }
+
+        fun queryByToken(
+            token : String
+        ) : List<QueryResult<UserData>> {
+            val joinArgs : JoinArgs = JoinArgs(
+                joinType = "INNER",
+                joinTable = SessionData.EMPTY.tableName,
+                joinTable1Column = UserColumns.LOGIN_ID.name,
+                joinTable2Column = SessionColumns.ID.name,
+                joinSelectColumns = SessionColumns.ALL.map { it.name }
+            )
+
+            val whereArgs : WhereArgs = WhereArgs(
+                whereClause = "${SessionData.EMPTY.tableName}.${SessionColumns.SESSION_TOKEN.name} = ?",
+                whereArgs = listOf(token)
             )
 
             return queryDatabase(

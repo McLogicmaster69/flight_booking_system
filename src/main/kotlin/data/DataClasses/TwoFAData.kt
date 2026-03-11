@@ -8,8 +8,9 @@ object TwoFAColumns {
     val TTL = Column<Timestamp>("ttl", "TIMESTAMP NOT NULL")
     val CODE_HASH = Column<String>("code_hash", "VARCHAR NOT NULL")
     val ATTEMPTS = Column<Int>("attempts", "INTEGER NOT NULL DEFAULT 0")
+    val SESSION_TOKEN = Column<String>("session_token", "STRING NOT NULL")
 
-    val ALL = listOf(ID, USER_ID, TTL, CODE_HASH, ATTEMPTS)
+    val ALL = listOf(ID, USER_ID, TTL, CODE_HASH, ATTEMPTS, SESSION_TOKEN)
 }
 
 data class TwoFAData(
@@ -18,7 +19,8 @@ data class TwoFAData(
     var userId : Int = 0,
     var ttl: Timestamp = Timestamp(System.currentTimeMillis()),
     var code_hash: String = "",
-    var attempts: Int = 0
+    var attempts: Int = 0,
+    var sessionToken : String = ""
 
 ) : DataClass<TwoFAData>(id) {
 
@@ -31,7 +33,8 @@ data class TwoFAData(
             TwoFAColumns.USER_ID to userId,
             TwoFAColumns.TTL to ttl,
             TwoFAColumns.CODE_HASH to code_hash,
-            TwoFAColumns.ATTEMPTS to attempts
+            TwoFAColumns.ATTEMPTS to attempts,
+            TwoFAColumns.SESSION_TOKEN to sessionToken
         )
 
     override fun mapRowToData(row : Array<Any?>) : TwoFAData {
@@ -48,12 +51,13 @@ data class TwoFAData(
             userId = castRowElement(row, TwoFAColumns.USER_ID),
             ttl = ttlValue,
             code_hash = castRowElement(row, TwoFAColumns.CODE_HASH),
-            attempts = castRowElement(row, TwoFAColumns.ATTEMPTS)
+            attempts = castRowElement(row, TwoFAColumns.ATTEMPTS),
+            sessionToken = castRowElement(row, TwoFAColumns.SESSION_TOKEN)
         )
     }
 
     override fun debugData() {
-        println("TwoFA data: (\"$id\", \"$userId\", \"$ttl\", \"$code_hash\", \"$attempts\")")
+        println("TwoFA data: (\"$id\", \"$userId\", \"$ttl\", \"$code_hash\", \"$attempts\", \"$sessionToken\")")
     }
 
     companion object {
@@ -77,6 +81,10 @@ data class TwoFAData(
 
         fun deleteByUserId(userId : Int) : Int {
             return DatabaseManager.deleteFromTable(EMPTY.tableName, WhereArgs("${TwoFAColumns.USER_ID.name} = ?", listOf(userId)))
+        }
+
+        fun deleteByToken(token : String) : Int {
+            return DatabaseManager.deleteFromTable(EMPTY.tableName, WhereArgs("${TwoFAColumns.SESSION_TOKEN.name} = ?", listOf(token)))
         }
     }
 }

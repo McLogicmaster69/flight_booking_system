@@ -63,15 +63,8 @@ private suspend fun ApplicationCall.handleSignUpPost() {
         val login_id : Int = LoginData(email = email, passwordHash = passwordHash).insertIntoDatabase()
         val userData : UserData = UserData(firstName = firstname, lastName = lastname, verifiedAccount = false, loginId = login_id)
         val user_id : Int = userData.insertIntoDatabase()
-
-        sessions.set(UserSession(
-            user_id,
-            userData.firstName,
-            userData.lastName,
-            userData.verifiedAccount,
-            userData.loginId
-        ))
-
+        
+        sessions.set(SessionData.createSession(user_id).toTokenSession())
         response.headers.append("HX-Redirect", "/")
         respond(HttpStatusCode.OK)
     }

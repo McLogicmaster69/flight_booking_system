@@ -68,6 +68,7 @@ object DatabaseManager {
             RemainingSeatData.EMPTY,
             RouteData.EMPTY,
             SeatData.EMPTY,
+            SessionData.EMPTY,
             StaffData.EMPTY,
             StaffPositionData.EMPTY,
             TicketTypeData.EMPTY,

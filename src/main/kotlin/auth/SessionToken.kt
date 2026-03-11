@@ -1,5 +1,5 @@
 package auth
 
-data class Temp2FASession(
+data class SessionToken(
     val token : String
 )

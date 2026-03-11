@@ -13,6 +13,7 @@ import utils.jsMode
 import utils.logValidationError
 import utils.timed
 import auth.*
+import data.*
 
 fun ApplicationCall.isHtmx(): Boolean = request.headers["HX-Request"]?.equals("true", ignoreCase = true) == true
 
@@ -22,15 +23,37 @@ fun ApplicationCall.getEngine() : PebbleEngine = PebbleEngine.Builder().loader(
     }).build()
 
 fun ApplicationCall.loggedIn() : LoggedInState {
-    val user = sessions.get("USER_SESSION") as UserSession?
-    return LoggedInState(user != null, user)
+    val token : SessionToken? = sessions.get("TOKEN_SESSION") as SessionToken?
+    if (token == null)
+        return LoggedInState(false, null)
+    
+    val query : List<QueryResult<SessionData>> = SessionData.queryDatabase(token.token)
+    if (query.isEmpty())
+        return LoggedInState(false, null)
+
+    return LoggedInState(true, token)
+}
+
+fun ApplicationCall.createUserState(logged_state : LoggedInState) : UserSession? {
+    if (!logged_state.logged_in)
+        return null
+
+    val query : List<QueryResult<UserData>> = UserData.queryByToken(logged_state.session?.token ?: "")
+    if (query.isEmpty())
+        return UserSession("", "")
+
+    val user : UserData = query.first().dataClass
+    return UserSession(
+        user.firstName ?: "",
+        user.lastName ?: ""
+    )
 }
 
 fun ApplicationCall.loggedMap() : Map<String, Any?> {
     val logged_state = loggedIn()
     return mapOf(
         "logged_in" to logged_state.logged_in,
-        "user" to logged_state.session
+        "user" to createUserState(logged_state)
     )
 }
 

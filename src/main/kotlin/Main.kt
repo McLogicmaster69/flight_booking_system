@@ -91,14 +91,16 @@ fun Application.configureSessions() {
             cookie.path = "/"
             cookie.httpOnly = true
             cookie.extensions["SameSite"] = "Strict"
-        };
-        cookie<UserSession>("USER_SESSION") {
+        }
+        cookie<SessionToken>("TOKEN_SESSION") {
             cookie.path = "/"
             cookie.httpOnly = true
+            cookie.extensions["SameSite"] = "Strict"
         }
         cookie<Temp2FASession>("TEMP_2FA") {
             cookie.path = "/"
             cookie.httpOnly = true
+            cookie.extensions["SameSite"] = "Strict"
         }
     }
 }
