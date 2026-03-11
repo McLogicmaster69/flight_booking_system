@@ -1,12 +1,15 @@
 package data
 
+import java.time.LocalTime
+
 object RouteColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
     val START_DESTINATION = Column<Int>("start_destination", "INTEGER NOT NULL REFERENCES destinations(id)")
     val END_DESTINATION = Column<Int>("end_destination", "INTEGER NOT NULL REFERENCES destinations(id)")
     val PLANE_ID = Column<Int>("plane_id", "INTEGER NOT NULL REFERENCES planes(id)")
+    val DURATION = Column<String>("duration", "STRING NOT NULL")
 
-    val ALL = listOf(ID, START_DESTINATION, END_DESTINATION, PLANE_ID)
+    val ALL = listOf(ID, START_DESTINATION, END_DESTINATION, PLANE_ID, DURATION)
 }
 
 data class RouteData(
@@ -14,7 +17,8 @@ data class RouteData(
     override val id: Int = 0,
     var startDestination : Int = 0,
     var endDestination : Int = 0,
-    var planeId : Int = 0
+    var planeId : Int = 0,
+    var duration : LocalTime = LocalTime.parse("00:00")
 
 ) : DataClass<RouteData>(id) {
 
@@ -25,7 +29,8 @@ data class RouteData(
         mapOf(
             RouteColumns.START_DESTINATION to startDestination,
             RouteColumns.END_DESTINATION to endDestination,
-            RouteColumns.PLANE_ID to planeId
+            RouteColumns.PLANE_ID to planeId,
+            RouteColumns.DURATION to duration
         )
 
     override fun mapRowToData(row : Array<Any?>) : RouteData =
@@ -33,11 +38,12 @@ data class RouteData(
             id = castRowElement(row, RouteColumns.ID),
             startDestination = castRowElement(row, RouteColumns.START_DESTINATION),
             endDestination = castRowElement(row, RouteColumns.END_DESTINATION),
-            planeId = castRowElement(row, RouteColumns.PLANE_ID)
+            planeId = castRowElement(row, RouteColumns.PLANE_ID),
+            duration = castTimeRowElement(row, RouteColumns.DURATION)
         )
 
     override fun debugData() {
-        println("Route data: (\"$id\", \"$startDestination\", \"$endDestination\", \"$planeId\")")
+        println("Route data: (\"$id\", \"$startDestination\", \"$endDestination\", \"$planeId\", \"$duration\")")
     }
 
     companion object {
@@ -91,6 +97,29 @@ data class RouteData(
             }
 
             return output.toList()
+        }
+
+        fun getJourneyRoutes (
+            destinationArgs : DestinationArgs,
+            layovers : Int = 2
+        ) : List<JourneyRoute> {
+            val path : List<List<Int>> = getPathByLayovers(destinationArgs, layovers)
+            return path.map { routeIds ->
+                JourneyRoute(
+                    routeIds,
+                    routeIds.map { destinationId ->
+                        val destination = DestinationData.queryDatabase(
+                            whereArgs = WhereArgs("${DestinationColumns.ID.name} = ?", listOf(destinationId))
+                        ).firstOrNull()?.dataClass ?: return@map "UNKNOWN"
+
+                        val country = CountryData.queryDatabase(
+                            whereArgs = WhereArgs("${CountryColumns.ID.name} = ?", listOf(destination.countryId))
+                        ).firstOrNull()?.dataClass ?: return@map "UNKNOWN"
+
+                        "${country.name} - ${destination.cityName}"
+                    }
+                )
+            }
         }
     }
 }

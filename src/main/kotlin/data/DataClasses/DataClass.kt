@@ -1,6 +1,7 @@
 package data
 
-import java.time.LocalDateTime
+import java.time.LocalDate
+import java.time.LocalTime
 
 abstract class DataClass<T : DataClass<T>> ( open val id : Int = 0 ) {
     abstract val tableName: String
@@ -22,11 +23,24 @@ abstract class DataClass<T : DataClass<T>> ( open val id : Int = 0 ) {
         return row[index] as K
     }
 
-    protected fun castDateRowElement(row : Array<Any?>, column : Column<*>) : LocalDateTime {
+    protected fun castDateRowElement(row : Array<Any?>, column : Column<*>) : LocalDate {
         val index = tableColumns.indexOf(column)
         require(index >= 0) { "Column ${column.name} not found" }
         @Suppress("UNCHECKED_CAST")
-        return LocalDateTime.parse(row[index] as String)
+
+        return (row[index] as? String)
+            ?.let { LocalDate.parse(it) }
+            ?: LocalDate.parse("1970-01-01")
+    }
+
+    protected fun castTimeRowElement(row : Array<Any?>, column : Column<*>) : LocalTime {
+        val index = tableColumns.indexOf(column)
+        require(index >= 0) { "Column ${column.name} not found" }
+        @Suppress("UNCHECKED_CAST")
+
+        return (row[index] as? String)
+            ?.let { LocalTime.parse(it) }
+            ?: LocalTime.parse("00:00")
     }
 
     fun mapRawRows(

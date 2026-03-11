@@ -55,6 +55,7 @@ object DatabaseManager {
             BookerData.EMPTY,
             BookingData.EMPTY,
             ClassData.EMPTY,
+            CountryData.EMPTY,
             DestinationData.EMPTY,
             FlightData.EMPTY,
             GuestData.EMPTY,
