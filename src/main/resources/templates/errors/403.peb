@@ -4,14 +4,14 @@
 
 {% block content %}
 
-<div class="wf-center">
-  <div class="wf-box">
-    <h2 class="wf-title">403 • Forbidden</h2>
-    <div class="wf-rule"></div>
+<div>
+  <div>
+    <h2>403 • Forbidden</h2>
+    <div></div>
     <p style="color: var(--wf-muted);">You don’t have access to this page.</p>
     <div style="display:flex; gap: 12px; flex-wrap: wrap; margin-top: 12px;">
-      <a class="wf-btn" href="/" style="text-decoration:none; display:inline-block;">Go home</a>
-      <a class="wf-btn" href="/login" style="text-decoration:none; display:inline-block;">Login</a>
+      <a href="/" style="text-decoration:none; display:inline-block;">Go home</a>
+      <a href="/login" style="text-decoration:none; display:inline-block;">Login</a>
     </div>
   </div>
 </div>

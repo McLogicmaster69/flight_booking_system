@@ -4,24 +4,23 @@
 
 {% block content %}
 
-<section class="wf-box-dashed" aria-label="Hero Image Placeholder">
-    <div class="wf-center" style="padding: 48px 0;">
-        <div class="wf-box" style="max-width: 780px; margin: 0 auto;">
-            <h2 class="wf-title" style="text-align:center;">Where to next?</h2>
-            <div class="wf-rule"></div>
+<section aria-label="Hero Image Placeholder">
+    <div style="padding: 48px 0;">
+        <div style="max-width: 780px; margin: 0 auto;">
+            <h2 style="text-align:center;">Where to next?</h2>
 
-            <form class="wf-inline" method="get" action="/book" aria-label="Search flights">
+            <form method="get" action="/book" aria-label="Search flights">
                 <div>
-                    <input name="from" type="text" placeholder="From (Origin)" aria-label="From (Origin)" required>
+                    <input class="general-input-input" name="from" type="text" placeholder="From (Origin)" aria-label="From (Origin)" required>
                 </div>
                 <div>
-                    <input name="to" type="text" placeholder="To (Destination)" aria-label="To (Destination)" required>
+                    <input class="general-input-input" name="to" type="text" placeholder="To (Destination)" aria-label="To (Destination)" required>
                 </div>
                 <div>
-                    <input name="depart" type="text" placeholder="dd/mm/yyyy" aria-label="Depart date" required>
+                    <input class="general-input-input" name="depart" type="text" placeholder="dd/mm/yyyy" aria-label="Depart date" required>
                 </div>
                 <div style="flex: 0 0 auto;">
-                    <button class="wf-btn" type="submit">SEARCH FLIGHTS</button>
+                    <button type="submit">SEARCH FLIGHTS</button>
                 </div>
             </form>
         </div>
@@ -29,25 +28,7 @@
 </section>
 
 <section aria-label="Recommended Deals & Loyalty Rewards" style="margin-top: 34px;">
-    <div class="wf-rule"></div>
-    <h3 class="wf-subtitle" style="text-align:center;">Recommended Deals &amp; Loyalty Rewards</h3>
-    <div class="wf-card-grid">
-        <a class="wf-card" href="/book?to=Paris" aria-label="Book to Paris" style="text-decoration:none;">
-            <div>[Image] <strong>Paris</strong></div>
-            <div class="wf-rule" style="margin: 10px 0;"></div>
-            <div class="muted">From $499 or 50,000 pts</div>
-        </a>
-        <a class="wf-card" href="/book?to=Tokyo" aria-label="Book to Tokyo" style="text-decoration:none;">
-            <div>[Image] <strong>Tokyo</strong></div>
-            <div class="wf-rule" style="margin: 10px 0;"></div>
-            <div class="muted">From $799 or 80,000 pts</div>
-        </a>
-        <a class="wf-card" href="/book?to=New%20York" aria-label="Book to New York" style="text-decoration:none;">
-            <div>[Image] <strong>New York</strong></div>
-            <div class="wf-rule" style="margin: 10px 0;"></div>
-            <div class="muted">From $299 or 30,000 pts</div>
-        </a>
-    </div>
+    
 </section>
 
 {% endblock %}

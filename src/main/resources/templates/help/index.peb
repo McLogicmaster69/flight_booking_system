@@ -4,42 +4,12 @@
 
 {% block content %}
 
-<div class="wf-center">
-  <div class="wf-box">
-    <h2 class="wf-title">Help Center</h2>
-    <div class="wf-rule"></div>
+<h2 class="wf-title">Help Center</h2>
 
-    <h3 class="wf-subtitle" style="margin-top: 0;">Frequently Asked Questions (FAQ)</h3>
-    <div class="wf-rule"></div>
+<h3 style="margin-top: 0;">Frequently Asked Questions (FAQ)</h3>
 
-    <div>
-      <p><strong>[+]</strong> How do I use my Loyalty Points?</p>
-      <p style="color: var(--wf-muted); margin-top: -6px;">
-        Navigate to the "Loyalty Rewards" tab when logged in. Click "Redeem" on any eligible reward.
-      </p>
-
-      <div class="wf-rule"></div>
-
-      <p><strong>[+]</strong> Can I modify my flight?</p>
-      <p style="color: var(--wf-muted); margin-top: -6px;">
-        Yes, go to the "Manage" tab. If you are a guest, enter your last name and reference number to see modification options.
-      </p>
-    </div>
-
-    <div class="wf-rule" style="margin-top: 18px;"></div>
-
-    <div class="wf-box-dashed">
-      <h3 class="wf-subtitle" style="margin-top: 0;">Report a Bug / Submit a Complaint</h3>
-      <div class="wf-rule"></div>
-      <form method="post" action="#" aria-label="Report a bug">
-        <input type="text" placeholder="Subject Input" aria-label="Subject">
-        <div style="margin-top: 10px;"></div>
-        <textarea placeholder="Description Input Area..." aria-label="Description"></textarea>
-        <div style="margin-top: 10px;"></div>
-        <button class="wf-btn" type="button">SUBMIT REPORT</button>
-      </form>
-    </div>
-  </div>
+<div>
+  <h3 style="margin-top: 0;">Report a Bug / Submit a Complaint</h3>
 </div>
 
 {% endblock %}
