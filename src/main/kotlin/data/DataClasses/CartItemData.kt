@@ -2,8 +2,8 @@ package data
 
 object CartItemColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val USER_ID = Column<Int>("user_id", "INTEGER NOT NULL REFERENCES seats(id)")
-    val SEAT_ID = Column<Int>("seat_id", "INTEGER NOT NULL REFERENCES bookings(id)")
+    val USER_ID = Column<Int>("user_id", "INTEGER NOT NULL REFERENCES users(id)")
+    val SEAT_ID = Column<Int>("seat_id", "INTEGER NOT NULL REFERENCES seats(id)")
 
     val ALL = listOf(ID, USER_ID, SEAT_ID)
 }
@@ -33,7 +33,7 @@ data class CartItemData(
         )
 
     override fun debugData() {
-        println("Booked seat data: (\"$id\", \"$userId\", \"$seatId\")")
+        println("Cart item data: (\"$id\", \"$userId\", \"$seatId\")")
     }
 
     companion object {
@@ -42,7 +42,8 @@ data class CartItemData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null) : List<QueryResult<CartItemData>> {
+            whereArgs : WhereArgs? = null
+        ) : List<QueryResult<CartItemData>> {
             return EMPTY.queryDatabase(joinArgs, whereArgs)
         }
 
