@@ -76,7 +76,7 @@ data class TwoFAData(
         }
 
         fun deleteByUserId(userId : Int) : Int {
-            return DatabaseManager.deleteFromTable(EMPTY.tableName, WhereArgs("user_id = ?", listOf(userId)))
+            return DatabaseManager.deleteFromTable(EMPTY.tableName, WhereArgs("${TwoFAColumns.USER_ID.name} = ?", listOf(userId)))
         }
     }
 }
