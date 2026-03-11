@@ -17,10 +17,26 @@ import auth.LoggedInState
 import org.mindrot.jbcrypt.BCrypt
 
 fun Route.signUpRoutes() {
+    get("/signup") { call.handleSignUpLoad() }
     post("/signup") { call.handleSignUpPost() }
 }
 
 fun ApplicationCall.createSignUpStatus(message : String) : String = """<div id="sign-up-status" hx-swap-oob="true" role="status" aria-live="polite" aria-atomic="true">$message</div>"""
+
+private suspend fun ApplicationCall.handleSignUpLoad() {
+    timed("T0_sign_in", jsMode()) {
+        val pebble = getEngine()
+        
+        val model = mapOf(
+            "title" to "Sign Up"
+        )
+
+        val template = pebble.getTemplate("auth/signup.peb")
+        val writer = StringWriter()
+        fullEvaluate(template, writer, model)
+        respondText(writer.toString(), ContentType.Text.Html)
+    }
+}
 
 private suspend fun ApplicationCall.handleSignUpPost() {
     timed("T1_sign_up_post", jsMode()) {

@@ -17,7 +17,6 @@
     </div>
 
     <form 
-        class="auth-form"
         hx-post="/verify"
         hx-target="#verify-status"
         hx-swap="innerHTML"

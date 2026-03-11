@@ -4,77 +4,34 @@
 
 {% block content %}
 
-<div class="wf-box-dashed">
-  <div class="wf-row">
-    <div class="wf-col">
-      <div class="wf-box">
-        <h2 class="wf-title">Login Form</h2>
-        <div class="wf-rule"></div>
+<h2 class="wf-title">Login</h2>
+<div class="wf-rule"></div>
 
-        <form class="login-form"
-            method="post"
-            action="/login"
-            hx-post="/login"
-            hx-target="#log-in-status"
-            hx-swap="innerHTML">
+<form class="login-form"
+    method="post"
+    action="/login"
+    hx-post="/login"
+    hx-target="#log-in-status"
+    hx-swap="innerHTML">
 
-            <label for="loginEmail">Email</label>
-            <input id="loginEmail" name="loginEmail" type="email" placeholder="Email">
+    <label class="auth-label" for="loginEmail">Email</label>
+    <input class="auth-input" id="loginEmail" name="loginEmail" type="email" placeholder="Email">
 
-            <label for="loginPw">Password</label>
-            <input id="loginPw" name="loginPw" type="password" placeholder="Password">
+    <label class="auth-label" for="loginPw">Password</label>
+    <input class="auth-input" id="loginPw" name="loginPw" type="password" placeholder="Password">
 
-            <div style="margin-top: 14px;"></div>
-            <button class="wf-btn wide" type="submit">Login</button>
+    <div style="margin-top: 14px;"></div>
+    <button class="wf-btn wide" type="submit">Login</button>
 
-            <div class="wf-rule"></div>
-            <p style="color: var(--wf-muted); font-size: 12px;">
-              2-Factor Authentication (2FA) will be prompted on the next screen.
-            </p>
+    <div class="wf-rule"></div>
+    <p style="color: var(--wf-muted); font-size: 12px;">
+      2-Factor Authentication (2FA) will be prompted on the next screen.
+    </p>
+    <p style="color: var(--wf-muted); font-size: 12px;">
+      Don't have an account? Sign up <a href="/signup" class="{% if activePage == 'signup' %}is-active{% endif %}">here</a>
+    </p>
 
-            <div id="log-in-status" role="status" aria-live="polite" aria-atomic="true"></div>
-        </form>
-
-        
-      </div>
-    </div>
-
-    <div class="wf-col">
-      <div class="wf-box">
-        <h2 class="wf-title">Sign Up Form</h2>
-        <div class="wf-rule"></div>
-
-        <form class="login-form"
-            method="post"
-            action="/signup"
-            hx-post="/signup"
-            hx-target="#sign-up-status"
-            hx-swap="innerHTML">
-
-            <label for="signupFirstName">First Name</label>
-            <input id="signupFirstName" name="signupFirstName" type="text" placeholder="First Name">
-
-            <label for="signupLastName">Last Name</label>
-            <input id="signupLastName" name="signupLastName" type="text" placeholder="Last Name">
-
-            <label for="signupEmail">Email</label>
-            <input id="signupEmail" name="signupEmail" type="email" placeholder="Email">
-
-            <label for="signupPassword">Create Password</label>
-            <input id="signupPassword" name="signupPassword" type="password" placeholder="Password">
-
-            <div style="margin-top: 14px;"></div>
-            <button class="wf-btn wide" type="submit">Register</button>
-
-            <div class="wf-rule"></div>
-            <p style="color: var(--wf-muted); font-size: 12px;">
-              We securely hash all passwords. A verification email will be sent upon registration.
-            </p>
-            <div id="sign-up-status" role="status" aria-live="polite" aria-atomic="true"></div>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
+    <div id="log-in-status" role="status" aria-live="polite" aria-atomic="true"></div>
+</form>
 
 {% endblock %}
