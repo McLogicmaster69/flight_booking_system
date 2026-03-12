@@ -115,5 +115,6 @@ fun Application.configureRouting() {
         pagesRoutes()
         logInRoutes()
         signUpRoutes()
+        rewardsRoutes()
     }
 }
