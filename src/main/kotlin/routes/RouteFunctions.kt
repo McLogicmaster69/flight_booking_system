@@ -40,12 +40,13 @@ fun ApplicationCall.createUserState(logged_state : LoggedInState) : UserSession?
 
     val query : List<QueryResult<UserData>> = UserData.queryByToken(logged_state.session?.token ?: "")
     if (query.isEmpty())
-        return UserSession("", "")
+        return UserSession("", "", 0)
 
     val user : UserData = query.first().dataClass
     return UserSession(
         user.firstName ?: "",
-        user.lastName ?: ""
+        user.lastName ?: "",
+        user.loyalityPoints ?: 0
     )
 }
 

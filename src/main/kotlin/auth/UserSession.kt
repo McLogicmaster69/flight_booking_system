@@ -1,6 +1,7 @@
 package auth
 
 data class UserSession(
-    var firstName: String? = null,
-    var lastName: String? = null
+    var firstName: String,
+    var lastName: String,
+    var loyalityPoints: Int
 )

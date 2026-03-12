@@ -39,7 +39,8 @@ private suspend fun ApplicationCall.handleLogInLoad() {
             respondRedirect("/")
 
         val model = mapOf(
-            "title" to "Log In / Sign Up"
+            "title" to "Log In / Sign Up",
+            "isNav" to true
         )
 
         val template = pebble.getTemplate("auth/login.peb")

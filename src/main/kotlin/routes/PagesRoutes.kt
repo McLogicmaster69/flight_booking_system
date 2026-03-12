@@ -18,7 +18,6 @@ import utils.jsMode
 fun Route.pagesRoutes() {
     get("/book") { call.render("book/index.peb", "Book") }
     get("/manage") { call.render("manage/index.peb", "Manage") }
-    get("/rewards") { call.render("rewards/index.peb", "Loyalty Rewards") }
     get("/settings") { call.render("settings/index.peb", "Settings") }
     get("/help") { call.render("help/index.peb", "Help") }
     get("/checkout") { call.render("checkout/index.peb", "Checkout", inNav = false) }
@@ -53,7 +52,7 @@ private suspend fun ApplicationCall.render(
                     "activePage" to "",
                     "layout" to "",
                     "headerRightText" to "",
-                ),
+                ) + loggedMap(),
             )
             respondText(writer.toString(), ContentType.Text.Html, HttpStatusCode.Forbidden)
             return@timed
