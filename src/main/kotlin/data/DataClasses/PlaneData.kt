@@ -5,6 +5,7 @@ object PlaneColumns {
     val MODEL_ID = Column<Int>("model_id", "INTEGER NOT NULL REFERENCES plane_models(id)")
 
     val ALL = listOf(ID, MODEL_ID)
+    val COLUMN_NAMES = ALL.map { it.name }
 }
 
 data class PlaneData(

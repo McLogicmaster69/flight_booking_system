@@ -9,6 +9,7 @@ object SeatColumns {
     val PRICE = Column<Float>("price", "INTEGER NOT NULL")
 
     val ALL = listOf(ID, FLIGHT_ID, CLASS_ID, TYPE_ID, NUMBER, PRICE)
+    val COLUMN_NAMES = ALL.map { it.name }
 }
 
 data class SeatData(

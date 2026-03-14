@@ -8,6 +8,7 @@ object BookingColumns {
     val BOOKING_REFERENCE = Column<String>("booking_reference", "STRING NOT NULL")
 
     val ALL = listOf(ID, BOOKER_ID, PASSPORT_NUMBER, LASTNAME, BOOKING_REFERENCE)
+    val COLUMN_NAMES = ALL.map { it.name }
 }
 
 data class BookingData(

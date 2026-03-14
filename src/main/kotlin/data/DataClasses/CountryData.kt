@@ -2,38 +2,42 @@ package data
 
 object CountryColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val NAME = Column<String>("name", "VARCHAR NOT NULL")
-    val TIMEZONE = Column<String>("timezone", "VARCHAR NOT NULL")
+    val NAME = Column<String>("name", "VARCHAR NOT NULL UNIQUE")
 
-    val ALL = listOf(ID, NAME, TIMEZONE)
+    val ALL = listOf(ID, NAME)
+    val COLUMN_NAMES = ALL.map { it.name }
 }
 
 data class CountryData(
 
     override val id: Int = 0,
-    var name : String = "",
-    var timezone : String = ""
+    var name : String = ""
 
 ) : DataClass<CountryData>(id) {
 
     override val tableName = "countries"
     override val tableColumns = CountryColumns.ALL
 
+    override val initialRows : List<CountryData>
+        get() = listOf(
+            CountryData(name = "England"),
+            CountryData(name = "Japan"),
+            CountryData(name = "Germany")
+        )
+
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
-            CountryColumns.NAME to name,
-            CountryColumns.TIMEZONE to timezone
+            CountryColumns.NAME to name
         )
 
     override fun mapRowToData(row : Array<Any?>) : CountryData =
         CountryData(
             id = castRowElement(row, CountryColumns.ID),
-            name = castRowElement(row, CountryColumns.NAME),
-            timezone = castRowElement(row, CountryColumns.TIMEZONE)
+            name = castRowElement(row, CountryColumns.NAME)
         )
 
     override fun debugData() {
-        println("Country data: (\"$id\", \"$name\", \"$timezone\")")
+        println("Country data: (\"$id\", \"$name\")")
     }
 
     companion object {
@@ -53,6 +57,16 @@ data class CountryData(
 
         fun delete(id : Int) : Int {
             return CountryData(id = id).delete()
+        }
+
+        fun getCountryId (country : String) : Int {
+            val query : List<QueryResult<CountryData>> = queryDatabase(whereArgs = WhereArgs("${CountryColumns.NAME.name} = ?", listOf(country)))
+            if (query.isEmpty()) {
+                println("Could not find country $country")
+                return -1
+            }
+
+            return query.first().dataClass.id
         }
     }
 }

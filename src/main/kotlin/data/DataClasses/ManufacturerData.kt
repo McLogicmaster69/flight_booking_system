@@ -5,6 +5,7 @@ object ManufacturerColumns {
     val NAME = Column<String?>("name", "VARCHAR")
 
     val ALL = listOf(ID, NAME)
+    val COLUMN_NAMES = ALL.map { it.name }
 }
 
 data class ManufacturerData(

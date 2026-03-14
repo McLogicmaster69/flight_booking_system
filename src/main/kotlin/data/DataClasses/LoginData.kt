@@ -6,6 +6,7 @@ object LoginColumns {
     val PASSWORD_HASH = Column<String>("password_hash", "VARCHAR NOT NULL")
 
     val ALL = listOf(ID, EMAIL, PASSWORD_HASH)
+    val COLUMN_NAMES = ALL.map { it.name }
 }
 
 data class LoginData(

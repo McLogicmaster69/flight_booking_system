@@ -2,6 +2,12 @@ package data
 
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.LocalDateTime
+import java.time.Duration
+import kotlin.math.roundToInt
+
+const val TRANSFER_TIME : Int = 120
+const val MAX_TIME : Int = 2880
 
 object FlightColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
@@ -10,6 +16,7 @@ object FlightColumns {
     val TIME = Column<String>("time", "STRING NOT NULL")
 
     val ALL = listOf(ID, ROUTE_ID, DATE, TIME)
+    val COLUMN_NAMES = ALL.map { it.name }
 }
 
 data class FlightData(
@@ -23,6 +30,46 @@ data class FlightData(
 
     override val tableName = "flights"
     override val tableColumns = FlightColumns.ALL
+    override val tableAdditionalSQL = "UNIQUE (route_id, date, time)"
+
+    override val initialRows : List<FlightData>
+        get() = listOf(
+            FlightData(
+                routeId = RouteData.getRouteId(
+                    DestinationArgs(
+                        DestinationData.getDestinationId("Luton"),
+                        DestinationData.getDestinationId("Tokyo")
+                    )
+                ),
+                date = LocalDate.parse("2026-03-15"),
+                time = LocalTime.parse("12:00")
+            ),
+            FlightData(
+                routeId = RouteData.getRouteId(
+                    DestinationArgs(
+                        DestinationData.getDestinationId("Luton"),
+                        DestinationData.getDestinationId("Berlin")
+                    )
+                ),
+                date = LocalDate.parse("2026-03-15"),
+                time = LocalTime.parse("10:00")
+            ),
+            FlightData(
+                routeId = RouteData.getRouteId(
+                    DestinationArgs(
+                        DestinationData.getDestinationId("Berlin"),
+                        DestinationData.getDestinationId("Tokyo")
+                    )
+                ),
+                date = LocalDate.parse("2026-03-15"),
+                time = LocalTime.parse("16:00")
+            )
+        )
+
+    override val requiredTables : List<DataClass<*>>
+        get() = listOf(
+            RouteData.EMPTY
+        )
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
@@ -63,7 +110,7 @@ data class FlightData(
             return FlightData(id = id).delete()
         }
 
-        fun queryDatabase(
+        fun queryDatabase (
             routeIds : List<Int>,
             joinArgs : JoinArgs? = null
         ) : List<QueryResult<FlightData>> {
@@ -72,7 +119,7 @@ data class FlightData(
             return EMPTY.queryDatabase(joinArgs, WhereArgs(whereClause, whereArgs))
         }
 
-        fun queryDatabase(
+        fun queryDatabase (
             routeIds : List<Int>,
             date : LocalDate,
             joinArgs : JoinArgs? = null
@@ -82,7 +129,7 @@ data class FlightData(
             return EMPTY.queryDatabase(joinArgs, WhereArgs(whereClause, whereArgs))
         }
 
-        fun queryDatabase(
+        fun queryDatabase (
             destinationArgs : DestinationArgs,
             joinArgs : JoinArgs? = null
         ) : List<QueryResult<FlightData>> {
@@ -93,7 +140,7 @@ data class FlightData(
             return queryDatabase(routeIds, joinArgs)
         }
 
-        fun queryDatabase(
+        fun queryDatabase (
             destinationArgs : DestinationArgs,
             date : LocalDate,
             joinArgs : JoinArgs? = null
@@ -103,6 +150,194 @@ data class FlightData(
                 route.dataClass.id
             }
             return queryDatabase(routeIds, date, joinArgs)
+        }
+
+        fun queryDatabase (
+            destinationArgs : DestinationArgs,
+            dateTime : LocalDateTime,
+            joinArgs : JoinArgs? = null
+        ) : List<QueryResult<FlightData>> = queryDatabase(destinationArgs, dateTime.toLocalDate(), joinArgs)
+
+        private fun offsetTimeByZone (
+            dateTime : LocalDateTime,
+            destinationId : Int
+        ) : LocalDateTime {
+            val query : List<QueryResult<DestinationData>> = DestinationData.queryDatabase(destinationId)
+            if (query.isEmpty())
+                return dateTime
+
+            return dateTime.plusMinutes((query.first().dataClass.getTimezoneOffset() * 60f).roundToInt().toLong())
+        }
+
+        private fun addTime (
+            time : LocalTime,
+            routeId : Int
+        ) : LocalTime {
+            val duration : LocalTime = RouteData.getDuration(routeId)
+            return time.plusHours(duration.hour.toLong()).plusMinutes(duration.minute.toLong())
+        }
+
+        private fun addTime (
+            time : LocalTime,
+            startId : Int,
+            endId : Int
+        ) : LocalTime {
+            val query = RouteData.queryDatabase(DestinationArgs(startId, endId))
+            if (query.isEmpty())
+                return time
+            return addTime(time, query.first().dataClass.id)
+        }
+
+        private fun addTime (
+            minutes : Long,
+            routeId : Int
+        ) : Long {
+            val duration : LocalTime = RouteData.getDuration(routeId)
+            return minutes + duration.hour.toLong() * 60L + duration.minute.toLong()
+        }
+
+        private fun addTime (
+            minutes : Long,
+            startId : Int,
+            endId : Int
+        ) : Long {
+            val query = RouteData.queryDatabase(DestinationArgs(startId, endId))
+            if (query.isEmpty())
+                return minutes
+            return addTime(minutes, query.first().dataClass.id)
+        }
+
+        private fun getJourneyPath (
+            route : JourneyRoute,
+            dateTime : LocalDateTime,
+            i : Int,
+            totalMinutes : Long
+        ) : List<JourneyFlightTimePath> {
+
+            val locationId = route.destinationIds[i]
+            val query : List<QueryResult<FlightData>> = queryDatabase(
+                DestinationArgs(
+                    locationId,
+                    route.destinationIds[i + 1]
+                ),
+                dateTime
+            ) + queryDatabase(
+                DestinationArgs(
+                    locationId,
+                    route.destinationIds[i + 1]
+                ),
+                dateTime.plusDays(1)
+            ) + queryDatabase(
+                DestinationArgs(
+                    locationId,
+                    route.destinationIds[i + 1]
+                ),
+                dateTime.minusDays(1)
+            ).filter { result ->
+                offsetTimeByZone(LocalDateTime.of(result.dataClass.date, result.dataClass.time), locationId).isAfter(dateTime)
+            }
+
+            if (query.isEmpty())
+                return emptyList<JourneyFlightTimePath>()
+
+            if (i == route.destinationIds.size - 2) {
+                return query.map { result ->
+                    JourneyFlightTimePath(
+                        route.destinationIds,
+                        route.locationNames,
+                        listOf(result.dataClass.id),
+                        listOf(LocalDateTime.of(result.dataClass.date, result.dataClass.time)),
+                        listOf(DestinationData.getTimezoneCode(locationId)),
+                        addTime(totalMinutes, locationId, route.destinationIds[i + 1])
+                    )
+                }
+            }
+
+            val output : MutableList<JourneyFlightTimePath> = mutableListOf()
+            
+            for (flight in query) {
+                val minutesBetweenFlights : Long = Duration.between(
+                    dateTime,
+                    offsetTimeByZone(
+                        LocalDateTime.of(
+                            flight.dataClass.date,
+                            flight.dataClass.time
+                        ),
+                        locationId
+                    )
+                ).toMinutes()
+
+                val minutesInFlightAndTransfer : Long = TRANSFER_TIME + RouteData.getDurationMinutes(locationId)
+                val paths : List<JourneyFlightTimePath> = getJourneyPath(
+                    route,
+                    offsetTimeByZone(
+                        LocalDateTime.of(
+                            flight.dataClass.date,
+                            flight.dataClass.time
+                        ),
+                        locationId
+                    ).plusMinutes(minutesInFlightAndTransfer),
+                    i + 1,
+                    totalMinutes + minutesBetweenFlights + minutesInFlightAndTransfer
+                )
+
+                if (paths.isEmpty())
+                    continue
+
+                for (path in paths) {
+                    output.add(
+                        JourneyFlightTimePath(
+                            path.destinationIds,
+                            path.locationNames,
+                            listOf<Int>(flight.dataClass.id) + path.flightIds,
+                            listOf(LocalDateTime.of(flight.dataClass.date, flight.dataClass.time)) + path.localDateTimes,
+                            listOf(DestinationData.getTimezoneCode(locationId)) + path.timezones,
+                            path.totalMinutes
+                        )
+                    )
+                }
+            }
+
+            return output.toList()
+        }
+
+        fun getJourneyFlight (
+            routes : List<JourneyRoute>,
+            date : LocalDate
+        ) : List<JourneyFlightTimePath> {
+            val output : MutableList<JourneyFlightTimePath> = mutableListOf()
+            for (route in routes) {
+                val paths : List<JourneyFlightTimePath> = getJourneyPath(
+                    route,
+                    LocalDateTime.of(date, LocalTime.parse("00:00")),
+                    0,
+                    0L
+                )
+
+                for (path in paths) {
+                    output.add(path)
+                }
+            }
+
+            return output.toList()
+        }
+
+        fun getJourneyFlight (
+            start : String,
+            end : String,
+            date : LocalDate,
+            layovers : Int = 2
+        ) : List<JourneyFlightTimePath> {
+            val routes : List<JourneyRoute> = RouteData.getJourneyRoutes(start, end, layovers + 1)
+
+            if (routes.isEmpty())
+                return emptyList<JourneyFlightTimePath>()
+                
+            val flights = getJourneyFlight(routes, date)
+            if (flights.isEmpty())
+                return emptyList<JourneyFlightTimePath>()
+
+            return flights.sortedBy { it.totalMinutes }
         }
     }
 }

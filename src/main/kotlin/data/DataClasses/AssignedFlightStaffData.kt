@@ -6,6 +6,7 @@ object AssignedFlightStaffColumns {
     val STAFF_ID = Column<Int>("staff_id", "INTEGER NOT NULL REFERENCES staff(id)")
 
     val ALL = listOf(ID, FLIGHT_ID, STAFF_ID)
+    val COLUMN_NAMES = ALL.map { it.name }
 }
 
 data class AssignedFlightStaffData(

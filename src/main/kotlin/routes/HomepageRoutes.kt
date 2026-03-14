@@ -10,6 +10,7 @@ import java.io.StringWriter
 import utils.jsMode
 import utils.logValidationError
 import utils.timed
+import data.*
 
 fun Route.homepageRoutes() {
     get("/") { call.handleLoadPage() }
@@ -25,7 +26,8 @@ private suspend fun ApplicationCall.handleLoadPage() {
             "activePage" to "home",
             "layout" to "",
             "headerRightText" to "",
-            "language" to (request.queryParameters["lang"] ?: "en")
+            "language" to (request.queryParameters["lang"] ?: "en"),
+            "destinations" to DestinationData.getDestinationNames()
         )
 
         val writer = StringWriter()
