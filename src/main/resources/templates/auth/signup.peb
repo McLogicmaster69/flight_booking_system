@@ -1,6 +1,7 @@
 {% extends "_layout/base.peb" %}
 
 {% set activePage = 'auth/signup' %}
+{% set inNav = true %}
 
 {% block content %}
 

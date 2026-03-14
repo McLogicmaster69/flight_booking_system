@@ -1,5 +1,8 @@
 {% extends "_layout/base.peb" %}
 
+{% set activePage = 'auth/verify.' %}
+{% set inNav = true %}
+
 {% block content %}
 
 <div class="auth-container">

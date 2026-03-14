@@ -2,6 +2,7 @@
 
 {% set layout = 'admin' %}
 {% set activePage = 'admin' %}
+{% set inNav = true %}
 
 {% block content %}
 

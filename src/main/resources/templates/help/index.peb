@@ -1,6 +1,7 @@
 {% extends "_layout/base.peb" %}
 
 {% set activePage = 'help' %}
+{% set inNav = true %}
 
 {% block content %}
 

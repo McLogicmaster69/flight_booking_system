@@ -1,5 +1,8 @@
 {% extends "_layout/base.peb" %}
 
+{% set activePage = 'checkout' %}
+{% set inNav = true %}
+
 {% set headerRightText = 'Step 3 of 3: Checkout' %}
 
 {% block content %}
