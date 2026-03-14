@@ -8,6 +8,7 @@ object SessionColumns {
     val SESSION_TOKEN = Column<String>("session_token", "STRING NOT NULL")
 
     val ALL = listOf(ID, USER_ID, SESSION_TOKEN)
+    val COLUMN_NAMES = ALL.map { it.name }
 }
 
 data class SessionData(

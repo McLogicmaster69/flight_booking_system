@@ -7,6 +7,7 @@ object PlaneModelColumns {
     val MANUFACTURER_ID = Column<Int>("booker_id", "INTEGER NOT NULL REFERENCES manufacturers(id)")
 
     val ALL = listOf(ID, CAPACITY, NAME, MANUFACTURER_ID)
+    val COLUMN_NAMES = ALL.map { it.name }
 }
 
 data class PlaneModelData(

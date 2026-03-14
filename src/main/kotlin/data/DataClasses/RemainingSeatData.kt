@@ -5,6 +5,7 @@ object RemainingSeatColumns {
     val SEAT_ID = Column<Int>("seat_id", "INTEGER NOT NULL REFERENCES seats(id)")
 
     val ALL = listOf(ID, SEAT_ID)
+    val COLUMN_NAMES = ALL.map { it.name }
 }
 
 data class RemainingSeatData(

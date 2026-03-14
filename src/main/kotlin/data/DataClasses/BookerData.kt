@@ -6,6 +6,7 @@ object BookerColumns {
     val GUEST_ID = Column<Int?>("guest_id", "INTEGER REFERENCES guests(id)")
 
     val ALL = listOf(ID, USER_ID, GUEST_ID)
+    val COLUMN_NAMES = ALL.map { it.name }
 }
 
 data class BookerData(

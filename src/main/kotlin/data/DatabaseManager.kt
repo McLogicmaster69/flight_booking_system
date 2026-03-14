@@ -10,6 +10,7 @@ fun anyToBool(i : Any?) : Boolean? = (i as? Int)?.let { it != 0}
 object DatabaseManager {
     private val dbFilePath : String = "data/database.db"
     private val connection : Connection
+    private var initialisedTables : MutableList<DataClass<*>> = mutableListOf()
 
     init {
         connection = connect()
@@ -35,12 +36,12 @@ object DatabaseManager {
         }
     }
 
-    fun createTable(table : String, columns : String) {
+    fun createTable(table : String, columns : String, additional : String) {
         if (table.isBlank()) return;
 
         val sql = """
             CREATE TABLE IF NOT EXISTS $table (
-                $columns
+                $columns${if (additional.isNotBlank()) ",\n$additional" else ""}
             );
         """.trimIndent()
 
@@ -48,6 +49,8 @@ object DatabaseManager {
     }
 
     fun createTables() {
+        println("Initialising database")
+        initialisedTables = mutableListOf()
         val dataClasses: List<DataClass<*>> = listOf(
             AdminData.EMPTY,
             AssignedFlightStaffData.EMPTY,
@@ -72,21 +75,45 @@ object DatabaseManager {
             StaffData.EMPTY,
             StaffPositionData.EMPTY,
             TicketTypeData.EMPTY,
+            TimezoneData.EMPTY,
             TwoFAData.EMPTY,
             UserData.EMPTY
         )
 
-        for (data in dataClasses) {
-            DatabaseManager.createTable(
-                data.tableName,
-                data.tableCreateSQL
-            )
+        for (dataClass in dataClasses) {
+            initialiseTable(dataClass)
         }
+
+        initialisedTables.clear()
+
+        println("Database initilisation completed")
+    }
+
+    fun initialiseTable(dataClass : DataClass<*>) {
+        if (initialisedTables.any { it::class == dataClass::class })
+            return
+
+        DatabaseManager.createTable(
+            dataClass.tableName,
+            dataClass.tableCreateSQL,
+            dataClass.tableAdditionalSQL
+        )
+
+        for (requirement in dataClass.requiredTables) { // WARNING: If two tables require records from one another when initialising, this will break :)
+            initialiseTable(requirement)
+        }
+            
+        for (row in dataClass.initialRows) {
+            row.insertIntoDatabase(true)
+        }
+
+        initialisedTables.add(dataClass)
     }
 
     fun insertIntoTable(
         table : String,
-        values : Map<Column<*>, Any?>
+        values : Map<Column<*>, Any?>,
+        ignore : Boolean = false
     ) : Int {
 
         if (values.size == 0) return -1
@@ -95,7 +122,7 @@ object DatabaseManager {
         val columns = values.keys.joinToString(", ") { it.name }
         val placeholders = List(values.size) { "?" }.joinToString(", ")
 
-        val sql = "INSERT INTO $table ($columns) VALUES ($placeholders)"
+        val sql = "INSERT ${if (ignore) "OR IGNORE " else ""}INTO $table ($columns) VALUES ($placeholders)"
         var id : Int = -1
 
         connection.prepareStatement(sql).use { stmt ->

@@ -9,6 +9,7 @@ object UserColumns {
     val LOGIN_ID = Column<Int>("login_id", "INTEGER NOT NULL REFERENCES login_info(id)")
 
     val ALL = listOf(ID, FIRSTNAME, LASTNAME, VERIFIED, LOYALITY_POINTS, LOGIN_ID)
+    val COLUMN_NAMES = ALL.map { it.name }
 }
 
 data class UserData(
@@ -105,7 +106,7 @@ data class UserData(
                 joinTable = LoginData.EMPTY.tableName,
                 joinTable1Column = UserColumns.LOGIN_ID.name,
                 joinTable2Column = LoginColumns.ID.name,
-                joinSelectColumns = LoginColumns.ALL.map { it.name }
+                joinSelectColumns = LoginColumns.COLUMN_NAMES
             )
 
             val whereArgs : WhereArgs = WhereArgs(
@@ -127,7 +128,7 @@ data class UserData(
                 joinTable = SessionData.EMPTY.tableName,
                 joinTable1Column = UserColumns.LOGIN_ID.name,
                 joinTable2Column = SessionColumns.ID.name,
-                joinSelectColumns = SessionColumns.ALL.map { it.name }
+                joinSelectColumns = SessionColumns.COLUMN_NAMES
             )
 
             val whereArgs : WhereArgs = WhereArgs(

@@ -10,6 +10,7 @@ object PaymentMethodColumns {
     val EXP_YEAR = Column<Int?>("exp_year", "INTEGER")
 
     val ALL = listOf(ID, USER_ID, PAYMENT_TOKEN, LAST_FOUR, BRAND, EXP_MONTH, EXP_YEAR)
+    val COLUMN_NAMES = ALL.map { it.name }
 }
 
 data class PaymentMethodData(

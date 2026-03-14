@@ -11,6 +11,7 @@ object TwoFAColumns {
     val SESSION_TOKEN = Column<String>("session_token", "STRING NOT NULL")
 
     val ALL = listOf(ID, USER_ID, TTL, CODE_HASH, ATTEMPTS, SESSION_TOKEN)
+    val COLUMN_NAMES = ALL.map { it.name }
 }
 
 data class TwoFAData(

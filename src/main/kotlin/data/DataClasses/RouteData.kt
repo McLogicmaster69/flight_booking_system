@@ -10,6 +10,7 @@ object RouteColumns {
     val DURATION = Column<String>("duration", "STRING NOT NULL")
 
     val ALL = listOf(ID, START_DESTINATION, END_DESTINATION, PLANE_ID, DURATION)
+    val COLUMN_NAMES = ALL.map { it.name }
 }
 
 data class RouteData(
@@ -24,6 +25,35 @@ data class RouteData(
 
     override val tableName = "routes"
     override val tableColumns = RouteColumns.ALL
+    override val tableAdditionalSQL = "UNIQUE (start_destination, end_destination)"
+
+    override val initialRows : List<RouteData>
+        get() = listOf(
+            RouteData(
+                startDestination = DestinationData.getDestinationId("Luton"),
+                endDestination = DestinationData.getDestinationId("Tokyo"),
+                planeId = 0,
+                duration = LocalTime.parse("07:00")
+            ),
+            RouteData(
+                startDestination = DestinationData.getDestinationId("Luton"),
+                endDestination = DestinationData.getDestinationId("Berlin"),
+                planeId = 0,
+                duration = LocalTime.parse("02:00")
+            ),
+            RouteData(
+                startDestination = DestinationData.getDestinationId("Berlin"),
+                endDestination = DestinationData.getDestinationId("Tokyo"),
+                planeId = 0,
+                duration = LocalTime.parse("06:00")
+            )
+        )
+
+    override val requiredTables : List<DataClass<*>>
+        get() = listOf(
+            DestinationData.EMPTY,
+            PlaneData.EMPTY
+        )
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
@@ -66,7 +96,7 @@ data class RouteData(
             return RouteData(id = id).delete()
         }
 
-        fun queryDatabase(
+        fun queryDatabase (
             destinationArgs : DestinationArgs,
             joinArgs : JoinArgs? = null
         ) : List<QueryResult<RouteData>> {
@@ -75,28 +105,146 @@ data class RouteData(
             return EMPTY.queryDatabase(joinArgs, WhereArgs(whereClause, whereArgs))
         }
 
-        fun getPathByLayovers(
+        fun queryDatabase (
+            startCity : String,
+            startCountry : String,
+            endCity : String,
+            endCountry : String,            
+            joinArgs : JoinArgs? = null
+        ) : List<QueryResult<RouteData>> {
+            val startDestinationResults : List<QueryResult<DestinationData>> = DestinationData.queryDatabase(startCity, startCountry)
+            if (startDestinationResults.isEmpty())
+                return emptyList<QueryResult<RouteData>>()
+
+            val endDestinationResults : List<QueryResult<DestinationData>> = DestinationData.queryDatabase(endCity, endCountry)
+            if (endDestinationResults.isEmpty())
+                return emptyList<QueryResult<RouteData>>()
+
+            return queryDatabase(
+                DestinationArgs(
+                    startDestinationResults.first().dataClass.id,
+                    endDestinationResults.first().dataClass.id
+                ),
+                joinArgs
+            )
+        }
+
+        fun queryDatabase (
+            start : String,
+            end : String,
+            joinArgs : JoinArgs? = null
+        ) : List<QueryResult<RouteData>> {
+            val startElements = start.split(" - ")
+            if (startElements.size != 2)
+                return emptyList<QueryResult<RouteData>>()
+
+            val endElements = end.split(" - ")
+            if (endElements.size != 2)
+                return emptyList<QueryResult<RouteData>>()
+
+            val query : List<QueryResult<RouteData>> = queryDatabase(
+                startElements[0],
+                startElements[1],
+                endElements[0],
+                endElements[1],
+                joinArgs
+            )
+
+            if (query.isNotEmpty())
+                return query
+
+            return queryDatabase(
+                startElements[1],
+                startElements[0],
+                endElements[1],
+                endElements[0],
+                joinArgs
+            )
+        }
+
+        fun getPathByLayovers (
             destinationArgs : DestinationArgs,
             layovers : Int = 2
         ) : List<List<Int>> {
-            val reachable : MutableList<List<Int>> = mutableListOf(listOf(destinationArgs.startDestination))
-            for (i in 1..layovers) {
-                for (r in reachable) {
-                    val neighbours = queryDatabase(whereArgs = WhereArgs("${RouteColumns.START_DESTINATION.name} = ?", listOf(r.last())))
+            var currentPaths: List<List<Int>> = listOf(listOf(destinationArgs.startDestination))
+
+            repeat (layovers) {
+                val nextPaths = mutableListOf<List<Int>>()
+
+                for (path in currentPaths) {
+                    val neighbours = queryDatabase(
+                        whereArgs = WhereArgs("${RouteColumns.START_DESTINATION.name} = ?",
+                        listOf(path.last()))
+                    )
+
                     for (neighbour in neighbours) {
-                        reachable.add(r.toList() + listOf(neighbour.dataClass.endDestination))
+                        nextPaths.add(path + neighbour.dataClass.endDestination)
                     }
                 }
+
+                currentPaths = currentPaths + nextPaths
             }
 
-            val output : MutableList<List<Int>> = mutableListOf()
-            reachable.forEach { r ->
-                if (r.last() == destinationArgs.endDestination) {
-                    output.add(r)
-                }
-            }
+            return currentPaths.filter {
+                it.last() == destinationArgs.endDestination
+            }.distinct()
+        }
 
-            return output.toList()
+        fun getPathByLayovers (
+            startCity : String,
+            startCountry : String,
+            endCity : String,
+            endCountry : String,
+            layovers : Int = 2
+        ) : List<List<Int>> {
+            val startDestinationResults : List<QueryResult<DestinationData>> = DestinationData.queryDatabase(startCity, startCountry)
+            if (startDestinationResults.isEmpty())
+                return emptyList<List<Int>>()
+
+            val endDestinationResults : List<QueryResult<DestinationData>> = DestinationData.queryDatabase(endCity, endCountry)
+            if (endDestinationResults.isEmpty())
+                return emptyList<List<Int>>()
+
+            return getPathByLayovers(
+                DestinationArgs(
+                    startDestinationResults.first().dataClass.id,
+                    endDestinationResults.first().dataClass.id
+                ),
+                layovers
+            )
+        }
+
+        fun getPathByLayovers (
+            start : String,
+            end : String,
+            layovers : Int = 2
+        ) : List<List<Int>>  {
+            val startElements = start.split(" - ")
+            if (startElements.size != 2)
+                return emptyList<List<Int>>()
+
+            val endElements = end.split(" - ")
+            if (endElements.size != 2)
+                return emptyList<List<Int>>()
+
+            val query : List<List<Int>> = getPathByLayovers(
+                startElements[0],
+                startElements[1],
+                endElements[0],
+                endElements[1],
+                layovers
+            )
+
+            if (query.isNotEmpty())
+                return query
+
+            return getPathByLayovers(
+                startElements[1],
+                startElements[0],
+                endElements[1],
+                endElements[0],
+                layovers
+            )
         }
 
         fun getJourneyRoutes (
@@ -120,6 +268,89 @@ data class RouteData(
                     }
                 )
             }
+        }
+
+        fun getJourneyRoutes (
+            startCity : String,
+            startCountry : String,
+            endCity : String,
+            endCountry : String,
+            layovers : Int = 2
+        ) : List<JourneyRoute> {
+            val startDestinationResults : List<QueryResult<DestinationData>> = DestinationData.queryDatabase(startCity, startCountry)
+            if (startDestinationResults.isEmpty())
+                return emptyList<JourneyRoute>()
+
+            val endDestinationResults : List<QueryResult<DestinationData>> = DestinationData.queryDatabase(endCity, endCountry)
+            if (endDestinationResults.isEmpty())
+                return emptyList<JourneyRoute>()
+
+            return getJourneyRoutes(
+                DestinationArgs(
+                    startDestinationResults.first().dataClass.id,
+                    endDestinationResults.first().dataClass.id
+                ),
+                layovers
+            )
+        }
+
+        fun getJourneyRoutes (
+            start : String,
+            end : String,
+            layovers : Int = 2
+        ) : List<JourneyRoute>  {
+            val startElements = start.split(" - ")
+            if (startElements.size != 2)
+                return emptyList<JourneyRoute>()
+
+            val endElements = end.split(" - ")
+            if (endElements.size != 2)
+                return emptyList<JourneyRoute>()
+
+            val query : List<JourneyRoute> = getJourneyRoutes(
+                startElements[0],
+                startElements[1],
+                endElements[0],
+                endElements[1],
+                layovers
+            )
+
+            if (query.isNotEmpty())
+                return query
+
+            return getJourneyRoutes(
+                startElements[1],
+                startElements[0],
+                endElements[1],
+                endElements[0],
+                layovers
+            )
+        }
+
+        fun queryDatabase(id : Int) : List<QueryResult<RouteData>> = queryDatabase(whereArgs = WhereArgs("${RouteColumns.ID.name} = ?", listOf(id)))
+
+        fun getDuration(id : Int) : LocalTime {
+            val query = queryDatabase(id)
+            if (query.isEmpty())
+                return LocalTime.parse("00:00")
+            return query.first().dataClass.duration
+        }
+
+        fun getDurationMinutes(id : Int) : Long {
+            val time : LocalTime = getDuration(id)
+            return time.minute + time.hour * 60L
+        }
+
+        fun getRouteId (
+            destinationArgs : DestinationArgs
+        ) : Int {
+            val query : List<QueryResult<RouteData>> = queryDatabase(destinationArgs)
+            if (query.isEmpty()) {
+                println("Could not find route ${destinationArgs.startDestination} to ${destinationArgs.endDestination}")
+                return -1
+            }
+
+            return query.first().dataClass.id
         }
     }
 }

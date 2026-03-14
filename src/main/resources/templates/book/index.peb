@@ -4,53 +4,67 @@
 
 {% block content %}
 
-<!-- Filters column -->
-<aside style="flex: 0 0 320px;">
-  <div>
-    <h2>Filters</h2>
+<form method="post"
+  action="/book-search"
+  aria-label="Find Your Flight"
+  hx-post="/book-search"
+  hx-target="#flight-results"
+  hx-swap="innerHTML">
 
-    <label for="tripType">Trip Type</label>
-    <select class="general-input" id="tripType" name="tripType">
-      <option>Round Trip</option>
-      <option>One Way</option>
-      <option>Multi-city</option>
-    </select>
+  <!-- Filters column -->
+  <aside style="flex: 0 0 320px;">
+    <div>
+      <h2>Filters</h2>
 
-    <label for="maxLayovers">Max Layovers</label>
-    <select class="general-input" id="maxLayovers" name="maxLayovers">
-      <option>Any</option>
-      <option>Direct Only</option>
-      <option>1</option>
-      <option>2+</option>
-    </select>
+      <label for="tripType">Trip Type</label>
+      <select class="general-input" id="tripType" name="tripType">
+        <option>Round Trip</option>
+        <option>One Way</option>
+        <option>Multi-city</option>
+      </select>
 
-    <label for="maxDuration">Max Duration (Hours)</label>
-    <input class="general-input" id="maxDuration" name="maxDuration" type="text" placeholder="e.g. 15">
+      <label for="maxLayovers">Max Layovers</label>
+      <select class="general-input" id="maxLayovers" name="maxLayovers">
+        <option>Direct Only</option>
+        <option>1</option>
+        <option>2</option>
+        <option>Any</option>
+      </select>
 
-    <label for="priceRange">Price Range</label>
-    <input class="general-input" id="priceRange" name="priceRange" type="range" min="0" max="100" value="40" aria-label="Price Range">
+      <label for="maxDuration">Max Duration (Hours)</label>
+      <input class="general-input" id="maxDuration" name="maxDuration" type="text" placeholder="e.g. 15">
 
-    <label for="sortBy">Sort By</label>
-    <select class="general-input" id="sortBy" name="sortBy">
-      <option>Fastest to Slowest</option>
-      <option>Cheapest to Most Expensive</option>
-    </select>
-  </div>
-</aside>
+      <label for="priceRange">Price Range</label>
+      <input class="general-input" id="priceRange" name="priceRange" type="range" min="0" max="100" value="40" aria-label="Price Range">
 
-<!-- Results column -->
-<section>
-  <div>
-    <h2>Find Your Flight</h2>
+      <label for="sortBy">Sort By</label>
+      <select class="general-input" id="sortBy" name="sortBy">
+        <option>Fastest to Slowest</option>
+        <option>Cheapest to Most Expensive</option>
+      </select>
+    </div>
+  </aside>
 
-    <form method="get" action="/book" aria-label="Find Your Flight">
-      <div><input class="general-input" name="from" type="text" placeholder="Origin"></div>
-      <div><input class="general-input" name="to" type="text" placeholder="Destination"></div>
-      <div><input class="general-input" name="depart" type="text" placeholder="dd/mm/yyyy"></div>
-      <div style="flex:0 0 auto;"><button type="submit">SEARCH</button></div>
-    </form>
+  <!-- Results column -->
+  <section>
+    <div>
+      <h2>Find Your Flight</h2>
 
-    <h3>Available Flights</h3>
-  </div>
-</section>
+        <div><input class="general-input" name="from" type="text" placeholder="Origin"></div>
+        <div><input class="general-input" name="to" type="text" placeholder="Destination"></div>
+        <div><input class="general-input" name="depart" type="text" placeholder="dd/mm/yyyy"></div>
+        <div class="submit-button">
+          <button type="submit">SEARCH</button>
+        </div>
+    </div>
+  </section>
+
+</form>
+
+<h3>Available Flights</h3>
+<br>
+<div id="flight-results">
+  <p>Search above to get results</p>
+</div>
+
 {% endblock %}

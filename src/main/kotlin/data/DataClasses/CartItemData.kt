@@ -6,6 +6,7 @@ object CartItemColumns {
     val SEAT_ID = Column<Int>("seat_id", "INTEGER NOT NULL REFERENCES seats(id)")
 
     val ALL = listOf(ID, USER_ID, SEAT_ID)
+    val COLUMN_NAMES = ALL.map { it.name }
 }
 
 data class CartItemData(

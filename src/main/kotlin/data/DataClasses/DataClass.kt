@@ -8,6 +8,11 @@ import java.util.Base64
 abstract class DataClass<T : DataClass<T>> ( open val id : Int = 0 ) {
     abstract val tableName: String
     abstract val tableColumns : List<Column<*>>
+    
+    open val tableAdditionalSQL : String = ""
+    open val initialRows : List<T> = emptyList<T>()
+    open val requiredTables : List<DataClass<*>> = emptyList<DataClass<*>>()
+
     private val random = SecureRandom()
 
     val tableCreateSQL : String
@@ -91,9 +96,9 @@ abstract class DataClass<T : DataClass<T>> ( open val id : Int = 0 ) {
         return rows.map { QueryResult<T>(mapRowToData(it), mapRawRows(tables.toList(), columns.toList(), it)) }
     }
 
-    fun insertIntoDatabase() : Int {
+    fun insertIntoDatabase(ignore : Boolean = false) : Int {
         val values = mapDataToColumns()
-        return DatabaseManager.insertIntoTable(tableName, values)
+        return DatabaseManager.insertIntoTable(tableName, values, ignore)
     }
 
     fun generateToken() : String {

@@ -6,6 +6,7 @@ object BookedSeatColumns {
     val BOOKING_ID = Column<Int>("booking_id", "INTEGER NOT NULL REFERENCES bookings(id)")
 
     val ALL = listOf(ID, SEAT_ID, BOOKING_ID)
+    val COLUMN_NAMES = ALL.map { it.name }
 }
 
 data class BookedSeatData(

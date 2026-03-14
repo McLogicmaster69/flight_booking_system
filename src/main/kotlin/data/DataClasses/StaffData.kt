@@ -8,6 +8,7 @@ object StaffColumns {
     val LOGIN_ID = Column<Int>("login_id", "INTEGER NOT NULL REFERENCES login_info(id)")
 
     val ALL = listOf(ID, FIRSTNAME, LASTNAME, POSITION_ID, LOGIN_ID)
+    val COLUMN_NAMES = ALL.map { it.name }
 }
 
 data class StaffData(

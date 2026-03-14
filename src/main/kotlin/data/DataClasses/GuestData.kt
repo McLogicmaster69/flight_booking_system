@@ -5,6 +5,7 @@ object GuestColumns {
     val EMAIL = Column<String>("email", "VARCHAR NOT NULL")
 
     val ALL = listOf(ID, EMAIL)
+    val COLUMN_NAMES = ALL.map { it.name }
 }
 
 data class GuestData(
