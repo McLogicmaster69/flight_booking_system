@@ -1,0 +1,18 @@
+{% extends "_layout/base.peb" %}
+
+{% set activePage = 'rewards' %}
+{% set inNav = true %}
+
+{% block content %}
+
+<br>
+<div style="text-align:center; margin-bottom: 18px;">
+  <div style="color: var(--muted);"><strong>Your Current Balance</strong></div>
+  <h1>{{ user.loyalityPoints }}</h1>
+</div>
+
+<h3>Redeemable Now</h3>
+
+<h3>Almost There (Within 1000 pts)</h3>
+
+{% endblock %}

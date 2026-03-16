@@ -1,0 +1,38 @@
+{% extends "_layout/base.peb" %}
+
+{% set activePage = 'auth' %}
+{% set inNav = true %}
+
+{% block content %}
+
+<h2 class="wf-title">Login</h2>
+<div class="wf-rule"></div>
+
+<form class="login-form"
+    method="post"
+    action="/login"
+    hx-post="/login"
+    hx-target="#log-in-status"
+    hx-swap="innerHTML">
+
+    <label class="auth-label" for="loginEmail">Email</label>
+    <input class="auth-input" id="loginEmail" name="loginEmail" type="email" placeholder="Email">
+
+    <label class="auth-label" for="loginPw">Password</label>
+    <input class="auth-input" id="loginPw" name="loginPw" type="password" placeholder="Password">
+
+    <div style="margin-top: 14px;"></div>
+    <button class="wf-btn wide" type="submit">Login</button>
+
+    <div class="wf-rule"></div>
+    <p style="color: var(--wf-muted); font-size: 12px;">
+      2-Factor Authentication (2FA) will be prompted on the next screen.
+    </p>
+    <p style="color: var(--wf-muted); font-size: 12px;">
+      Don't have an account? Sign up <a href="/signup" class="{% if activePage == 'signup' %}is-active{% endif %}">here</a>
+    </p>
+
+    <div id="log-in-status" role="status" aria-live="polite" aria-atomic="true"></div>
+</form>
+
+{% endblock %}

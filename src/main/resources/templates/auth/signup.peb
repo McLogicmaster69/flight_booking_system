@@ -1,0 +1,40 @@
+{% extends "_layout/base.peb" %}
+
+{% set activePage = 'auth/signup' %}
+{% set inNav = true %}
+
+{% block content %}
+
+<h2 class="wf-title">Sign Up</h2>
+<div class="wf-rule"></div>
+
+<form class="auth-form"
+    method="post"
+    action="/signup"
+    hx-post="/signup"
+    hx-target="#sign-up-status"
+    hx-swap="innerHTML">
+
+    <label class="auth-label" for="signupFirstName">First Name</label>
+    <input class="auth-input" id="signupFirstName" name="signupFirstName" type="text" placeholder="First Name">
+
+    <label class="auth-label" for="signupLastName">Last Name</label>
+    <input class="auth-input" id="signupLastName" name="signupLastName" type="text" placeholder="Last Name">
+
+    <label class="auth-label" for="signupEmail">Email</label>
+    <input class="auth-input" id="signupEmail" name="signupEmail" type="email" placeholder="Email">
+
+    <label class="auth-label" for="signupPassword">Create Password</label>
+    <input class="auth-input" id="signupPassword" name="signupPassword" type="password" placeholder="Password">
+
+    <div style="margin-top: 14px;"></div>
+    <button class="wf-btn wide" type="submit">Register</button>
+
+    <div class="wf-rule"></div>
+    <p style="color: var(--wf-muted); font-size: 12px;">
+      We securely hash all passwords. You can verify your email after signing up for additional rewards.
+    </p>
+    <div id="sign-up-status" role="status" aria-live="polite" aria-atomic="true"></div>
+</form>
+
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "_layout/base.peb" %}
+
+{% set activePage = 'settings' %}
+{% set inNav = true %}
+
+{% block content %}
+
+    <h2>Accessibility &amp; Preferences</h2>
+
+    <p style="color: var(--wf-muted); margin-top: 0;">
+      Settings will be saved across sessions if you are logged in or accept cookies.
+    </p>
+
+    <form method="post" action="#" aria-label="Accessibility settings">
+      <label for="palette">Website Color Palette (Dropdown)</label>
+      <select id="palette" name="palette">
+        <option>Default</option>
+        <option>Color Blind Friendly</option>
+        <option>High Contrast</option>
+      </select>
+
+      <div style="display:flex; align-items:center; justify-content: space-between; gap: 14px;">
+        <div><strong>Enable Screen Reader Assistance</strong></div>
+        <input type="checkbox" aria-label="Enable Screen Reader Assistance" style="width:auto; height: 18px;">
+      </div>
+
+      <div style="display:flex; align-items:center; justify-content: space-between; gap: 14px;">
+        <div><strong>Enable AI Assistant (Chatbot)</strong></div>
+        <input type="checkbox" checked aria-label="Enable AI Assistant" style="width:auto; height: 18px;">
+      </div>
+
+      <button type="button">SAVE SETTINGS BUTTON</button>
+    </form>
+
+{% endblock %}

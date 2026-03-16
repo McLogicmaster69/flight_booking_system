@@ -1,0 +1,16 @@
+{% extends "_layout/base.peb" %}
+
+{% set activePage = 'help' %}
+{% set inNav = true %}
+
+{% block content %}
+
+<h2 class="wf-title">Help Center</h2>
+
+<h3 style="margin-top: 0;">Frequently Asked Questions (FAQ)</h3>
+
+<div>
+  <h3 style="margin-top: 0;">Report a Bug / Submit a Complaint</h3>
+</div>
+
+{% endblock %}

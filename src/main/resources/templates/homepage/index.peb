@@ -1,0 +1,173 @@
+{% extends "_layout/base.peb" %}
+
+{% set activePage = 'home' %}
+{% set inNav = true %}
+
+{% block content %}
+
+<section aria-label="Flight search" class="homepage-hero">
+    <div class="homepage-hero-inner">
+        <div class="homepage-search-card">
+            <h2 class="homepage-search-title">Where to next?</h2>
+            <p class="homepage-search-subtitle">Search for available routes and choose a valid departure date.</p>
+
+            <form id="homepageSearchForm" method="get" action="/book" aria-label="Search flights" class="homepage-search-form" novalidate>
+                <div class="homepage-field">
+                    <label for="from">From</label>
+                    <input
+                        class="general-input-input"
+                        id="from"
+                        name="from"
+                        type="text"
+                        list="destinationsList"
+                        placeholder="From (Origin)"
+                        aria-label="From (Origin)"
+                        aria-describedby="fromError"
+                        required
+                    >
+                    <small id="fromError" class="homepage-field-error" aria-live="polite"></small>
+                </div>
+
+                <div class="homepage-field">
+                    <label for="to">To</label>
+                    <input
+                        class="general-input-input"
+                        id="to"
+                        name="to"
+                        type="text"
+                        list="destinationsList"
+                        placeholder="To (Destination)"
+                        aria-label="To (Destination)"
+                        aria-describedby="toError"
+                        required
+                    >
+                    <small id="toError" class="homepage-field-error" aria-live="polite"></small>
+                </div>
+
+                <div class="homepage-field">
+                    <label for="depart">Departure date</label>
+                    <input
+                        class="general-input-input"
+                        id="depart"
+                        name="depart"
+                        type="date"
+                        aria-label="Depart date"
+                        aria-describedby="departError"
+                        required
+                    >
+                    <small id="departError" class="homepage-field-error" aria-live="polite"></small>
+                </div>
+
+                <div class="homepage-search-actions">
+                    <button type="submit">SEARCH FLIGHTS</button>
+                </div>
+
+                <div id="homepageFormStatus" class="homepage-form-status" aria-live="polite"></div>
+            </form>
+
+            <datalist id="destinationsList">
+                {% for d in destinations %}
+                    <option value="{{ d }}"></option>
+                {% endfor %}
+            </datalist>
+        </div>
+    </div>
+</section>
+
+<section aria-label="Recommended Deals & Loyalty Rewards" style="margin-top: 34px;">
+</section>
+
+<script>
+(function () {
+    const form = document.getElementById("homepageSearchForm");
+    const fromEl = document.getElementById("from");
+    const toEl = document.getElementById("to");
+    const departEl = document.getElementById("depart");
+    const statusEl = document.getElementById("homepageFormStatus");
+
+    const fromErr = document.getElementById("fromError");
+    const toErr = document.getElementById("toError");
+    const departErr = document.getElementById("departError");
+
+    if (!form || !fromEl || !toEl || !departEl) return;
+
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+    departEl.min = todayStr;
+
+    const allowedValues = new Set(
+        Array.from(document.querySelectorAll("#destinationsList option"))
+            .map(option => (option.value || "").trim().toLowerCase())
+            .filter(Boolean)
+    );
+
+    function setError(input, errorNode, message) {
+        if (!input || !errorNode) return;
+        if (message) {
+            input.setAttribute("aria-invalid", "true");
+            errorNode.textContent = message;
+        } else {
+            input.removeAttribute("aria-invalid");
+            errorNode.textContent = "";
+        }
+    }
+
+    function resetErrors() {
+        setError(fromEl, fromErr, "");
+        setError(toEl, toErr, "");
+        setError(departEl, departErr, "");
+        if (statusEl) statusEl.textContent = "";
+    }
+
+    function isAllowedDestination(value) {
+        return allowedValues.has((value || "").trim().toLowerCase());
+    }
+
+    form.addEventListener("submit", function (event) {
+        resetErrors();
+
+        const fromValue = fromEl.value.trim();
+        const toValue = toEl.value.trim();
+        const departValue = departEl.value;
+
+        let valid = true;
+
+        if (!isAllowedDestination(fromValue)) {
+            setError(fromEl, fromErr, "Please select a valid origin from the list.");
+            valid = false;
+        }
+
+        if (!isAllowedDestination(toValue)) {
+            setError(toEl, toErr, "Please select a valid destination from the list.");
+            valid = false;
+        }
+
+        if (fromValue && toValue && fromValue.toLowerCase() === toValue.toLowerCase()) {
+            setError(toEl, toErr, "Destination must be different from origin.");
+            valid = false;
+        }
+
+        if (!departValue) {
+            setError(departEl, departErr, "Please choose a departure date.");
+            valid = false;
+        } else if (departValue < todayStr) {
+            setError(departEl, departErr, "Past dates are not allowed.");
+            valid = false;
+        }
+
+        if (!valid) {
+            event.preventDefault();
+            if (statusEl) {
+                statusEl.textContent = "Please correct the highlighted fields before continuing.";
+            }
+            const firstInvalid = form.querySelector('[aria-invalid="true"]');
+            if (firstInvalid) firstInvalid.focus();
+        }
+    });
+})();
+</script>
+
+{% endblock %}
