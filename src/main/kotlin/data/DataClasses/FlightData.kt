@@ -158,6 +158,8 @@ data class FlightData(
             joinArgs : JoinArgs? = null
         ) : List<QueryResult<FlightData>> = queryDatabase(destinationArgs, dateTime.toLocalDate(), joinArgs)
 
+        fun queryDatabase(id : Int) : List<QueryResult<FlightData>> = queryDatabase(whereArgs = WhereArgs("${FlightColumns.ID.name} = ?", listOf(id)))
+
         private fun offsetTimeByZone (
             dateTime : LocalDateTime,
             destinationId : Int

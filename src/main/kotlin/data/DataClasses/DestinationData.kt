@@ -118,6 +118,27 @@ data class DestinationData(
                 return "${timezones.first().dataClass.name} (UTC${timezones.first().dataClass.timeOffset})"
         }
 
+        fun getDestinationName(id : Int) : String {
+            val joinArgs : JoinArgs = JoinArgs(
+                joinType = "INNER",
+                joinTable = CountryData.EMPTY.tableName,
+                joinTable1Column = DestinationColumns.COUNTRY_ID.name,
+                joinTable2Column = CountryColumns.ID.name,
+                joinSelectColumns = CountryColumns.COLUMN_NAMES
+            )
+
+            val whereArgs : WhereArgs = WhereArgs(
+                whereClause = "${EMPTY.tableName}.${DestinationColumns.ID.name} = ?",
+                whereArgs = listOf(id)
+            )
+
+            val query = queryDatabase(joinArgs, whereArgs)
+            if (query.size == 0)
+                return ""
+
+            return "${query.first().dataClass.cityName} - ${query.first().getColumn(CountryData.EMPTY.tableName, CountryColumns.NAME.name)?.columnVal ?: ""}"
+        }
+
         fun getDestinationNames() : List<String> {
             val joinArgs : JoinArgs = JoinArgs(
                 joinType = "INNER",

@@ -4,6 +4,20 @@
 
 {% block content %}
 
-<h1>{{ start }} to {{ end }}</h1>
+<h2>{{ start }} to {{ end }}</h2>
+<h3>{{ date }}</h3>
+<h3>{% if layovers == 0 %}Direct{% elseif layovers == 1 %}{{ layovers }} Layover{% else %}{{ layovers }} Layovers{% endif %}</h3>
+
+<br>
+<h2>Flights</h2>
+{% for flight in flightInfo %}
+
+<div>
+    <h3>{{ flight.startDestination }} to {{ flight.endDestination }}</h3>
+    <h4>{{ flight.dateTime }}</h4>
+</div>
+<br>
+
+{% endfor %}
 
 {% endblock %}

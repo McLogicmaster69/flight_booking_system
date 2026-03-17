@@ -146,8 +146,11 @@ private suspend fun ApplicationCall.handleGetResult() {
         val model = mapOf(
             "title" to "Result",
             "isNav" to true,
-            "start" to search.search.startDestination,
-            "end" to search.search.endDestination
+            "start" to search.getStartDestinationName(),
+            "end" to search.getEndDestinationName(),
+            "date" to search.getDate(),
+            "layovers" to search.getLayovers(),
+            "flightInfo" to search.getFlightInfo()
         )
 
         val template = pebble.getTemplate("book/result.peb")
