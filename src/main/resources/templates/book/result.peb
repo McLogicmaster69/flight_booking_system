@@ -1,0 +1,9 @@
+{% extends "_layout/base.peb" %}
+
+{% set activePage = 'book/result' %}
+
+{% block content %}
+
+<h1>{{ start }} to {{ end }}</h1>
+
+{% endblock %}

@@ -95,6 +95,8 @@ object DatabaseManager {
         if (initialisedTables.any { it::class == dataClass::class })
             return
 
+        println("Initialising ${dataClass.tableName}")
+
         DatabaseManager.createTable(
             dataClass.tableName,
             dataClass.tableCreateSQL,

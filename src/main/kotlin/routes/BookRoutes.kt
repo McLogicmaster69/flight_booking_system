@@ -66,6 +66,7 @@ fun getResultsHTML(results : List<JourneyFlightTimePath>) : String {
 fun Route.bookRoutes() {
     get("/book") { call.handleBookLoad() }
     post("/book-search") { call.handleSearchResults() }
+    get("/book/{token}") { call.handleGetResult() }
 }
 
 private suspend fun ApplicationCall.handleBookLoad() {
@@ -108,5 +109,49 @@ private suspend fun ApplicationCall.handleSearchResults() {
         )
 
         respondText(getResultsHTML(results), ContentType.Text.Html)
+    }
+}
+
+private suspend fun ApplicationCall.handleGetResult() {
+    timed("T2_book_result", jsMode()) {
+        val writer = StringWriter()
+        val pebble = getEngine()
+        val token = parameters["token"]
+        
+        if (token == null) {
+            val template = pebble.getTemplate("book/pageNotFound.peb")
+
+            val errorModel = mapOf(
+                "title" to "Error",
+                "isNav" to true
+            )
+
+            fullEvaluate(template, writer, errorModel)
+            return@timed respondText(writer.toString(), ContentType.Text.Html)
+        }
+
+        val search : FlightSearchInfo? = FlightSearchData.queryByToken(token)
+        if (search == null) {
+            val template = pebble.getTemplate("book/pageNotFound.peb")
+
+            val errorModel = mapOf(
+                "title" to "Error",
+                "isNav" to true
+            )
+
+            fullEvaluate(template, writer, errorModel)
+            return@timed respondText(writer.toString(), ContentType.Text.Html)
+        }
+
+        val model = mapOf(
+            "title" to "Result",
+            "isNav" to true,
+            "start" to search.search.startDestination,
+            "end" to search.search.endDestination
+        )
+
+        val template = pebble.getTemplate("book/result.peb")
+        fullEvaluate(template, writer, model)
+        respondText(writer.toString(), ContentType.Text.Html)
     }
 }

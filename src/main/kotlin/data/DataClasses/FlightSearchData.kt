@@ -96,15 +96,15 @@ data class FlightSearchData(
 
         fun deleteOld() {
             val whereArgs = WhereArgs(
-                whereClause = "${FlightSearchColumns.CREATED_AT.name} < datetime('now', '-1 month')",
+                whereClause = "${FlightSearchColumns.CREATED_AT.name} > datetime('now', '-1 month')",
                 whereArgs = emptyList()
             )
 
             val query : List<QueryResult<FlightSearchData>> = queryDatabase(whereArgs = whereArgs)
 
             query.forEach {
-                it.dataClass.delete()
                 FlightSearchFlightData.deleteByFlightSearch(it.dataClass.id)
+                it.dataClass.delete()
             }
         }
 
@@ -140,6 +140,20 @@ data class FlightSearchData(
                 endDestination = endDestination,
                 date = date,
                 createdAt = createdAt
+            )
+        }
+
+        fun queryByToken (
+            token : String
+        ) : FlightSearchInfo? {
+            val query : List<QueryResult<FlightSearchData>> = queryDatabase(token)
+            if (query.isEmpty())
+                return null
+
+            val search : FlightSearchData = query.first().dataClass
+            return FlightSearchInfo (
+                search = search,
+                flights = FlightSearchFlightData.queryByFlightSearch(search.id).map { it.dataClass }
             )
         }
 
