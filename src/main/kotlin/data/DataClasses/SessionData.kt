@@ -68,15 +68,19 @@ data class SessionData(
         fun createSession(
             userId : Int
         ) : SessionData {
-            val token : String = EMPTY.generateToken()
+            val token : String = EMPTY.generateSecureToken()
 
             val session = SessionData(
                 userId = userId,
                 sessionToken = token
             )
 
-            session.insertIntoDatabase()
-            return session
+            val id : Int = session.insertIntoDatabase()
+            return SessionData (
+                id = id,
+                userId = userId,
+                sessionToken = token
+            )
         }
 
         fun queryDatabase(

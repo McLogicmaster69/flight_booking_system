@@ -1,0 +1,42 @@
+package utils
+
+import data.FlightSearchData
+import java.time.*
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+
+fun initialCleanup() {
+    FlightSearchData.deleteOld()
+}
+
+fun scheduleDailyCleanup() {
+    val scheduler = Executors.newSingleThreadScheduledExecutor()
+
+    val now = ZonedDateTime.now()
+    val updateTime = now
+        .withHour(12)
+        .withMinute(0)
+        .withSecond(0)
+        .withNano(0)
+        .let {
+            if (it.isBefore(now)) it.plusDays(1) else it
+        }
+
+    val initialDelay = Duration.between(now, updateTime).seconds
+    val period = TimeUnit.DAYS.toSeconds(1)
+
+    scheduler.scheduleAtFixedRate(
+        {
+            println("Cleaning database")
+            try {
+                FlightSearchData.deleteOld()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            println("Cleaning complete")
+        },
+        initialDelay,
+        period,
+        TimeUnit.SECONDS
+    )
+}

@@ -30,9 +30,10 @@ fun representAsTime(minutes : Long) : String {
 }
 
 fun getResultHTML(result : JourneyFlightTimePath, index : Int) : String {
+    val searchData : FlightSearchData = FlightSearchData.queryOrAddFlightPath(result)
     return """
     <div class="flight-result-container">
-        <a href="/book/$index" class="flight-result-button">
+        <a href="/book/${searchData.token}" class="flight-result-button">
             <h2>${result.locationNames.first()} to ${result.locationNames.last()}</h2>
             <div class="flight-result-info">
                 <p>Duration: ${representAsTime(result.totalMinutes)}</p>
@@ -65,6 +66,7 @@ fun getResultsHTML(results : List<JourneyFlightTimePath>) : String {
 fun Route.bookRoutes() {
     get("/book") { call.handleBookLoad() }
     post("/book-search") { call.handleSearchResults() }
+    get("/book/{token}") { call.handleGetResult() }
 }
 
 private suspend fun ApplicationCall.handleBookLoad() {
@@ -107,5 +109,52 @@ private suspend fun ApplicationCall.handleSearchResults() {
         )
 
         respondText(getResultsHTML(results), ContentType.Text.Html)
+    }
+}
+
+private suspend fun ApplicationCall.handleGetResult() {
+    timed("T2_book_result", jsMode()) {
+        val writer = StringWriter()
+        val pebble = getEngine()
+        val token = parameters["token"]
+        
+        if (token == null) {
+            val template = pebble.getTemplate("book/pageNotFound.peb")
+
+            val errorModel = mapOf(
+                "title" to "Error",
+                "isNav" to true
+            )
+
+            fullEvaluate(template, writer, errorModel)
+            return@timed respondText(writer.toString(), ContentType.Text.Html)
+        }
+
+        val search : FlightSearchInfo? = FlightSearchData.queryByToken(token)
+        if (search == null) {
+            val template = pebble.getTemplate("book/pageNotFound.peb")
+
+            val errorModel = mapOf(
+                "title" to "Error",
+                "isNav" to true
+            )
+
+            fullEvaluate(template, writer, errorModel)
+            return@timed respondText(writer.toString(), ContentType.Text.Html)
+        }
+
+        val model = mapOf(
+            "title" to "Result",
+            "isNav" to true,
+            "start" to search.getStartDestinationName(),
+            "end" to search.getEndDestinationName(),
+            "date" to search.getDate(),
+            "layovers" to search.getLayovers(),
+            "flightInfo" to search.getFlightInfo()
+        )
+
+        val template = pebble.getTemplate("book/result.peb")
+        fullEvaluate(template, writer, model)
+        respondText(writer.toString(), ContentType.Text.Html)
     }
 }

@@ -62,6 +62,8 @@ object DatabaseManager {
             CountryData.EMPTY,
             DestinationData.EMPTY,
             FlightData.EMPTY,
+            FlightSearchData.EMPTY,
+            FlightSearchFlightData.EMPTY,
             GuestData.EMPTY,
             LoginData.EMPTY,
             ManufacturerData.EMPTY,
@@ -92,6 +94,8 @@ object DatabaseManager {
     fun initialiseTable(dataClass : DataClass<*>) {
         if (initialisedTables.any { it::class == dataClass::class })
             return
+
+        println("Initialising ${dataClass.tableName}")
 
         DatabaseManager.createTable(
             dataClass.tableName,
