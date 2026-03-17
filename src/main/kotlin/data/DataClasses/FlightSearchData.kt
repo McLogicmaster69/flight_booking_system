@@ -10,7 +10,7 @@ object FlightSearchColumns {
     val START_DESTINATION = Column<Int>("start_destination", "INTEGER NOT NULL REFERENCES destinations(id)")
     val END_DESTINATION = Column<Int>("end_destination", "INTEGER NOT NULL REFERENCES destinations(id)")
     val DATE = Column<String>("date", "STRING NOT NULL")
-    val CREATED_AT = Column<Timestamp>("createdAt", "TIMESTAMP NOT NULL")
+    val CREATED_AT = Column<Timestamp>("created_at", "TIMESTAMP NOT NULL")
 
     val ALL = listOf(ID, TOKEN, START_DESTINATION, END_DESTINATION, DATE, CREATED_AT)
     val COLUMN_NAMES = ALL.map { it.name }
@@ -92,6 +92,20 @@ data class FlightSearchData(
 
         fun delete(id : Int) : Int {
             return FlightSearchData(id = id).delete()
+        }
+
+        fun deleteOld() {
+            val whereArgs = WhereArgs(
+                whereClause = "${FlightSearchColumns.CREATED_AT.name} < datetime('now', '-1 month')",
+                whereArgs = emptyList()
+            )
+
+            val query : List<QueryResult<FlightSearchData>> = queryDatabase(whereArgs = whereArgs)
+
+            query.forEach {
+                it.dataClass.delete()
+                FlightSearchFlightData.deleteByFlightSearch(it.dataClass.id)
+            }
         }
 
         fun hasToken(token : String) : Boolean {
@@ -181,8 +195,11 @@ data class FlightSearchData(
             path : JourneyFlightTimePath
         ) : FlightSearchData {
             val possibleSearch : FlightSearchData? = queryFlightPath(path)
-            if (possibleSearch != null)
+            if (possibleSearch != null) {
+                possibleSearch.createdAt = Timestamp.from(Instant.now())
+                possibleSearch.update()
                 return possibleSearch!!
+            }
 
             val search : FlightSearchData = createSearch(
                 path.destinationIds.first(),

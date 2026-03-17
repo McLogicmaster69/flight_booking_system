@@ -61,6 +61,16 @@ data class FlightSearchFlightData(
             return FlightSearchFlightData(id = id).delete()
         }
 
+        fun deleteByFlightSearch(
+            id : Int
+        ) {
+            val query : List<QueryResult<FlightSearchFlightData>> = queryByFlightSearch(id)
+            
+            query.forEach {
+                it.dataClass.delete()
+            }
+        }
+
         fun queryByFlightSearch(
             id : Int
         ) : List<QueryResult<FlightSearchFlightData>> = queryDatabase(whereArgs = WhereArgs("${FlightSearchFlightColumns.FLIGHT_SEARCH_ID.name} = ?", listOf(id))).sortedBy { it.dataClass.position }
