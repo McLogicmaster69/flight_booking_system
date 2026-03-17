@@ -62,6 +62,8 @@ object DatabaseManager {
             CountryData.EMPTY,
             DestinationData.EMPTY,
             FlightData.EMPTY,
+            FlightSearchData.EMPTY,
+            FlightSearchFlightData.EMPTY,
             GuestData.EMPTY,
             LoginData.EMPTY,
             ManufacturerData.EMPTY,

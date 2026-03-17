@@ -101,7 +101,12 @@ abstract class DataClass<T : DataClass<T>> ( open val id : Int = 0 ) {
         return DatabaseManager.insertIntoTable(tableName, values, ignore)
     }
 
-    fun generateToken() : String {
+    fun generateToken(length : Int = 16) : String {
+        val allowedChars = ('A'..'Z') + ('a'..'z') + ('0'..'9')
+        return (1..length).map { allowedChars.random() }.joinToString("")
+    }
+
+    fun generateSecureToken() : String {
         val bytes = ByteArray(32)
         random.nextBytes(bytes)
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)

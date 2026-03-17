@@ -30,9 +30,10 @@ fun representAsTime(minutes : Long) : String {
 }
 
 fun getResultHTML(result : JourneyFlightTimePath, index : Int) : String {
+    val searchData : FlightSearchData = FlightSearchData.queryOrAddFlightPath(result)
     return """
     <div class="flight-result-container">
-        <a href="/book/$index" class="flight-result-button">
+        <a href="/book/${searchData.token}" class="flight-result-button">
             <h2>${result.locationNames.first()} to ${result.locationNames.last()}</h2>
             <div class="flight-result-info">
                 <p>Duration: ${representAsTime(result.totalMinutes)}</p>
