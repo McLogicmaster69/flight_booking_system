@@ -361,6 +361,62 @@ button,
   align-items: flex-end; /* right-align text */
 }
 
+/* Homepage search validation */
+.homepage-hero {
+  padding: 48px 0;
+}
+
+.homepage-hero-inner {
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.homepage-search-card {
+  background: rgba(255,255,255,.92);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 20px;
+}
+
+.homepage-search-title {
+  text-align: center;
+  margin: 0 0 8px;
+}
+
+.homepage-search-subtitle {
+  text-align: center;
+  color: var(--muted);
+  margin: 0 0 18px;
+}
+
+.homepage-search-form {
+  display: grid;
+  gap: 12px;
+}
+
+.homepage-field {
+  display: grid;
+  gap: 6px;
+}
+
+.homepage-field-error {
+  min-height: 1em;
+  color: var(--danger);
+  font-size: 12px;
+}
+
+.homepage-form-status {
+  min-height: 1em;
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.homepage-search-actions {
+  display: flex;
+}
+
 /* RESPONSIVE */
 
 @media (max-width: 980px) {
