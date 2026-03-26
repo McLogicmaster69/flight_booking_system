@@ -40,7 +40,8 @@ object EmailService {
         reference: String,
         startLocation: String,
         destination: String,
-        dateTime: String
+        dateTime: String,
+        passengers: List<String>
     ) {
 
         val props = Properties().apply {
@@ -56,19 +57,25 @@ object EmailService {
             }
         })
 
+        val passengerList = passengers.joinToString("\n") { "- $it" }
+
         val body = """
             Booking Confirmation
             
-            Thank you for your booking. Your journey details are below:
-            
             Reference: $reference
-            Starting Location: $startLocation
-            Destination: $destination
-            Date & Time: $dateTime
             
-            Please keep this reference for your records.
+            Route:
+            $startLocation → $destination
             
-            We look forward to serving you.
+            Departure:
+            $dateTime
+            
+            Passengers:
+            $passengerList
+            
+            Please keep this reference for check-in.
+            
+            Thank you for booking with us.
         """.trimIndent()
 
         val message = MimeMessage(session).apply {

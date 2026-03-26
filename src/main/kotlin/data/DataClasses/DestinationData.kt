@@ -162,5 +162,21 @@ data class DestinationData(
 
             return query.first().dataClass.id
         }
+
+        fun parseDestination(input: String?): Pair<String, String>? {
+            if (input.isNullOrBlank()) return null
+            val parts = input.split(" - ").map { it.trim() }
+            if (parts.size != 2) return null
+
+            val (first, second) = parts
+            var query = DestinationData.queryDatabase(first, second)
+            if (query.isNotEmpty()) return first to second
+
+            query = DestinationData.queryDatabase(second, first)
+            if (query.isNotEmpty()) return second to first
+
+            return null
+        }
+
     }
 }
