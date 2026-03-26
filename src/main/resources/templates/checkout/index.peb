@@ -7,4 +7,32 @@
 
 {% block content %}
 
+<h2>Flight</h2>
+
+{% if start != null and end != null %}
+    <h3>{{ start }} → {{ end }}</h3>
+    <p><strong>Departure:</strong> {{ date }}</p>
+{% else %}
+    <p>No flight selected</p>
+{% endif %}
+
+<h2>Selected Tickets: {{ tickets }}</h2>
+
+<form action="/payment" method="post">
+
+    <input type="hidden" name="flightId" value="{{ flightId }}">
+
+    {% for i in 1..tickets %}
+    <div>
+        <h3>Passenger {{ i }}</h3>
+        <input class="general-input" type="text" name="lastName{{ i }}" required pattern="[A-Za-z]+" placeholder="Last Name">
+        <input class="general-input" type="text" name="passport{{ i }}" required minlength="6" placeholder="Passport Number">
+    </div>
+    {% endfor %}
+
+    <button type="submit">Proceed To Payment</button>
+
+</form>
+
+
 {% endblock %}

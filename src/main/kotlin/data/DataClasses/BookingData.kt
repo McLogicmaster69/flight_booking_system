@@ -3,7 +3,7 @@ package data
 object BookingColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
     val BOOKER_ID = Column<Int>("booker_id", "INTEGER NOT NULL REFERENCES bookers(id)")
-    val PASSPORT_NUMBER = Column<Int?>("passport_number", "INTEGER")
+    val PASSPORT_NUMBER = Column<String?>("passport_number", "STRING")
     val LASTNAME = Column<String?>("lastname", "STRING")
     val BOOKING_REFERENCE = Column<String>("booking_reference", "STRING NOT NULL")
 
@@ -15,7 +15,7 @@ data class BookingData(
 
     override val id : Int = 0,
     var bookerId : Int = 0,
-    var passportNumber : Int? = null,
+    var passportNumber : String? = null,
     var lastname : String? = null,
     var bookingReference : String = ""
 
