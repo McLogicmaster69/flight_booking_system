@@ -212,63 +212,83 @@ private suspend fun ApplicationCall.handleVerifyPost() {
 }
 
 private suspend fun ApplicationCall.handleSendVerification() {
-    val userSession = sessions.get<SessionToken>()
-        ?: return respondRedirect("/login")
+    timed("T5_verify_send", jsMode()) {
 
-    val userQuery = UserData.queryByToken(userSession.token)
+        val tempSession = sessions.get<Temp2FASession>()
+            ?: return@timed respondRedirect("/login")
 
-    if (userQuery.isEmpty()) {
-        return respondRedirect("/")
-    }
+        val query = TwoFAData.queryDatabase(
+            whereArgs = WhereArgs(
+                "${TwoFAColumns.SESSION_TOKEN.name} = ?",
+                listOf(tempSession.token)
+            )
+        )
 
-    val user = userQuery.first().dataClass
-
-    if (user.verifiedAccount == true) {
-        return respondRedirect("/")
-    }
-
-    val existing = TwoFAData.queryDatabase(
-        whereArgs = WhereArgs("${TwoFAColumns.ID.name} = ?", listOf(user.id))
-    )
-
-    if (existing.isNotEmpty()) {
-        val record = existing.first().dataClass
-        if (record.ttl.after(Timestamp.from(Instant.now()))) {
-            return respondRedirect("/verify")
+        if (query.isEmpty()) {
+            return@timed respondRedirect("/login")
         }
+
+        val record = query.first().dataClass
+
+        val userQuery = UserData.queryDatabase(
+            whereArgs = WhereArgs(
+                "${UserColumns.ID.name} = ?",
+                listOf(record.userId)
+            )
+        )
+
+        if (userQuery.isEmpty()) {
+            return@timed respondRedirect("/")
+        }
+
+        val user = userQuery.first().dataClass
+
+        if (user.verifiedAccount == true) {
+            return@timed respondRedirect("/")
+        }
+
+        if (record.ttl.after(Timestamp.from(Instant.now()))) {
+            respondText(
+                "<div class='error-message'>Please wait before requesting another code</div>",
+                ContentType.Text.Html
+            )
+            return@timed
+        }
+
+        val code = generate2FACode()
+        val hashedCode = BCrypt.hashpw(code, BCrypt.gensalt(10))
+
+        val expiration = Timestamp.from(
+            Instant.now().plus(5, ChronoUnit.MINUTES)
+        )
+
+        TwoFAData.deleteByUserId(user.id)
+        val newToken = TwoFAData.EMPTY.generateToken()
+
+        TwoFAData(
+            userId = user.id,
+            ttl = expiration,
+            code_hash = hashedCode,
+            attempts = 0,
+            sessionToken = newToken
+        ).insertIntoDatabase()
+
+        val loginQuery = LoginData.queryDatabase(
+            whereArgs = WhereArgs("${LoginColumns.ID.name} = ?", listOf(user.loginId))
+        )
+
+        if (loginQuery.isEmpty()) {
+            return@timed respondRedirect("/")
+        }
+
+        val loginData = loginQuery.first().dataClass
+
+        EmailService.send2FA(loginData.email, code)
+
+        sessions.set(Temp2FASession(newToken))
+
+        respondRedirect("/verify")
     }
-
-    val code = generate2FACode()
-    val hashedCode = BCrypt.hashpw(code, BCrypt.gensalt(10))
-
-    val expiration = Timestamp.from(
-        Instant.now().plus(5, ChronoUnit.MINUTES)
-    )
-
-    TwoFAData.deleteByUserId(user.id)
-    val token = TwoFAData.EMPTY.generateToken()
-
-    TwoFAData(
-        userId = user.id,
-        ttl = expiration,
-        code_hash = hashedCode,
-        attempts = 0,
-        sessionToken = token
-    ).insertIntoDatabase()
-
-    val loginQuery = LoginData.queryDatabase(
-        whereArgs = WhereArgs("${LoginColumns.ID.name} = ?", listOf(user.loginId))
-    )
-
-    if (loginQuery.isEmpty()) {
-        return respondRedirect("/")
-    }
-
-    val loginData = loginQuery.first().dataClass
-
-    EmailService.send2FA(loginData.email, code)
-    sessions.set(Temp2FASession(token))
-    respondRedirect("/verify")
 }
 
 fun generate2FACode(): String {

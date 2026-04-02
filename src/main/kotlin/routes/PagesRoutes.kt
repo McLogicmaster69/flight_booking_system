@@ -16,10 +16,8 @@ import utils.jsMode
  * - Later, the team can wire them to real DB/API endpoints.
  */
 fun Route.pagesRoutes() {
-    get("/manage") { call.render("manage/index.peb", "Manage") }
     get("/settings") { call.render("settings/index.peb", "Settings") }
     get("/help") { call.render("help/index.peb", "Help") }
-    get("/checkout") { call.render("checkout/index.peb", "Checkout", inNav = false) }
     get("/admin") { call.render("admin/index.peb", "Admin", requireAdmin = true) }
 }
 

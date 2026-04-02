@@ -21,6 +21,7 @@
 <form action="/payment" method="post">
 
     <input type="hidden" name="flightId" value="{{ flightId }}">
+    <input type="hidden" name="tickets" value="{{ tickets }}">
 
     {% for i in 1..tickets %}
     <div>

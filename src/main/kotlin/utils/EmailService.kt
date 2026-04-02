@@ -6,7 +6,6 @@ import java.util.*
 
 object EmailService {
 
-    //using a burner email and password
     private const val FROM_EMAIL = "alidos37pro@gmail.com"
     private const val APP_PASSWORD = "oyeq zeqm bmvv qvpn"
 
@@ -57,26 +56,26 @@ object EmailService {
             }
         })
 
-        val passengerList = passengers.joinToString("\n") { "- $it" }
+        val passengerList = passengers.joinToString("\n") { "    - $it" }
 
-        val body = """
-            Booking Confirmation
-            
-            Reference: $reference
-            
-            Route:
-            $startLocation → $destination
-            
-            Departure:
-            $dateTime
-            
-            Passengers:
-            $passengerList
-            
-            Please keep this reference for check-in.
-            
-            Thank you for booking with us.
-        """.trimIndent()
+        val body = buildString {
+            appendLine("Booking Confirmation")
+            appendLine()
+            appendLine("Reference: $reference")
+            appendLine()
+            appendLine("Route:")
+            appendLine("$startLocation → $destination")
+            appendLine()
+            appendLine("Departure:")
+            appendLine(dateTime)
+            appendLine()
+            appendLine("Passengers:")
+            appendLine(passengerList)
+            appendLine()
+            appendLine("Please keep this reference for check-in.")
+            appendLine()
+            append("Thank you for booking with us.")
+        }
 
         val message = MimeMessage(session).apply {
             setFrom(InternetAddress(FROM_EMAIL))

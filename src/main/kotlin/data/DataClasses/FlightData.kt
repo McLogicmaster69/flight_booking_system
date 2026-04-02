@@ -41,7 +41,7 @@ data class FlightData(
                         DestinationData.getDestinationId("Tokyo")
                     )
                 ),
-                date = LocalDate.parse("2026-03-15"),
+                date = LocalDate.parse("2026-04-15"),
                 time = LocalTime.parse("12:00")
             ),
             FlightData(

@@ -79,9 +79,8 @@ private suspend fun ApplicationCall.handleCheckoutPost() {
 }
 
 private suspend fun ApplicationCall.handlePaymentPost() {
-    timed("T1_payment", jsMode()) { 
+    timed("T1_payment", jsMode()) {
         val pebble = getEngine()
-
         val paymentparams = receiveParameters()
 
         val flightId = paymentparams["flightId"]
@@ -110,13 +109,33 @@ private suspend fun ApplicationCall.handlePaymentPost() {
             passports.add(paymentparams["passport$i"] ?: "")
         }
 
+        val loggedState = loggedIn()
+        var user: UserData? = null
+        var userEmail: String? = null
+
+        if (loggedState.logged_in && loggedState.session != null) {
+            val token = loggedState.session.token
+            user = UserData.queryByToken(token).firstOrNull()?.dataClass
+
+            if (user != null) {
+                val login = LoginData.queryDatabase(
+                    whereArgs = WhereArgs("id = ?", listOf(user.loginId))
+                ).firstOrNull()?.dataClass
+
+                userEmail = login?.email
+            }
+        }
+
         val model = mapOf(
             "title" to "Payment",
             "isNav" to true,
             "flightId" to flightId,
             "tickets" to tickets,
             "lastNames" to lastNames,
-            "passportNumbers" to passports
+            "passportNumbers" to passports,
+            "logged_in" to loggedState.logged_in,
+            "user" to user,
+            "userEmail" to userEmail
         )
 
         val template = pebble.getTemplate("checkout/payment.peb")
@@ -151,7 +170,6 @@ private suspend fun ApplicationCall.handleCreatePaymentIntent() {
 
 private suspend fun ApplicationCall.handleConfirmBooking() {
     timed("T3_confirm_booking", jsMode()) {
-
         val confirmparams = receiveParameters()
 
         val flightId = confirmparams["flightId"]?.toIntOrNull()
@@ -163,47 +181,65 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
             return@timed
         }
 
-        val guest = GuestData.queryDatabase(
-            whereArgs = WhereArgs("email = ?", listOf(email))
-        ).firstOrNull()?.dataClass ?: run {
-            val newGuest = GuestData(email = email)
-            newGuest.insertIntoDatabase()
-            newGuest
-        }
+        val loggedState = loggedIn()
 
-        val booker = BookerData.queryDatabase(
-            whereArgs = WhereArgs("guest_id = ?", listOf(guest.id))
-        ).firstOrNull()?.dataClass ?: run {
-            val newBooker = BookerData(userId = null, guestId = guest.id)
-            newBooker.insertIntoDatabase()
-            newBooker
-        }
+        val booker = if (loggedState.logged_in && loggedState.session != null) {
+            val token = loggedState.session.token
+            val user = UserData.queryByToken(token).firstOrNull()?.dataClass
 
-        val bookerId = booker.id
+            if (user == null) {
+                respondText("Could not identify logged in user", status = HttpStatusCode.BadRequest)
+                return@timed
+            }
+
+            BookerData.queryDatabase(
+                whereArgs = WhereArgs("user_id = ?", listOf(user.id))
+            ).firstOrNull()?.dataClass ?: run {
+                val newBooker = BookerData(userId = user.id, guestId = null)
+                val newBookerId = newBooker.insertIntoDatabase()
+                BookerData(id = newBookerId, userId = user.id, guestId = null)
+            }
+        } else {
+            val guest = GuestData.queryDatabase(
+                whereArgs = WhereArgs("email = ?", listOf(email))
+            ).firstOrNull()?.dataClass ?: run {
+                val newGuest = GuestData(email = email)
+                val newGuestId = newGuest.insertIntoDatabase()
+                GuestData(id = newGuestId, email = email)
+            }
+
+            BookerData.queryDatabase(
+                whereArgs = WhereArgs("guest_id = ?", listOf(guest.id))
+            ).firstOrNull()?.dataClass ?: run {
+                val newBooker = BookerData(userId = null, guestId = guest.id)
+                val newBookerId = newBooker.insertIntoDatabase()
+                BookerData(id = newBookerId, userId = null, guestId = guest.id)
+            }
+        }
 
         val bookingRef = generateBookingReference()
         val passengerNames = mutableListOf<String>()
 
         for (i in 1..tickets) {
-
             val lastName = confirmparams["lastName$i"]
             val passport = confirmparams["passport$i"]
-            passengerNames.add(lastName!!)
 
-            if (lastName.isNullOrBlank() || passport == null) {
+            if (lastName.isNullOrBlank() || passport.isNullOrBlank()) {
                 respondText("Missing passenger info", status = HttpStatusCode.BadRequest)
                 return@timed
             }
 
-           val booking = BookingData(
-                bookerId = bookerId,
+            passengerNames.add(lastName)
+
+            val booking = BookingData(
+                bookerId = booker.id,
+                flightId = flightId,
                 passportNumber = passport,
                 lastname = lastName,
                 bookingReference = bookingRef
             )
 
             booking.insertIntoDatabase()
-
         }
 
         val flight = FlightData.queryDatabase(
@@ -237,10 +273,12 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
             passengers = passengerNames
         )
 
-        respond(mapOf(
-            "status" to "success",
-            "bookingReference" to bookingRef
-        ))
+        respond(
+            mapOf(
+                "status" to "success",
+                "bookingReference" to bookingRef
+            )
+        )
     }
 }
 
