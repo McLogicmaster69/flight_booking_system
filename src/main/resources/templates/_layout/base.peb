@@ -147,7 +147,71 @@
   <footer>
     <small>© 2026 SkyBridge Airways.</small>
   </footer>
+<div id="chat-widget">
+  <div id="chat-window" class="hidden">
+    <div id="chat-header">
+      SkyBridge Assistant 
+      <button id="chat-close">X</button>
+    </div>
+    <div id="chat-messages"></div>
+    <div id="chat-input-area">
+      <input type="text" id="chat-input" placeholder="Ask about flights...">
+      <button id="chat-send">Send</button>
+    </div>
+  </div>
+  <button id="chat-toggle">💬</button>
+</div>
 
+<script>
+  const chatToggle = document.getElementById('chat-toggle');
+  const chatWindow = document.getElementById('chat-window');
+  const chatClose = document.getElementById('chat-close');
+  const chatMessages = document.getElementById('chat-messages');
+  const chatInput = document.getElementById('chat-input');
+  const chatSend = document.getElementById('chat-send');
+
+  chatToggle.addEventListener('click', () => {
+    chatWindow.classList.remove('hidden');
+    chatToggle.classList.add('hidden');
+  });
+
+  chatClose.addEventListener('click', () => {
+    chatWindow.classList.add('hidden');
+    chatToggle.classList.remove('hidden');
+  });
+
+  chatSend.addEventListener('click', sendMessage);
+  chatInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
+  });
+
+  async function sendMessage() {
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    appendMessage('You', text);
+    chatInput.value = '';
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      });
+      const data = await response.json();
+      appendMessage('SkyBridge', data.reply);
+    } catch (err) {
+      appendMessage('System', 'Connection error.');
+    }
+  }
+
+  function appendMessage(sender, message) {
+    const msgDiv = document.createElement('div');
+    msgDiv.innerHTML = `<strong>${sender}:</strong> ${message}`;
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+</script>
 </body>
 
 </html>
