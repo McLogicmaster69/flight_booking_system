@@ -130,5 +130,6 @@ fun Application.configureRouting() {
         rewardsRoutes()
         bookRoutes()
         manageRoutes()
+        chatRoutes()
     }
 }
