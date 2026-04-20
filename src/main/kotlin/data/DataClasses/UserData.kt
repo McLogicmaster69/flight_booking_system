@@ -121,17 +121,18 @@ data class UserData(
         }
 
         fun queryByToken(
-            token : String
-        ) : List<QueryResult<UserData>> {
-            val joinArgs : JoinArgs = JoinArgs(
+            token: String
+        ): List<QueryResult<UserData>> {
+
+            val joinArgs = JoinArgs(
                 joinType = "INNER",
                 joinTable = SessionData.EMPTY.tableName,
-                joinTable1Column = UserColumns.LOGIN_ID.name,
-                joinTable2Column = SessionColumns.ID.name,
+                joinTable1Column = UserColumns.ID.name,
+                joinTable2Column = SessionColumns.USER_ID.name,
                 joinSelectColumns = SessionColumns.COLUMN_NAMES
             )
 
-            val whereArgs : WhereArgs = WhereArgs(
+            val whereArgs = WhereArgs(
                 whereClause = "${SessionData.EMPTY.tableName}.${SessionColumns.SESSION_TOKEN.name} = ?",
                 whereArgs = listOf(token)
             )

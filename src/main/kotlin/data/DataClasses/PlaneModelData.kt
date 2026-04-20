@@ -2,9 +2,9 @@ package data
 
 object PlaneModelColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val CAPACITY = Column<Int?>("passport_number", "INTEGER")
-    val NAME = Column<String>("booking_reference", "STRING NOT NULL")
-    val MANUFACTURER_ID = Column<Int>("booker_id", "INTEGER NOT NULL REFERENCES manufacturers(id)")
+    val CAPACITY = Column<Int?>("capacity", "INTEGER")
+    val NAME = Column<String>("name", "STRING NOT NULL")
+    val MANUFACTURER_ID = Column<Int>("manufacturer_id", "INTEGER NOT NULL REFERENCES manufacturers(id)")
 
     val ALL = listOf(ID, CAPACITY, NAME, MANUFACTURER_ID)
     val COLUMN_NAMES = ALL.map { it.name }
@@ -21,6 +21,25 @@ data class PlaneModelData(
 
     override val tableName = "plane_models"
     override val tableColumns = PlaneModelColumns.ALL
+
+    override val initialRows: List<PlaneModelData>
+        get() = listOf(
+            PlaneModelData(
+                capacity = 189,
+                name = "Boeing 737-800",
+                manufacturerId = ManufacturerData.getManufacturerId("Boeing")
+            ),
+            PlaneModelData(
+                capacity = 220,
+                name = "Airbus A321",
+                manufacturerId = ManufacturerData.getManufacturerId("Airbus")
+            )
+        )
+
+    override val requiredTables: List<DataClass<*>>
+        get() = listOf(
+            ManufacturerData.EMPTY
+        )
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
@@ -49,6 +68,12 @@ data class PlaneModelData(
             joinArgs : JoinArgs? = null,
             whereArgs : WhereArgs? = null) : List<QueryResult<PlaneModelData>> {
             return EMPTY.queryDatabase(joinArgs, whereArgs)
+        }
+
+        fun getPlaneModelId(name: String): Int {
+            return queryDatabase(
+                whereArgs = WhereArgs("name = ?", listOf(name))
+            ).firstOrNull()?.dataClass?.id ?: -1
         }
 
         fun updateTable (

@@ -32,23 +32,23 @@ data class RouteData(
             RouteData(
                 startDestination = DestinationData.getDestinationId("Luton"),
                 endDestination = DestinationData.getDestinationId("Tokyo"),
-                planeId = 0,
+                planeId = PlaneData.getPlaneId("Boeing 737-800"),
                 duration = LocalTime.parse("07:00")
             ),
             RouteData(
                 startDestination = DestinationData.getDestinationId("Luton"),
                 endDestination = DestinationData.getDestinationId("Berlin"),
-                planeId = 0,
+                planeId = PlaneData.getPlaneId("Airbus A321"),
                 duration = LocalTime.parse("02:00")
             ),
             RouteData(
                 startDestination = DestinationData.getDestinationId("Berlin"),
                 endDestination = DestinationData.getDestinationId("Tokyo"),
-                planeId = 0,
+                planeId = PlaneData.getPlaneId("Boeing 737-800"),
                 duration = LocalTime.parse("06:00")
             )
         )
-
+        
     override val requiredTables : List<DataClass<*>>
         get() = listOf(
             DestinationData.EMPTY,

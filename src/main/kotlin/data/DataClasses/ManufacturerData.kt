@@ -18,6 +18,12 @@ data class ManufacturerData(
     override val tableName = "manufacturers"
     override val tableColumns = ManufacturerColumns.ALL
 
+    override val initialRows: List<ManufacturerData>
+        get() = listOf(
+            ManufacturerData(name = "Boeing"),
+            ManufacturerData(name = "Airbus")
+        )
+
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
             ManufacturerColumns.NAME to name
@@ -41,6 +47,12 @@ data class ManufacturerData(
             joinArgs : JoinArgs? = null,
             whereArgs : WhereArgs? = null) : List<QueryResult<ManufacturerData>> {
             return EMPTY.queryDatabase(joinArgs, whereArgs)
+        }
+
+        fun getManufacturerId(name: String): Int {
+            return queryDatabase(
+                whereArgs = WhereArgs("name = ?", listOf(name))
+            ).firstOrNull()?.dataClass?.id ?: -1
         }
 
         fun updateTable (
