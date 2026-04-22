@@ -150,7 +150,8 @@ private suspend fun ApplicationCall.handleGetResult() {
             "end" to search.getEndDestinationName(),
             "date" to search.getDate(),
             "layovers" to search.getLayovers(),
-            "flightInfo" to search.getFlightInfo()
+            "flightInfo" to search.getFlightInfo(),
+            "token" to token
         )
 
         val template = pebble.getTemplate("book/result.peb")

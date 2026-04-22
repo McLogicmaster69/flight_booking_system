@@ -25,6 +25,8 @@ dependencies {
     implementation("io.ktor:ktor-server-sessions-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
 
     // Pebble templating
     implementation("io.pebbletemplates:pebble:$pebbleVersion")
@@ -49,6 +51,9 @@ dependencies {
 
     // Java Mail/Jakarta Mail
     implementation("com.sun.mail:jakarta.mail:2.0.1")
+
+    // Stripe API
+    implementation("com.stripe:stripe-java:24.16.0")
 }
 
 application {

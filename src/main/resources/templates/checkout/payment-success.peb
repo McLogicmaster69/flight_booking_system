@@ -1,0 +1,13 @@
+{% extends "_layout/base.peb" %}
+
+{% set activePage = 'payment' %}
+{% set inNav = true %}
+
+{% block content %}
+<div class="payment-success-container" style="text-align:center; padding: 50px;">
+    <h1>Payment Successful!</h1>
+    <p>Thank you for your booking.</p>
+    <p>Your tickets will be emailed to you shortly.</p>
+    <a href="/" style="display:inline-block; margin-top:20px; text-decoration:none; color:white; background:#007BFF; padding:10px 20px; border-radius:5px;">Back to Home</a>
+</div>
+{% endblock %}

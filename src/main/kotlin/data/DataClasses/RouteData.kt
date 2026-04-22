@@ -43,7 +43,7 @@ data class RouteData(
                 duration = LocalTime.parse("06:00")
             )
         )
-
+        
     override val requiredTables : List<DataClass<*>>
         get() = listOf(
             DestinationData.EMPTY,

@@ -16,6 +16,8 @@ import utils.initialCleanup
 import utils.SessionData
 import java.io.StringWriter
 import io.ktor.util.*
+import io.ktor.serialization.kotlinx.json.*
+import kotlinx.serialization.json.Json
 
 fun main() {
     val port = System.getenv("PORT")?.toIntOrNull() ?: 8080
@@ -29,6 +31,7 @@ fun main() {
         configureLogging()
         configureTemplating()
         configureSessions()
+        configureSerialization()
         configureRouting()
     }.start(wait = true)
 }
@@ -109,17 +112,24 @@ fun Application.configureSessions() {
     }
 }
 
+fun Application.configureSerialization() {
+    install(io.ktor.server.plugins.contentnegotiation.ContentNegotiation) {
+        json()  // enables parsing application/json in receive<Map<String,String>>()
+    }
+}
+
 fun Application.configureRouting() {
     routing {
         staticResources("/static", "static")
-
         configureHealthCheck()
-
+        checkoutRoutes()
         homepageRoutes()
         pagesRoutes()
         logInRoutes()
         signUpRoutes()
         rewardsRoutes()
         bookRoutes()
+        manageRoutes()
+        chatRoutes()
     }
 }

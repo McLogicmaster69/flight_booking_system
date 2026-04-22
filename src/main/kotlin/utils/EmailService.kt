@@ -6,7 +6,6 @@ import java.util.*
 
 object EmailService {
 
-    //using a burner email and password
     private const val FROM_EMAIL = "alidos37pro@gmail.com"
     private const val APP_PASSWORD = "oyeq zeqm bmvv qvpn"
 
@@ -40,7 +39,8 @@ object EmailService {
         reference: String,
         startLocation: String,
         destination: String,
-        dateTime: String
+        dateTime: String,
+        passengers: List<String>
     ) {
 
         val props = Properties().apply {
@@ -56,20 +56,26 @@ object EmailService {
             }
         })
 
-        val body = """
-            Booking Confirmation
-            
-            Thank you for your booking. Your journey details are below:
-            
-            Reference: $reference
-            Starting Location: $startLocation
-            Destination: $destination
-            Date & Time: $dateTime
-            
-            Please keep this reference for your records.
-            
-            We look forward to serving you.
-        """.trimIndent()
+        val passengerList = passengers.joinToString("\n") { "    - $it" }
+
+        val body = buildString {
+            appendLine("Booking Confirmation")
+            appendLine()
+            appendLine("Reference: $reference")
+            appendLine()
+            appendLine("Route:")
+            appendLine("$startLocation → $destination")
+            appendLine()
+            appendLine("Departure:")
+            appendLine(dateTime)
+            appendLine()
+            appendLine("Passengers:")
+            appendLine(passengerList)
+            appendLine()
+            appendLine("Please keep this reference for check-in.")
+            appendLine()
+            append("Thank you for booking with us.")
+        }
 
         val message = MimeMessage(session).apply {
             setFrom(InternetAddress(FROM_EMAIL))

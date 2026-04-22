@@ -34,6 +34,25 @@ data class PlaneModelData(
             ManufacturerData.EMPTY,
         )
 
+    override val initialRows: List<PlaneModelData>
+        get() = listOf(
+            PlaneModelData(
+                capacity = 189,
+                name = "Boeing 737-800",
+                manufacturerId = ManufacturerData.getManufacturerId("Boeing")
+            ),
+            PlaneModelData(
+                capacity = 220,
+                name = "Airbus A321",
+                manufacturerId = ManufacturerData.getManufacturerId("Airbus")
+            )
+        )
+
+    override val requiredTables: List<DataClass<*>>
+        get() = listOf(
+            ManufacturerData.EMPTY
+        )
+
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
             PlaneModelColumns.NAME to name,
@@ -59,6 +78,12 @@ data class PlaneModelData(
             joinArgs : JoinArgs? = null,
             whereArgs : WhereArgs? = null) : List<QueryResult<PlaneModelData>> {
             return EMPTY.queryDatabase(joinArgs, whereArgs)
+        }
+
+        fun getPlaneModelId(name: String): Int {
+            return queryDatabase(
+                whereArgs = WhereArgs("name = ?", listOf(name))
+            ).firstOrNull()?.dataClass?.id ?: -1
         }
 
         fun updateTable (
