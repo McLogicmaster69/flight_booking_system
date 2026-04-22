@@ -43,7 +43,7 @@ data class FlightData(
                         DestinationData.getDestinationId("Tokyo")
                     )
                 ),
-                planeId = PlaneData.queryDatabase().first().dataClass.id,
+                planeId = PlaneData.getPlaneId("Boeing 737-800"),
                 date = LocalDate.parse("2026-05-15"),
                 time = LocalTime.parse("12:00")
             ),
@@ -54,7 +54,7 @@ data class FlightData(
                         DestinationData.getDestinationId("Berlin")
                     )
                 ),
-                planeId = PlaneData.queryDatabase().first().dataClass.id,
+                planeId = PlaneData.getPlaneId("Airbus A321"),
                 date = LocalDate.parse("2026-05-15"),
                 time = LocalTime.parse("10:00")
             ),
@@ -65,7 +65,7 @@ data class FlightData(
                         DestinationData.getDestinationId("Tokyo")
                     )
                 ),
-                planeId = PlaneData.queryDatabase().first().dataClass.id,
+                planeId = PlaneData.getPlaneId("Boeing 737-800"),
                 date = LocalDate.parse("2026-05-15"),
                 time = LocalTime.parse("16:00")
             )

@@ -21,28 +21,17 @@ data class PlaneModelData(
     override val tableColumns = PlaneModelColumns.ALL
     override val tableAdditionalSQL = "UNIQUE (name, manufacturer_id)"
 
-    override val initialRows : List<PlaneModelData>
+    override val initialRows: List<PlaneModelData>
         get() = listOf(
             PlaneModelData(
                 name = "Good Plane",
                 manufacturerId = ManufacturerData.getManufacturerId("Plane Builder")
-            )
-        )
-
-    override val requiredTables : List<DataClass<*>>
-        get() = listOf(
-            ManufacturerData.EMPTY,
-        )
-
-    override val initialRows: List<PlaneModelData>
-        get() = listOf(
+            ),
             PlaneModelData(
-                capacity = 189,
                 name = "Boeing 737-800",
                 manufacturerId = ManufacturerData.getManufacturerId("Boeing")
             ),
             PlaneModelData(
-                capacity = 220,
                 name = "Airbus A321",
                 manufacturerId = ManufacturerData.getManufacturerId("Airbus")
             )
