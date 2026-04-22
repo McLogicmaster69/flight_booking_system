@@ -18,6 +18,12 @@ data class ClassData(
     override val tableName = "classes"
     override val tableColumns = ClassColumns.ALL
 
+    override val initialRows : List<ClassData>
+        get() = listOf(
+            ClassData(name = "First"),
+            ClassData(name = "Second")
+        )
+
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
             ClassColumns.NAME to name

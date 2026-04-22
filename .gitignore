@@ -27,3 +27,6 @@ gradle-app.setting
 /data/
 
 *.csv
+
+# bin folder
+/bin

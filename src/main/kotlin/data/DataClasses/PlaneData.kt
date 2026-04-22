@@ -18,6 +18,16 @@ data class PlaneData(
     override val tableName = "planes"
     override val tableColumns = PlaneColumns.ALL
 
+    override val initialRows : List<PlaneData>
+        get() = listOf(
+            PlaneData(modelId = PlaneModelData.queryDatabase().first().dataClass.id)
+        )
+
+    override val requiredTables : List<DataClass<*>>
+        get() = listOf(
+            PlaneModelData.EMPTY
+        )
+
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
             PlaneColumns.MODEL_ID to modelId
