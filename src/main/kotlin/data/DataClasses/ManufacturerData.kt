@@ -18,11 +18,11 @@ data class ManufacturerData(
     override val tableName = "manufacturers"
     override val tableColumns = ManufacturerColumns.ALL
 
-    override val initialRows: List<ManufacturerData>
+    override val initialRows : List<ManufacturerData>
         get() = listOf(
+            ManufacturerData(name = "Plane Builder"),
             ManufacturerData(name = "Boeing"),
             ManufacturerData(name = "Airbus")
-        )
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
@@ -62,6 +62,16 @@ data class ManufacturerData(
 
         fun delete(id : Int) : Int {
             return ManufacturerData(id = id).delete()
+        }
+
+        fun getManufacturerId (manufacturer : String) : Int {
+            val query : List<QueryResult<ManufacturerData>> = queryDatabase(whereArgs = WhereArgs("${ManufacturerColumns.NAME.name} = ?", listOf(manufacturer)))
+            if (query.isEmpty()) {
+                println("Could not find manufacturer $manufacturer")
+                return -1
+            }
+
+            return query.first().dataClass.id
         }
     }
 }

@@ -25,7 +25,9 @@ data class DestinationData(
 
     override val initialRows : List<DestinationData>
         get() = listOf(
-            DestinationData(countryId = CountryData.getCountryId("England"), cityName = "Luton", timezoneId = TimezoneData.getTimezoneId("GMT")),
+            DestinationData(countryId = CountryData.getCountryId("United Kingdom"), cityName = "Luton", timezoneId = TimezoneData.getTimezoneId("GMT")),
+            DestinationData(countryId = CountryData.getCountryId("United Kingdom"), cityName = "Heathrow", timezoneId = TimezoneData.getTimezoneId("GMT")),
+            DestinationData(countryId = CountryData.getCountryId("Slovakia"), cityName = "Bratislava", timezoneId = TimezoneData.getTimezoneId("CET")),
             DestinationData(countryId = CountryData.getCountryId("Japan"), cityName = "Tokyo", timezoneId = TimezoneData.getTimezoneId("JST")),
             DestinationData(countryId = CountryData.getCountryId("Germany"), cityName = "Berlin", timezoneId = TimezoneData.getTimezoneId("CET"))
         )
