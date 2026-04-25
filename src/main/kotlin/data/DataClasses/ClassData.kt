@@ -2,7 +2,7 @@ package data
 
 object ClassColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val NAME = Column<String?>("name", "VARCHAR")
+    val NAME = Column<String>("name", "VARCHAR NOT NULL UNIQUE")
 
     val ALL = listOf(ID, NAME)
     val COLUMN_NAMES = ALL.map { it.name }
@@ -17,6 +17,13 @@ data class ClassData(
 
     override val tableName = "classes"
     override val tableColumns = ClassColumns.ALL
+
+    override val initialRows: List<ClassData>
+        get() = listOf(
+            ClassData(name = "First Class"),
+            ClassData(name = "Business"),
+            ClassData(name = "Economy")
+        )
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(

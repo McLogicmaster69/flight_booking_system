@@ -2,7 +2,7 @@ package data
 
 object TicketTypeColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val NAME = Column<String?>("name", "VARCHAR")
+    val NAME = Column<String>("name", "VARCHAR NOT NULL UNIQUE")
 
     val ALL = listOf(ID, NAME)
     val COLUMN_NAMES = ALL.map { it.name }
@@ -11,12 +11,18 @@ object TicketTypeColumns {
 data class TicketTypeData(
 
     override val id: Int = 0,
-    var name : String? = null,
+    var name : String = "",
 
 ) : DataClass<TicketTypeData>(id) {
 
     override val tableName = "ticket_types"
     override val tableColumns = TicketTypeColumns.ALL
+
+    override val initialRows: List<TicketTypeData>
+        get() = listOf(
+            TicketTypeData(name = "Adult"),
+            TicketTypeData(name = "Child")
+        )
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(

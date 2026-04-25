@@ -67,5 +67,88 @@ data class SeatData(
         fun delete(id : Int) : Int {
             return SeatData(id = id).delete()
         }
+
+        fun generateSeatsForFlight(flightId: Int) {
+            val existingSeats = queryDatabase(
+                whereArgs = WhereArgs("flight_id = ?", listOf(flightId))
+            )
+
+            if (existingSeats.isNotEmpty()) return
+
+            val flight = FlightData.queryDatabase(
+                whereArgs = WhereArgs("id = ?", listOf(flightId))
+            ).firstOrNull()?.dataClass ?: return
+
+            val route = RouteData.queryDatabase(
+                whereArgs = WhereArgs("id = ?", listOf(flight.routeId))
+            ).firstOrNull()?.dataClass ?: return
+
+            val plane = PlaneData.queryDatabase(
+                whereArgs = WhereArgs("id = ?", listOf(route.planeId))
+            ).firstOrNull()?.dataClass ?: return
+
+            val model = PlaneModelData.queryDatabase(
+                whereArgs = WhereArgs("id = ?", listOf(plane.modelId))
+            ).firstOrNull()?.dataClass ?: return
+
+            val capacity = model.capacity ?: return
+
+            val firstClassId = ClassData.queryDatabase(
+                whereArgs = WhereArgs("name = ?", listOf("First Class"))
+            ).firstOrNull()?.dataClass?.id ?: return
+
+            val businessClassId = ClassData.queryDatabase(
+                whereArgs = WhereArgs("name = ?", listOf("Business"))
+            ).firstOrNull()?.dataClass?.id ?: return
+
+            val economyClassId = ClassData.queryDatabase(
+                whereArgs = WhereArgs("name = ?", listOf("Economy"))
+            ).firstOrNull()?.dataClass?.id ?: return
+
+            val adultTypeId = TicketTypeData.queryDatabase(
+                whereArgs = WhereArgs("name = ?", listOf("Adult"))
+            ).firstOrNull()?.dataClass?.id ?: return
+
+            for (seatNumber in 1..capacity) {
+                val classId = when {
+                    seatNumber <= capacity * 0.05 -> firstClassId
+                    seatNumber <= capacity * 0.20 -> businessClassId
+                    else -> economyClassId
+                }
+
+                SeatData(
+                    flightId = flightId,
+                    classId = classId,
+                    typeId = adultTypeId,
+                    number = seatNumber,
+                    price = 0f
+                ).insertIntoDatabase()
+            }
+        }
+
+        fun getAvailableSeats(flightId: Int, classId: Int): List<SeatData> {
+            val seats = queryDatabase(
+                whereArgs = WhereArgs(
+                    "flight_id = ? AND class_id = ?",
+                    listOf(flightId, classId)
+                )
+            ).map { it.dataClass }
+
+            return seats.filter { seat ->
+                BookedSeatData.queryDatabase(
+                    whereArgs = WhereArgs("seat_id = ?", listOf(seat.id))
+                ).isEmpty()
+            }
+        }
+
+        fun getRandomAvailableSeat(flightId: Int, classId: Int): SeatData? {
+            return getAvailableSeats(flightId, classId).randomOrNull()
+        }
+
+        fun isSeatAvailable(seatId: Int): Boolean {
+            return BookedSeatData.queryDatabase(
+                whereArgs = WhereArgs("seat_id = ?", listOf(seatId))
+            ).isEmpty()
+        }
     }
 }

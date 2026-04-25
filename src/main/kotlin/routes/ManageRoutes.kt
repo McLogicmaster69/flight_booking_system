@@ -89,44 +89,14 @@ private suspend fun ApplicationCall.handleBookingSearch() {
 
         val bookingRows = DatabaseManager.queryTable(
             table = "bookings",
-            columns = listOf("id", "booker_id", "flight_id", "passport_number", "lastname", "booking_reference"),
+            columns = listOf("id", "booker_id", "passport_number", "lastname", "booking_reference"),
             whereArgs = WhereArgs(
                 "LOWER(booking_reference) = LOWER(?) AND LOWER(lastname) = LOWER(?)",
                 listOf(ref, last)
             )
         )
 
-        val results = mutableListOf<Array<Any?>>()
-
-        for (row in bookingRows) {
-            val flightId = row[2] as Int
-            val lastname = row[4] as? String ?: ""
-            val bookingReference = row[5] as? String ?: ""
-
-            val flight = FlightData.queryDatabase(flightId).firstOrNull()?.dataClass
-
-            if (flight == null) {
-                results.add(
-                    arrayOf(
-                        bookingReference,
-                        lastname,
-                        "Not assigned",
-                        "Not assigned",
-                        "Not assigned"
-                    )
-                )
-            } else {
-                results.add(
-                    arrayOf(
-                        bookingReference,
-                        lastname,
-                        flight.date.toString(),
-                        flight.time.toString(),
-                        flight.id
-                    )
-                )
-            }
-        }
+        val results = enrichBookingRowsFromSeats(bookingRows)
 
         val model = mapOf(
             "title" to "Manage Bookings",
@@ -147,42 +117,59 @@ private suspend fun ApplicationCall.handleBookingSearch() {
 private fun getEnrichedBookingsForBooker(bookerId: Int): List<Array<Any?>> {
     val bookingRows = DatabaseManager.queryTable(
         table = "bookings",
-        columns = listOf("id", "booker_id", "flight_id", "passport_number", "lastname", "booking_reference"),
+        columns = listOf("id", "booker_id", "passport_number", "lastname", "booking_reference"),
         whereArgs = WhereArgs("booker_id = ?", listOf(bookerId))
     )
 
-    val enrichedBookings = mutableListOf<Array<Any?>>()
+    return enrichBookingRowsFromSeats(bookingRows)
+}
+
+private fun enrichBookingRowsFromSeats(bookingRows: List<Array<Any?>>): List<Array<Any?>> {
+    val results = mutableListOf<Array<Any?>>()
 
     for (row in bookingRows) {
-        val flightId = row[2] as Int
-        val lastname = row[4] as? String ?: ""
-        val bookingReference = row[5] as? String ?: ""
+        val bookingId = row[0] as Int
+        val lastname = row[3] as? String ?: ""
+        val bookingReference = row[4] as? String ?: ""
 
-        val flight = FlightData.queryDatabase(flightId).firstOrNull()?.dataClass
+        val bookedSeat = BookedSeatData.queryDatabase(
+            whereArgs = WhereArgs("booking_id = ?", listOf(bookingId))
+        ).firstOrNull()?.dataClass
 
-        if (flight == null) {
-            enrichedBookings.add(
-                arrayOf(
-                    bookingReference,
-                    lastname,
-                    "Not assigned",
-                    "Not assigned",
-                    "Not assigned"
-                )
-            )
-            continue
+        val seat = bookedSeat?.seatId?.let { seatId ->
+            SeatData.queryDatabase(
+                whereArgs = WhereArgs("id = ?", listOf(seatId))
+            ).firstOrNull()?.dataClass
         }
 
-        enrichedBookings.add(
+        val flight = seat?.flightId?.let { seatFlightId ->
+            FlightData.queryDatabase(seatFlightId).firstOrNull()?.dataClass
+        }
+
+        val seatClass = seat?.classId?.let { classId ->
+            ClassData.queryDatabase(
+                whereArgs = WhereArgs("id = ?", listOf(classId))
+            ).firstOrNull()?.dataClass
+        }
+
+        val ticketType = seat?.typeId?.let { typeId ->
+            TicketTypeData.queryDatabase(
+                whereArgs = WhereArgs("id = ?", listOf(typeId))
+            ).firstOrNull()?.dataClass
+        }
+
+        results.add(
             arrayOf(
                 bookingReference,
                 lastname,
-                flight.date.toString(),
-                flight.time.toString(),
-                flight.id
+                flight?.date?.toString() ?: "Not assigned",
+                flight?.time?.toString() ?: "Not assigned",
+                seat?.number ?: "Not assigned",
+                seatClass?.name ?: "Not assigned",
+                ticketType?.name ?: "Not assigned"
             )
         )
     }
 
-    return enrichedBookings
+    return results
 }
