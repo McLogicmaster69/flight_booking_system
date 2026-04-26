@@ -26,8 +26,31 @@
     {% for i in 1..tickets %}
     <div>
         <h3>Passenger {{ i }}</h3>
+
         <input class="general-input" type="text" name="lastName{{ i }}" required pattern="[A-Za-z]+" placeholder="Last Name">
+
         <input class="general-input" type="text" name="passport{{ i }}" required minlength="6" placeholder="Passport Number">
+
+        <select class="general-input" name="typeId{{ i }}" required>
+            <option value="">Select Ticket Type</option>
+            {% for ticketType in ticketTypes %}
+                <option value="{{ ticketType.id }}">{{ ticketType.name }}</option>
+            {% endfor %}
+        </select>
+        <select class="general-input class-select" name="classId{{ i }}" data-passenger="{{ i }}" required>
+            <option value="">Select Class</option>
+            {% for flightClass in classes %}
+                <option value="{{ flightClass.id }}">{{ flightClass.name }}</option>
+            {% endfor %}
+        </select>
+        <select class="general-input seat-select" name="seatId{{ i }}" id="seatId{{ i }}" data-passenger="{{ i }}">
+            <option value="">Random seat - free</option>
+            {% for seat in availableSeats %}
+                <option value="{{ seat.id }}" data-class-id="{{ seat.classId }}">
+                    Seat {{ seat.number }} - £5
+                </option>
+            {% endfor %}
+        </select>
     </div>
     {% endfor %}
 
@@ -35,5 +58,25 @@
 
 </form>
 
+<script>
+document.querySelectorAll(".class-select").forEach(classSelect => {
+    classSelect.addEventListener("change", () => {
+        const passenger = classSelect.dataset.passenger;
+        const selectedClassId = classSelect.value;
+        const seatSelect = document.getElementById("seatId" + passenger);
+
+        Array.from(seatSelect.options).forEach(option => {
+            if (option.value === "") {
+                option.hidden = false;
+                return;
+            }
+
+            option.hidden = option.dataset.classId !== selectedClassId;
+        });
+
+        seatSelect.value = "";
+    });
+});
+</script>
 
 {% endblock %}

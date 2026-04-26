@@ -27,11 +27,13 @@
             </div>
 
             <div class="booking-body">
-                <p><strong>Name :</strong> {{ row[1] }}</p>
-                <p><strong>Flight ID :</strong> {{ row[4] }}</p>
-                <p><strong>Date :</strong> {{ row[2] }}</p>
-                <p><strong>Time :</strong> {{ row[3] }}</p>
-            </div>
+              <p><strong>Name :</strong> {{ row[1] }}</p>
+              <p><strong>Date :</strong> {{ row[2] }}</p>
+              <p><strong>Time :</strong> {{ row[3] }}</p>
+              <p><strong>Seat :</strong> {{ row[4] }}</p>
+              <p><strong>Class :</strong> {{ row[5] }}</p>
+              <p><strong>Ticket Type :</strong> {{ row[6] }}</p>
+          </div>
 
         </div>
     {% endfor %}
@@ -48,10 +50,12 @@
         </div>
 
         <div class="booking-body">
-          <p><strong>Name :</strong> {{ booking[1] }}</p>
-          <p><strong>Flight ID :</strong> {{ booking[4] }}</p>
-          <p><strong>Date :</strong> {{ booking[2] }}</p>
-          <p><strong>Time :</strong> {{ booking[3] }}</p>
+            <p><strong>Name :</strong> {{ booking[1] }}</p>
+            <p><strong>Date :</strong> {{ booking[2] }}</p>
+            <p><strong>Time :</strong> {{ booking[3] }}</p>
+            <p><strong>Seat :</strong> {{ booking[4] }}</p>
+            <p><strong>Class :</strong> {{ booking[5] }}</p>
+            <p><strong>Ticket Type :</strong> {{ booking[6] }}</p>
         </div>
       </div>
     {% endfor %}

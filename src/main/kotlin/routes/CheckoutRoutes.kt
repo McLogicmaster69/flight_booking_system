@@ -41,6 +41,7 @@ private suspend fun ApplicationCall.handleCheckoutPost() {
         val start = cheakoutparams["start"]
         val end = cheakoutparams["end"]
         val dateTimeStr = cheakoutparams["dateTime"]
+        val ticketTypes = TicketTypeData.queryDatabase().map { it.dataClass }
 
         val (datePart, timePart) = dateTimeStr?.split("T")?.let {
             if (it.size == 2) it[0] to it[1] else it[0] to "00:00"
@@ -60,6 +61,23 @@ private suspend fun ApplicationCall.handleCheckoutPost() {
         val routeId = RouteData.getRouteId(DestinationArgs(startId, endId))
         val flightId = FlightData.queryDatabase(listOf(routeId), LocalDate.parse(datePart)).firstOrNull()?.dataClass?.id
 
+        if (flightId != null) {
+            SeatData.generateSeatsForFlight(flightId)
+        }
+
+        val classes = ClassData.queryDatabase().map { it.dataClass }
+
+        val availableSeats = if (flightId != null) {
+            SeatData.queryDatabase(
+                whereArgs = WhereArgs("flight_id = ?", listOf(flightId))
+            ).map { it.dataClass }.filter { seat ->
+                BookedSeatData.queryDatabase(
+                    whereArgs = WhereArgs("seat_id = ?", listOf(seat.id))
+                ).isEmpty()
+            }
+        } else {
+            emptyList()
+        }
 
         val model = mapOf(
             "title" to "Checkout",
@@ -68,7 +86,10 @@ private suspend fun ApplicationCall.handleCheckoutPost() {
             "start" to start,
             "end" to end,
             "date" to dateTimeStr,
-            "flightId" to flightId
+            "flightId" to flightId,
+            "classes" to classes,
+            "availableSeats" to availableSeats,
+            "ticketTypes" to ticketTypes
         )
 
         val template = pebble.getTemplate("checkout/index.peb")
@@ -82,6 +103,8 @@ private suspend fun ApplicationCall.handlePaymentPost() {
     timed("T1_payment", jsMode()) {
         val pebble = getEngine()
         val paymentparams = receiveParameters()
+
+        val typeIds = mutableListOf<Int>()
 
         val flightId = paymentparams["flightId"]
         if (flightId.isNullOrBlank()) {
@@ -99,6 +122,58 @@ private suspend fun ApplicationCall.handlePaymentPost() {
                 respondText("Missing passenger info", status = HttpStatusCode.BadRequest)
                 return@timed
             }
+        }
+
+        val classIds = mutableListOf<Int>()
+        val seatIds = mutableListOf<Int?>()
+        var totalAmount = 0L
+
+        val flight = FlightData.queryDatabase(
+            whereArgs = WhereArgs("id = ?", listOf(flightId.toInt()))
+        ).firstOrNull()?.dataClass
+
+        if (flight == null) {
+            respondText("Flight not found", status = HttpStatusCode.BadRequest)
+            return@timed
+        }
+
+        val durationMinutes = RouteData.getDurationMinutes(flight.routeId)
+
+        for (i in 1..tickets) {
+            val classId = paymentparams["classId$i"]?.toIntOrNull()
+            val seatId = paymentparams["seatId$i"]?.toIntOrNull()
+            val typeId = paymentparams["typeId$i"]?.toIntOrNull()
+
+            if (classId == null) {
+                respondText("Missing class selection", status = HttpStatusCode.BadRequest)
+                return@timed
+            }
+
+            if (seatId != null && !SeatData.isSeatAvailable(seatId)) {
+                respondText("Selected seat is no longer available", status = HttpStatusCode.BadRequest)
+                return@timed
+            }
+
+            if (typeId == null) {
+                respondText("Missing ticket type", status = HttpStatusCode.BadRequest)
+                return@timed
+            }
+
+            val classData = ClassData.queryDatabase(
+                whereArgs = WhereArgs("id = ?", listOf(classId))
+            ).firstOrNull()?.dataClass
+
+            val className = classData?.name ?: "Economy"
+
+            classIds.add(classId)
+            seatIds.add(seatId)
+            typeIds.add(typeId)
+
+            totalAmount += calculateTicketPrice(
+                className = className,
+                durationMinutes = durationMinutes,
+                choseSeat = seatId != null
+            )
         }
 
         val lastNames = mutableListOf<String>()
@@ -135,7 +210,12 @@ private suspend fun ApplicationCall.handlePaymentPost() {
             "passportNumbers" to passports,
             "logged_in" to loggedState.logged_in,
             "user" to user,
-            "userEmail" to userEmail
+            "userEmail" to userEmail,
+            "classIds" to classIds,
+            "seatIds" to seatIds,
+            "totalAmount" to totalAmount,
+            "displayTotal" to "%.2f".format(totalAmount / 100.0),
+            "typeIds" to typeIds
         )
 
         val template = pebble.getTemplate("checkout/payment.peb")
@@ -149,11 +229,14 @@ private suspend fun ApplicationCall.handleCreatePaymentIntent() {
     timed("T2_payment_intent", jsMode()) {
         val body = receive<Map<String, String>>()
         val email = body["email"] ?: ""
-        val tickets = (body["tickets"]?.toIntOrNull() ?: 1)
-
         Stripe.apiKey = "sk_test_51TCfFDDPNfjFe9Utry1rCfJEQJ0YIASnPd7O0SkI3Ewo7COIifnBpfEsP7xPhx5c1WJ8ndpJKxi1IrWqJEJfoyEL00engmejFe"
 
-        val amount = tickets * 5000L
+        val amount = body["amount"]?.toLongOrNull()
+
+        if (amount == null || amount <= 0) {
+            respondText("Invalid payment amount", status = HttpStatusCode.BadRequest)
+            return@timed
+        }
 
         val intentparams = PaymentIntentCreateParams.builder()
             .setAmount(amount)
@@ -231,6 +314,44 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
 
             passengerNames.add(lastName)
 
+            val classId = confirmparams["classId$i"]?.toIntOrNull()
+            val chosenSeatId = confirmparams["seatId$i"]?.toIntOrNull()
+            val typeId = confirmparams["typeId$i"]?.toIntOrNull()
+
+            if (classId == null) {
+                respondText("Missing class selection", status = HttpStatusCode.BadRequest)
+                return@timed
+            }
+
+            if (typeId == null) {
+                respondText("Missing ticket type", status = HttpStatusCode.BadRequest)
+                return@timed
+            }
+
+            val finalSeat = if (chosenSeatId != null) {
+                if (!SeatData.isSeatAvailable(chosenSeatId)) {
+                    respondText("Selected seat is no longer available", status = HttpStatusCode.BadRequest)
+                    return@timed
+                }
+
+                SeatData.queryDatabase(
+                    whereArgs = WhereArgs("id = ?", listOf(chosenSeatId))
+                ).firstOrNull()?.dataClass
+
+            } else {
+                SeatData.getRandomAvailableSeat(flightId, classId)
+            }
+
+            if (finalSeat == null) {
+                respondText("No available seats", status = HttpStatusCode.BadRequest)
+                return@timed
+            }
+
+            if (finalSeat.flightId != flightId || finalSeat.classId != classId) {
+                respondText("Selected seat does not match selected class or flight", status = HttpStatusCode.BadRequest)
+                return@timed
+            }
+
             val booking = BookingData(
                 bookerId = booker.id,
                 flightId = flightId,
@@ -239,7 +360,12 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
                 bookingReference = bookingRef
             )
 
-            booking.insertIntoDatabase()
+            val bookingId = booking.insertIntoDatabase()
+
+            BookedSeatData(
+                seatId = finalSeat.id,
+                bookingId = bookingId
+            ).insertIntoDatabase()
         }
 
         val flight = FlightData.queryDatabase(
@@ -303,4 +429,24 @@ private suspend fun ApplicationCall.handlePaymentSuccessLoad() {
         fullEvaluate(template, writer, model)
         respondText(writer.toString(), ContentType.Text.Html)
     }
+}
+
+private fun calculateTicketPrice(
+    className: String,
+    durationMinutes: Long,
+    choseSeat: Boolean
+): Long {
+
+    val classMultiplier = when (className) {
+        "First Class" -> 3.0
+        "Business" -> 2.0
+        else -> 1.0
+    }
+
+    val basePerMinute = 50L // £0.50 per minute
+    val seatFee = if (choseSeat) 500L else 0L // £5
+
+    val basePrice = durationMinutes * basePerMinute
+
+    return (basePrice * classMultiplier).toLong() + seatFee
 }
