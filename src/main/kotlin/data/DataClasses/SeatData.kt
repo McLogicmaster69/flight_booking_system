@@ -79,12 +79,8 @@ data class SeatData(
                 whereArgs = WhereArgs("id = ?", listOf(flightId))
             ).firstOrNull()?.dataClass ?: return
 
-            val route = RouteData.queryDatabase(
-                whereArgs = WhereArgs("id = ?", listOf(flight.routeId))
-            ).firstOrNull()?.dataClass ?: return
-
             val plane = PlaneData.queryDatabase(
-                whereArgs = WhereArgs("id = ?", listOf(route.planeId))
+                whereArgs = WhereArgs("id = ?", listOf(flight.planeId))
             ).firstOrNull()?.dataClass ?: return
 
             val model = PlaneModelData.queryDatabase(

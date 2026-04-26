@@ -49,12 +49,6 @@ data class ManufacturerData(
             return EMPTY.queryDatabase(joinArgs, whereArgs)
         }
 
-        fun getManufacturerId(name: String): Int {
-            return queryDatabase(
-                whereArgs = WhereArgs("name = ?", listOf(name))
-            ).firstOrNull()?.dataClass?.id ?: -1
-        }
-
         fun updateTable (
             values : Map<Column<*>, Any?>,
             whereArgs : WhereArgs
