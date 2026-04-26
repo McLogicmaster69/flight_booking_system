@@ -9,6 +9,7 @@ import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import io.pebbletemplates.pebble.PebbleEngine
 import java.io.StringWriter
+import java.security.SecureRandom
 import utils.jsMode
 import utils.logValidationError
 import utils.timed
@@ -292,5 +293,10 @@ private suspend fun ApplicationCall.handleSendVerification() {
 }
 
 fun generate2FACode(): String {
-    return (100000..999999).random().toString()
+    val chars = "0123456789"
+    val secureRandom = SecureRandom()
+
+    return (1..6)
+        .map { chars[secureRandom.nextInt(chars.length)] }
+        .joinToString("")
 }
