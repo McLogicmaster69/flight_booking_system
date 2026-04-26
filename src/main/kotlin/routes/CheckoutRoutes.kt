@@ -9,6 +9,7 @@ import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import io.pebbletemplates.pebble.PebbleEngine
 import java.io.StringWriter
+import java.security.SecureRandom
 import utils.jsMode
 import utils.logValidationError
 import utils.timed
@@ -300,7 +301,7 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
             }
         }
 
-        val bookingRef = generateBookingReference()
+        val bookingRef = generateSecureBookingReference()
         val passengerNames = mutableListOf<String>()
 
         for (i in 1..tickets) {
@@ -407,10 +408,12 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
     }
 }
 
-fun generateBookingReference(): String {
+fun generateSecureBookingReference(): String {
     val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    val secureRandom = SecureRandom()
+
     return (1..6)
-        .map { chars.random() }
+        .map { chars[secureRandom.nextInt(chars.length)] }
         .joinToString("")
 }
 

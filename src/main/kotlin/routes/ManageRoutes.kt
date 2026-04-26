@@ -91,7 +91,7 @@ private suspend fun ApplicationCall.handleBookingSearch() {
             table = BookingData.EMPTY.tableName,
             columns = BookingColumns.COLUMN_NAMES,
             whereArgs = WhereArgs(
-                "LOWER(${BookingColumns.BOOKING_REFERENCE.name}) = LOWER(?) AND LOWER(${BookingColumns.LASTNAME}) = LOWER(?)",
+                "LOWER(${BookingColumns.BOOKING_REFERENCE.name}) = LOWER(?) AND LOWER(${BookingColumns.LASTNAME.name}) = LOWER(?)",
                 listOf(ref, last)
             )
         )
@@ -118,7 +118,7 @@ private fun getEnrichedBookingsForBooker(bookerId: Int): List<Array<Any?>> {
     val bookingRows = DatabaseManager.queryTable(
         table = BookingData.EMPTY.tableName,
         columns = BookingColumns.COLUMN_NAMES,
-        whereArgs = WhereArgs("${BookingColumns.BOOKER_ID} = ?", listOf(bookerId))
+        whereArgs = WhereArgs("${BookingColumns.BOOKER_ID.name} = ?", listOf(bookerId))
     )
 
     return enrichBookingRowsFromSeats(bookingRows)
@@ -133,7 +133,7 @@ private fun enrichBookingRowsFromSeats(bookingRows: List<Array<Any?>>): List<Arr
         val bookingReference = row[4] as? String ?: ""
 
         val bookedSeat = BookedSeatData.queryDatabase(
-            whereArgs = WhereArgs("${BookedSeatColumns.BOOKING_ID} = ?", listOf(bookingId))
+            whereArgs = WhereArgs("${BookedSeatColumns.BOOKING_ID.name} = ?", listOf(bookingId))
         ).firstOrNull()?.dataClass
 
         val seat = bookedSeat?.seatId?.let { seatId ->
