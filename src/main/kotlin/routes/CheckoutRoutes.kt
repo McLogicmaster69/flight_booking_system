@@ -69,10 +69,10 @@ private suspend fun ApplicationCall.handleCheckoutPost() {
 
         val availableSeats = if (flightId != null) {
             SeatData.queryDatabase(
-                whereArgs = WhereArgs("flight_id = ?", listOf(flightId))
+                whereArgs = WhereArgs("${SeatColumns.FLIGHT_ID.name} = ?", listOf(flightId))
             ).map { it.dataClass }.filter { seat ->
                 BookedSeatData.queryDatabase(
-                    whereArgs = WhereArgs("seat_id = ?", listOf(seat.id))
+                    whereArgs = WhereArgs("${BookedSeatColumns.SEAT_ID.name} = ?", listOf(seat.id))
                 ).isEmpty()
             }
         } else {
@@ -276,7 +276,7 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
             }
 
             BookerData.queryDatabase(
-                whereArgs = WhereArgs("user_id = ?", listOf(user.id))
+                whereArgs = WhereArgs("${BookerColumns.USER_ID.name} = ?", listOf(user.id))
             ).firstOrNull()?.dataClass ?: run {
                 val newBooker = BookerData(userId = user.id, guestId = null)
                 val newBookerId = newBooker.insertIntoDatabase()
@@ -284,7 +284,7 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
             }
         } else {
             val guest = GuestData.queryDatabase(
-                whereArgs = WhereArgs("email = ?", listOf(email))
+                whereArgs = WhereArgs("${GuestColumns.EMAIL.name} = ?", listOf(email))
             ).firstOrNull()?.dataClass ?: run {
                 val newGuest = GuestData(email = email)
                 val newGuestId = newGuest.insertIntoDatabase()
@@ -292,7 +292,7 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
             }
 
             BookerData.queryDatabase(
-                whereArgs = WhereArgs("guest_id = ?", listOf(guest.id))
+                whereArgs = WhereArgs("${BookerColumns.GUEST_ID.name} = ?", listOf(guest.id))
             ).firstOrNull()?.dataClass ?: run {
                 val newBooker = BookerData(userId = null, guestId = guest.id)
                 val newBookerId = newBooker.insertIntoDatabase()
@@ -354,7 +354,6 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
 
             val booking = BookingData(
                 bookerId = booker.id,
-                flightId = flightId,
                 passportNumber = passport,
                 lastname = lastName,
                 bookingReference = bookingRef

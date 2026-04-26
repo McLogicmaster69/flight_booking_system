@@ -30,7 +30,7 @@ private suspend fun ApplicationCall.handleManageLoad() {
 
             if (user != null) {
                 val bookerQuery = BookerData.queryDatabase(
-                    whereArgs = WhereArgs("user_id = ?", listOf(user.id))
+                    whereArgs = WhereArgs("${BookerColumns.USER_ID.name} = ?", listOf(user.id))
                 )
 
                 if (bookerQuery.isNotEmpty()) {
@@ -77,7 +77,7 @@ private suspend fun ApplicationCall.handleBookingSearch() {
 
             if (user != null) {
                 val bookerQuery = BookerData.queryDatabase(
-                    whereArgs = WhereArgs("user_id = ?", listOf(user.id))
+                    whereArgs = WhereArgs("${BookerColumns.USER_ID.name} = ?", listOf(user.id))
                 )
 
                 if (bookerQuery.isNotEmpty()) {
@@ -88,10 +88,10 @@ private suspend fun ApplicationCall.handleBookingSearch() {
         }
 
         val bookingRows = DatabaseManager.queryTable(
-            table = "bookings",
-            columns = listOf("id", "booker_id", "passport_number", "lastname", "booking_reference"),
+            table = BookingData.EMPTY.tableName,
+            columns = BookingColumns.COLUMN_NAMES,
             whereArgs = WhereArgs(
-                "LOWER(booking_reference) = LOWER(?) AND LOWER(lastname) = LOWER(?)",
+                "LOWER(${BookingColumns.BOOKING_REFERENCE.name}) = LOWER(?) AND LOWER(${BookingColumns.LASTNAME}) = LOWER(?)",
                 listOf(ref, last)
             )
         )
@@ -116,9 +116,9 @@ private suspend fun ApplicationCall.handleBookingSearch() {
 
 private fun getEnrichedBookingsForBooker(bookerId: Int): List<Array<Any?>> {
     val bookingRows = DatabaseManager.queryTable(
-        table = "bookings",
-        columns = listOf("id", "booker_id", "passport_number", "lastname", "booking_reference"),
-        whereArgs = WhereArgs("booker_id = ?", listOf(bookerId))
+        table = BookingData.EMPTY.tableName,
+        columns = BookingColumns.COLUMN_NAMES,
+        whereArgs = WhereArgs("${BookingColumns.BOOKER_ID} = ?", listOf(bookerId))
     )
 
     return enrichBookingRowsFromSeats(bookingRows)
@@ -133,7 +133,7 @@ private fun enrichBookingRowsFromSeats(bookingRows: List<Array<Any?>>): List<Arr
         val bookingReference = row[4] as? String ?: ""
 
         val bookedSeat = BookedSeatData.queryDatabase(
-            whereArgs = WhereArgs("booking_id = ?", listOf(bookingId))
+            whereArgs = WhereArgs("${BookedSeatColumns.BOOKING_ID} = ?", listOf(bookingId))
         ).firstOrNull()?.dataClass
 
         val seat = bookedSeat?.seatId?.let { seatId ->
