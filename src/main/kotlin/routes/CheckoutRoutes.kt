@@ -304,7 +304,6 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
         val passengerNames = mutableListOf<String>()
 
         for (i in 1..tickets) {
-
             val lastName = confirmparams["lastName$i"]
             val passport = confirmparams["passport$i"]
 

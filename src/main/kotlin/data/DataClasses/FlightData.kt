@@ -12,10 +12,11 @@ const val MAX_TIME : Int = 2880
 object FlightColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
     val ROUTE_ID = Column<Int>("route_id", "INTEGER NOT NULL REFERENCES routes(id)")
+    val PLANE_ID = Column<Int>("plane_id", "INTEGER NOT NULL REFERENCES planes(id)")
     val DATE = Column<String>("date", "STRING NOT NULL")
     val TIME = Column<String>("time", "STRING NOT NULL")
 
-    val ALL = listOf(ID, ROUTE_ID, DATE, TIME)
+    val ALL = listOf(ID, ROUTE_ID, PLANE_ID, DATE, TIME)
     val COLUMN_NAMES = ALL.map { it.name }
 }
 
@@ -23,6 +24,7 @@ data class FlightData(
 
     override val id: Int = 0,
     var routeId : Int = 0,
+    var planeId : Int = 0,
     var date : LocalDate = LocalDate.parse("1970-01-01"),
     var time : LocalTime = LocalTime.parse("00:00")
 
@@ -30,7 +32,7 @@ data class FlightData(
 
     override val tableName = "flights"
     override val tableColumns = FlightColumns.ALL
-    override val tableAdditionalSQL = "UNIQUE (route_id, date, time)"
+    override val tableAdditionalSQL = "UNIQUE (route_id, plane_id, date, time)"
 
     override val initialRows : List<FlightData>
         get() = listOf(
@@ -41,6 +43,7 @@ data class FlightData(
                         DestinationData.getDestinationId("Tokyo")
                     )
                 ),
+                planeId = PlaneData.getPlaneId("Boeing 737-800"),
                 date = LocalDate.parse("2026-05-15"),
                 time = LocalTime.parse("12:00")
             ),
@@ -51,7 +54,8 @@ data class FlightData(
                         DestinationData.getDestinationId("Berlin")
                     )
                 ),
-                date = LocalDate.parse("2026-04-30"),
+                planeId = PlaneData.getPlaneId("Airbus A321"),
+                date = LocalDate.parse("2026-05-15"),
                 time = LocalTime.parse("10:00")
             ),
             FlightData(
@@ -61,19 +65,23 @@ data class FlightData(
                         DestinationData.getDestinationId("Tokyo")
                     )
                 ),
-                date = LocalDate.parse("2026-03-15"),
+                planeId = PlaneData.getPlaneId("Boeing 737-800"),
+                date = LocalDate.parse("2026-05-15"),
                 time = LocalTime.parse("16:00")
             )
         )
 
     override val requiredTables : List<DataClass<*>>
         get() = listOf(
-            RouteData.EMPTY
+            RouteData.EMPTY,
+            PlaneData.EMPTY,
+            DestinationData.EMPTY
         )
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
             FlightColumns.ROUTE_ID to routeId,
+            FlightColumns.PLANE_ID to planeId,
             FlightColumns.DATE to date.toString(),
             FlightColumns.TIME to time.toString()
         )
@@ -82,12 +90,13 @@ data class FlightData(
         FlightData(
             id = castRowElement(row, FlightColumns.ID),
             routeId = castRowElement(row, FlightColumns.ROUTE_ID),
+            planeId = castRowElement(row, FlightColumns.PLANE_ID),
             date = castDateRowElement(row, FlightColumns.DATE),
             time = castTimeRowElement(row, FlightColumns.TIME)
         )
 
     override fun debugData() {
-        println("Flight data: (\"$id\", \"$routeId\", \"$date\", \"$time\")")
+        println("Flight data: (\"$id\", \"$routeId\", \"$planeId\" \"$date\", \"$time\")")
     }
 
     companion object {

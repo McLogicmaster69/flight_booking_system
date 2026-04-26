@@ -70,6 +70,7 @@ object DatabaseManager {
             PaymentMethodData.EMPTY,
             PlaneData.EMPTY,
             PlaneModelData.EMPTY,
+            PlaneSeatData.EMPTY,
             RemainingSeatData.EMPTY,
             RouteData.EMPTY,
             SeatData.EMPTY,

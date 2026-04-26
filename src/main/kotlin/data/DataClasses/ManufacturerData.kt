@@ -63,5 +63,15 @@ data class ManufacturerData(
         fun delete(id : Int) : Int {
             return ManufacturerData(id = id).delete()
         }
+
+        fun getManufacturerId (manufacturer : String) : Int {
+            val query : List<QueryResult<ManufacturerData>> = queryDatabase(whereArgs = WhereArgs("${ManufacturerColumns.NAME.name} = ?", listOf(manufacturer)))
+            if (query.isEmpty()) {
+                println("Could not find manufacturer $manufacturer")
+                return -1
+            }
+
+            return query.first().dataClass.id
+        }
     }
 }
