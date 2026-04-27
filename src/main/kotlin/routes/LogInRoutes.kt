@@ -41,7 +41,7 @@ private suspend fun ApplicationCall.handleLogInLoad() {
 
         val model = mapOf(
             "title" to "Log In / Sign Up",
-            "isNav" to true
+            "inNav" to true
         )
 
         val template = pebble.getTemplate("auth/login.peb")
@@ -200,6 +200,14 @@ private suspend fun ApplicationCall.handleVerifyPost() {
         }
 
         val user = userQuery.first().dataClass
+        val adminQuery = AdminData.queryDatabase(
+            whereArgs = WhereArgs(
+                "${AdminColumns.LOGIN_ID.name} = ?",
+                listOf(user.loginId)
+            )
+        )
+
+        val isAdmin = adminQuery.isNotEmpty()
         
         if (user.verifiedAccount != true) {
             user.verifiedAccount = true
@@ -207,7 +215,11 @@ private suspend fun ApplicationCall.handleVerifyPost() {
         }
 
         sessions.set(SessionData.createSession(user.id).toTokenSession())
-        response.headers.append("HX-Redirect", "/")
+        if (isAdmin) {
+            response.headers.append("HX-Redirect", "/admin")
+        } else {
+            response.headers.append("HX-Redirect", "/")
+        }
         respond(HttpStatusCode.OK)
     }
 }

@@ -42,7 +42,7 @@ private suspend fun ApplicationCall.handleManageLoad() {
 
         val model = mapOf(
             "title" to "Manage Bookings",
-            "isNav" to true,
+            "inNav" to true,
             "logged_in" to logged_state.logged_in,
             "userBookings" to userBookings,
             "searchResults" to emptyList<Array<Any?>>()
@@ -100,7 +100,7 @@ private suspend fun ApplicationCall.handleBookingSearch() {
 
         val model = mapOf(
             "title" to "Manage Bookings",
-            "isNav" to true,
+            "inNav" to true,
             "searchResults" to results,
             "logged_in" to loggedState.logged_in,
             "userBookings" to userBookings

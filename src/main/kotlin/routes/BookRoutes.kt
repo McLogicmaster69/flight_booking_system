@@ -77,7 +77,7 @@ private suspend fun ApplicationCall.handleBookLoad() {
 
         val model = mapOf(
             "title" to "Book",
-            "isNav" to true,
+            "inNav" to true,
             "destinations" to DestinationData.getDestinationNames(),
             "fromValue" to from,
             "toValue" to to,
@@ -136,7 +136,7 @@ private suspend fun ApplicationCall.handleGetResult() {
 
             val errorModel = mapOf(
                 "title" to "Error",
-                "isNav" to true
+                "inNav" to true
             )
 
             fullEvaluate(template, writer, errorModel)
@@ -149,7 +149,7 @@ private suspend fun ApplicationCall.handleGetResult() {
 
             val errorModel = mapOf(
                 "title" to "Error",
-                "isNav" to true
+                "inNav" to true
             )
 
             fullEvaluate(template, writer, errorModel)
@@ -158,7 +158,7 @@ private suspend fun ApplicationCall.handleGetResult() {
 
         val model = mapOf(
             "title" to "Result",
-            "isNav" to true,
+            "inNav" to true,
             "start" to search.getStartDestinationName(),
             "end" to search.getEndDestinationName(),
             "date" to search.getDate(),

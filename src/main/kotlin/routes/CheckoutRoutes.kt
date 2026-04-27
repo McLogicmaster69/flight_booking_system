@@ -82,7 +82,7 @@ private suspend fun ApplicationCall.handleCheckoutPost() {
 
         val model = mapOf(
             "title" to "Checkout",
-            "isNav" to true,
+            "inNav" to true,
             "tickets" to tickets,
             "start" to start,
             "end" to end,
@@ -204,7 +204,7 @@ private suspend fun ApplicationCall.handlePaymentPost() {
 
         val model = mapOf(
             "title" to "Payment",
-            "isNav" to true,
+            "inNav" to true,
             "flightId" to flightId,
             "tickets" to tickets,
             "lastNames" to lastNames,
@@ -423,7 +423,7 @@ private suspend fun ApplicationCall.handlePaymentSuccessLoad() {
 
         val model = mapOf(
             "title" to "Payment Success",
-            "isNav" to true
+            "inNav" to true
         )
 
         val template = pebble.getTemplate("checkout/payment-success.peb")

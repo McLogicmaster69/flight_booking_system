@@ -29,7 +29,7 @@ private suspend fun ApplicationCall.handleSignUpLoad() {
         
         val model = mapOf(
             "title" to "Sign Up",
-            "isNav" to true
+            "inNav" to true,
         )
 
         val template = pebble.getTemplate("auth/signup.peb")

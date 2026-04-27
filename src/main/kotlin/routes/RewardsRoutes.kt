@@ -31,7 +31,7 @@ private suspend fun ApplicationCall.handleRewardsLoad() {
        
         val model = mapOf(
             "title" to "Loyalty Rewards",
-            "isNav" to true
+            "inNav" to true
         )
 
         val pebble = getEngine()
