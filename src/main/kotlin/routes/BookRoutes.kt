@@ -70,11 +70,19 @@ fun Route.bookRoutes() {
 }
 
 private suspend fun ApplicationCall.handleBookLoad() {
-    timed("T0_book", jsMode()) {       
+    timed("T0_book", jsMode()) {
+        val from = request.queryParameters["from"].orEmpty()
+        val to = request.queryParameters["to"].orEmpty()
+        val depart = request.queryParameters["depart"].orEmpty()
+
         val model = mapOf(
             "title" to "Book",
             "isNav" to true,
-            "destinations" to DestinationData.getDestinationNames()
+            "destinations" to DestinationData.getDestinationNames(),
+            "fromValue" to from,
+            "toValue" to to,
+            "departValue" to depart,
+            "hasInitialSearch" to (from.isNotBlank() && to.isNotBlank() && depart.isNotBlank())
         )
 
         val pebble = getEngine()
@@ -92,7 +100,12 @@ private suspend fun ApplicationCall.handleSearchResults() {
         val end = parameters["to"].orEmpty().trim()
         val time = parameters["depart"].orEmpty().trim()
         val maxLayovers = parameters["maxLayovers"].orEmpty().trim()
-        val timeElements = time.split("/")
+        val date = if (time.contains("/")) {
+            val parts = time.split("/")
+            LocalDate.of(parts[2].toInt(), parts[1].toInt(), parts[0].toInt())
+        } else {
+            LocalDate.parse(time)
+        }
         val layovers = when(maxLayovers) {
             "Direct Only" -> 0
             "1" -> 1
@@ -101,10 +114,10 @@ private suspend fun ApplicationCall.handleSearchResults() {
             else -> MAX_LAYOVERS
         }
 
-        val results : List<JourneyFlightTimePath> = FlightData.getJourneyFlight(
+        val results: List<JourneyFlightTimePath> = FlightData.getJourneyFlight(
             start,
             end,
-            LocalDate.of(timeElements[2].toInt(), timeElements[1].toInt(), timeElements[0].toInt()),
+            date,
             layovers
         )
 

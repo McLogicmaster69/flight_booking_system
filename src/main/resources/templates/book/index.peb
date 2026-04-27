@@ -51,21 +51,23 @@
       <div class="homepage-field">
         <label for="from">From</label>
         <input class="general-input-input" id="from" name="from" type="text" list="destinationsList"
-          placeholder="From (Origin)" aria-label="From (Origin)" aria-describedby="fromError" required>
+          value="{{ fromValue | default('') }}" placeholder="From (Origin)" aria-label="From (Origin)"
+          aria-describedby="fromError" required>
         <small id="fromError" class="homepage-field-error" aria-live="polite"></small>
       </div>
 
       <div class="homepage-field">
         <label for="to">To</label>
         <input class="general-input-input" id="to" name="to" type="text" list="destinationsList"
-          placeholder="To (Destination)" aria-label="To (Destination)" aria-describedby="toError" required>
+          value="{{ toValue | default('') }}" placeholder="To (Destination)" aria-label="To (Destination)"
+          aria-describedby="toError" required>
         <small id="toError" class="homepage-field-error" aria-live="polite"></small>
       </div>
 
       <div class="homepage-field">
         <label for="depart">Departure date</label>
-        <input class="general-input-input" id="depart" name="depart" type="date" aria-label="Depart date"
-          aria-describedby="departError" required>
+        <input class="general-input-input" id="depart" name="depart" type="date" value="{{ departValue | default('') }}"
+          aria-label="Depart date" aria-describedby="departError" required>
         <small id="departError" class="homepage-field-error" aria-live="polite"></small>
       </div>
 
@@ -183,6 +185,12 @@
     }
 
   });
+
+  {% if hasInitialSearch %}
+  window.addEventListener("load", function () {
+  htmx.trigger(form, "submit");
+  });
+  {% endif %}
 
 })();
 </script>
