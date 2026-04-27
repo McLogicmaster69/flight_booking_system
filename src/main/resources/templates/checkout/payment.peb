@@ -120,6 +120,7 @@ form.addEventListener("submit", async (e) => {
                     email: email,
                     flightId: "{{ flightId }}",
                     tickets: "{{ tickets }}",
+                    totalAmount: "{{ totalAmount }}",
                     {% for i in 1..tickets %}
                     lastName{{ i }}: "{{ lastNames[i-1] }}",
                     passport{{ i }}: "{{ passportNumbers[i-1] }}",

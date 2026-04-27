@@ -1,0 +1,8 @@
+{% extends "_layout/base.peb" %}
+
+{% set activePage = 'staff' %}
+{% set inNav = true %}
+
+{% block content %}
+
+{% endblock %}

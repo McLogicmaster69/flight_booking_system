@@ -1,0 +1,93 @@
+{% extends "_layout/base.peb" %}
+
+{% set layout = 'admin' %}
+{% set activePage = 'manageStaff' %}
+{% set inNav = true %}
+
+{% block content %}
+
+<h2 class="wf-title">Manage Staff</h2>
+<div class="wf-rule"></div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start;">
+
+    <section>
+        <h3>Existing Staff</h3>
+
+        {% for member in staff %}
+            <form
+                class="auth-form"
+                method="post"
+                action="/manageStaff/update"
+                hx-post="/manageStaff/update">
+
+                <input type="hidden" name="staffId" value="{{ member.id }}">
+
+                <label class="auth-label">First Name</label>
+                <input class="auth-input" name="firstName" type="text" value="{{ member.firstName }}">
+
+                <label class="auth-label">Last Name</label>
+                <input class="auth-input" name="lastName" type="text" value="{{ member.lastName }}">
+
+                <label class="auth-label">Email</label>
+                <input class="auth-input" type="email" value="{{ member.email }}" disabled>
+
+                <label class="auth-label">Position</label>
+                <select class="auth-input" name="positionId">
+                    {% for position in positions %}
+                        <option value="{{ position.id }}" {% if position.id == member.positionId %}selected{% endif %}>
+                            {{ position.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <div style="margin-top: 14px;"></div>
+                <button class="wf-btn wide" type="submit">Save Changes</button>
+
+                <div class="wf-rule"></div>
+            </form>
+        {% else %}
+            <p>No staff accounts found.</p>
+        {% endfor %}
+    </section>
+
+    <section>
+        <h3>Create Staff Account</h3>
+
+        <form
+            class="auth-form"
+            method="post"
+            action="/manageStaff/create"
+            hx-post="/manageStaff/create"
+            hx-target="#create-staff-status"
+            hx-swap="innerHTML">
+
+            <label class="auth-label">First Name</label>
+            <input class="auth-input" name="firstName" type="text" placeholder="First Name">
+
+            <label class="auth-label">Last Name</label>
+            <input class="auth-input" name="lastName" type="text" placeholder="Last Name">
+
+            <label class="auth-label">Position</label>
+            <select class="auth-input" name="positionId">
+                {% for position in positions %}
+                    <option value="{{ position.id }}">{{ position.name }}</option>
+                {% endfor %}
+            </select>
+
+            <label class="auth-label">Email</label>
+            <input class="auth-input" name="email" type="email" placeholder="Email">
+
+            <label class="auth-label">Password</label>
+            <input class="auth-input" name="password" type="password" placeholder="Password">
+
+            <div style="margin-top: 14px;"></div>
+            <button class="wf-btn wide" type="submit">Create Staff Account</button>
+
+            <div id="create-staff-status" role="status" aria-live="polite"></div>
+        </form>
+    </section>
+
+</div>
+
+{% endblock %}

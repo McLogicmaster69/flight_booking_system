@@ -1,0 +1,36 @@
+{% extends "_layout/base.peb" %}
+
+{% set activePage = 'staff' %}
+{% set inNav = true %}
+
+{% block content %}
+
+<h2 class="wf-title">Staff Login</h2>
+<div class="wf-rule"></div>
+
+<form class="login-form"
+    method="post"
+    action="/stafflogin"
+    hx-post="/stafflogin"
+    hx-target="#staff-log-in-status"
+    hx-swap="innerHTML">
+
+    <label class="auth-label" for="staffEmail">Email</label>
+    <input class="auth-input" id="staffEmail" name="staffEmail" type="email" placeholder="Staff Email">
+
+    <label class="auth-label" for="staffPw">Password</label>
+    <input class="auth-input" id="staffPw" name="staffPw" type="password" placeholder="Password">
+
+    <div style="margin-top: 14px;"></div>
+    <button class="wf-btn wide" type="submit">Staff Login</button>
+
+    <div class="wf-rule"></div>
+
+    <p style="color: var(--wf-muted); font-size: 12px;">
+        Customer? Sign in <a href="/login">here</a>
+    </p>
+
+    <div id="staff-log-in-status" role="status" aria-live="polite" aria-atomic="true"></div>
+</form>
+
+{% endblock %}

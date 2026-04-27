@@ -41,7 +41,7 @@
 
   <div id="status" role="status" aria-live="polite" aria-atomic="true"></div>
 
-  {% if layout == "admin" or isAdmin %}
+  {% if layout == "admin" %}
 
   <header class="site-header">
     <div class="header-top">
@@ -57,7 +57,8 @@
       <nav class="top-links" aria-label="Admin">
         <a href="/" class="{% if activePage == 'live' %}is-active{% endif %}">View Live Site</a>
         <a href="/admin" class="{% if activePage == 'admin' %}is-active{% endif %}">Admin Dashboard</a>
-        <a href="/logout">Staff Logout</a>
+        <a href="/manageStaff" class="{% if activePage == 'manageStaff' %}is-active{% endif %}">Manage Staff</a>
+        <a href="/logout">Logout</a>
       </nav>
 
     </div>
@@ -87,7 +88,7 @@
         </form>
         {% endif %}
 
-        {% if logged_in %}
+        {% if logged_in or isStaff%}
         <a href="/logout" class="{% if activePage == 'auth' %}is-active{% endif %}">Logout</a>
         {% else %}
         <a href="/login" class="{% if activePage == 'auth' %}is-active{% endif %}">Login</a>
@@ -107,6 +108,11 @@
       <a href="/rewards" class="{% if activePage == 'rewards' %}is-active{% endif %}">Loyalty Rewards</a>
       <a href="/settings" class="{% if activePage == 'settings' %}is-active{% endif %}">Settings</a>
       <a href="/help" class="{% if activePage == 'help' %}is-active{% endif %}">Help</a>
+      {% if isAdmin %}
+        <a href="/admin" class="{% if activePage == 'admin' %}is-active{% endif %}">Admin Dashboard</a>
+      {% elseif isStaff %}
+        <a href="/staffdashboard" class="{% if activePage == 'staffDashboard' %}is-active{% endif %}">Staff Dashboard</a>
+      {% endif %}
 
     </nav>
 

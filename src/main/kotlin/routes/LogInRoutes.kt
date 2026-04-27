@@ -115,6 +115,8 @@ private suspend fun ApplicationCall.handleLogInPost() {
 private suspend fun ApplicationCall.handleLogOut() {
     timed("T2_log_out", jsMode()) {
         sessions.clear<SessionToken>()
+        sessions.clear<StaffSession>()
+        sessions.clear<Temp2FASession>()
         respondRedirect("/")
     }
 }

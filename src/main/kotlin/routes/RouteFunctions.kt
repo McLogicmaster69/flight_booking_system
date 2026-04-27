@@ -58,6 +58,37 @@ fun ApplicationCall.loggedMap() : Map<String, Any?> {
     )
 }
 
-fun ApplicationCall.fullEvaluate(template : PebbleTemplate, writer : StringWriter, model : Map<String, Any?>) {
-    template.evaluate(writer, model + loggedMap())
+fun ApplicationCall.fullEvaluate(
+    template: PebbleTemplate,
+    writer: StringWriter,
+    model: Map<String, Any?>
+) {
+    val loggedState = loggedIn()
+
+    var isAdmin = false
+
+    if (loggedState.logged_in && loggedState.session != null) {
+        val user = UserData.queryByToken(loggedState.session.token)
+            .firstOrNull()
+            ?.dataClass
+
+        if (user != null) {
+            isAdmin = AdminData.queryDatabase(
+                whereArgs = WhereArgs(
+                    "${AdminColumns.LOGIN_ID.name} = ?",
+                    listOf(user.loginId)
+                )
+            ).isNotEmpty()
+        }
+    }
+
+    val isStaff = sessions.get<StaffSession>() != null
+
+    template.evaluate(
+        writer,
+        model + loggedMap() + mapOf(
+            "isAdmin" to isAdmin,
+            "isStaff" to isStaff
+        )
+    )
 }

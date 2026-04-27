@@ -109,6 +109,11 @@ fun Application.configureSessions() {
             cookie.httpOnly = true
             cookie.extensions["SameSite"] = "Strict"
         }
+        cookie<StaffSession>("STAFF_SESSION") {
+            cookie.path = "/"
+            cookie.httpOnly = true
+            cookie.extensions["SameSite"] = "Strict"
+        }
     }
 }
 
@@ -132,5 +137,6 @@ fun Application.configureRouting() {
         manageRoutes()
         adminRoutes()
         chatRoutes()
+        staffRoutes()
     }
 }

@@ -259,8 +259,10 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
         val flightId = confirmparams["flightId"]?.toIntOrNull()
         val email = confirmparams["email"]
         val tickets = (confirmparams["tickets"]?.toIntOrNull() ?: 1).coerceAtLeast(1)
+        val totalAmount = confirmparams["totalAmount"]?.toLongOrNull()
+        var signedInUser: UserData? = null
 
-        if (flightId == null || email.isNullOrBlank()) {
+        if (flightId == null || email.isNullOrBlank() || totalAmount == null || totalAmount <= 0) {
             respondText("Invalid booking data", status = HttpStatusCode.BadRequest)
             return@timed
         }
@@ -275,6 +277,8 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
                 respondText("Could not identify logged in user", status = HttpStatusCode.BadRequest)
                 return@timed
             }
+
+            signedInUser = user
 
             BookerData.queryDatabase(
                 whereArgs = WhereArgs("${BookerColumns.USER_ID.name} = ?", listOf(user.id))
@@ -366,6 +370,11 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
                 seatId = finalSeat.id,
                 bookingId = bookingId
             ).insertIntoDatabase()
+        }
+
+        signedInUser?.let { user ->
+            val pointsEarned = (totalAmount / 100L * 10L).toInt()
+            user.awardPoints(pointsEarned)
         }
 
         val flight = FlightData.queryDatabase(
