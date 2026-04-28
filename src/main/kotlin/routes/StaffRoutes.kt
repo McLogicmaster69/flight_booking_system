@@ -94,7 +94,7 @@ private suspend fun ApplicationCall.handleStaffLoginPost() {
             return@timed
         }
 
-        sessions.set(StaffSession(result.dataClass.id))
+        sessions.set(StaffSessionData.createSession(result.dataClass.id).toTokenSession())
         response.headers.append("HX-Redirect", "/staffdashboard")
         respond(HttpStatusCode.OK)
     }
@@ -102,10 +102,9 @@ private suspend fun ApplicationCall.handleStaffLoginPost() {
 
 private suspend fun ApplicationCall.handleStaffDashboardLoad() {
     timed("T2_staff_dashboard", jsMode()) {
-        val staffSession = requireStaff() ?: return@timed
+        requireStaff() ?: return@timed
 
         val pebble = getEngine()
-
         val model = mapOf(
             "title" to "Staff Dashboard",
             "layout" to "staff",
@@ -120,10 +119,18 @@ private suspend fun ApplicationCall.handleStaffDashboardLoad() {
     }
 }
 
-private suspend fun ApplicationCall.requireStaff(): StaffSession? {
-    val staffSession = sessions.get<StaffSession>()
+private suspend fun ApplicationCall.requireStaff(): StaffSessionToken? {
+    val staffSession = sessions.get<StaffSessionToken>()
 
     if (staffSession == null) {
+        respondRedirect("/stafflogin")
+        return null
+    }
+
+    val results : List<QueryResult<StaffSessionData>> = StaffSessionData.queryDatabase(staffSession.token)
+    
+    if (results.isEmpty()) {
+        sessions.clear<StaffSessionToken>()
         respondRedirect("/stafflogin")
         return null
     }

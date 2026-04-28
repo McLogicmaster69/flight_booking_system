@@ -53,7 +53,6 @@ private suspend fun ApplicationCall.handleLogInLoad() {
 
 private suspend fun ApplicationCall.handleLogInPost() {
     timed("T1_log_in_post", jsMode()) {
-        val pebble = getEngine()
         val params = receiveParameters()
         val email = params["loginEmail"]
         val password = params["loginPw"]
@@ -115,7 +114,7 @@ private suspend fun ApplicationCall.handleLogInPost() {
 private suspend fun ApplicationCall.handleLogOut() {
     timed("T2_log_out", jsMode()) {
         sessions.clear<SessionToken>()
-        sessions.clear<StaffSession>()
+        sessions.clear<StaffSessionToken>()
         sessions.clear<Temp2FASession>()
         respondRedirect("/")
     }
