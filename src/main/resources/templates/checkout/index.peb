@@ -9,62 +9,78 @@
 
 <h2>Flight</h2>
 
-{% if start != null and end != null %}
-    <h3>{{ start }} → {{ end }}</h3>
-    <p><strong>Departure:</strong> {{ date }}</p>
-{% else %}
-    <p>No flight selected</p>
-{% endif %}
-
 <h2>Selected Tickets: {{ tickets }}</h2>
 
-<form action="/payment" method="post">
+<form action="/payment" method="post" onsubmit="return validateCheckoutForm()">
 
-    <input type="hidden" name="flightId" value="{{ flightId }}">
+    <input type="hidden" name="token" value="{{ token }}">
     <input type="hidden" name="tickets" value="{{ tickets }}">
 
     {% for i in 1..tickets %}
-    <div>
         <h3>Passenger {{ i }}</h3>
 
-        <input class="general-input" type="text" name="lastName{{ i }}" required pattern="[A-Za-z]+" placeholder="Last Name">
+        <input class="general-input" name="lastName{{ i }}" required placeholder="Last Name">
+        <input class="general-input" name="passport{{ i }}" required placeholder="Passport Number">
 
-        <input class="general-input" type="text" name="passport{{ i }}" required minlength="6" placeholder="Passport Number">
+        {% for flight in checkoutFlights %}
 
-        <select class="general-input" name="typeId{{ i }}" required>
-            <option value="">Select Ticket Type</option>
-            {% for ticketType in ticketTypes %}
-                <option value="{{ ticketType.id }}">{{ ticketType.name }}</option>
-            {% endfor %}
-        </select>
-        <select class="general-input class-select" name="classId{{ i }}" data-passenger="{{ i }}" required>
-            <option value="">Select Class</option>
-            {% for flightClass in classes %}
-                <option value="{{ flightClass.id }}">{{ flightClass.name }}</option>
-            {% endfor %}
-        </select>
-        <select class="general-input seat-select" name="seatId{{ i }}" id="seatId{{ i }}" data-passenger="{{ i }}">
-            <option value="">Select a class first</option>
+            <h4>{{ flight.info.startDestination }} → {{ flight.info.endDestination }}</h4>
 
-            {% for seat in availableSeats %}
-                <option value="{{ seat.id }}" data-class-id="{{ seat.classId }}" hidden disabled>
-                    Seat {{ seat.number }} - £5
-                </option>
-            {% endfor %}
-        </select>
-    </div>
+            <select class="general-input" name="typeId{{ i }}_{{ flight.leg }}" required>
+                <option value="">Select Ticket Type</option>
+                {% for ticketType in ticketTypes %}
+                    <option value="{{ ticketType.id }}">{{ ticketType.name }}</option>
+                {% endfor %}
+            </select>
+
+            <select class="general-input class-select" name="classId{{ i }}_{{ flight.leg }}" data-passenger="{{ i }}" data-leg="{{ flight.leg }}" required>
+                <option value="">Select Class</option>
+                {% for flightClass in classes %}
+                    <option value="{{ flightClass.id }}">{{ flightClass.name }}</option>
+                {% endfor %}
+            </select>
+
+            <select class="general-input seat-select" name="seatId{{ i }}_{{ flight.leg }}" id="seatId{{ i }}_{{ flight.leg }}">
+                <option value="">Select a class first</option>
+
+                {% for seat in availableSeatsByFlight[flight.flightId] %}
+                    <option value="{{ seat.id }}" data-class-id="{{ seat.classId }}" hidden disabled>
+                        Seat {{ seat.number }} - £5
+                    </option>
+                {% endfor %}
+            </select>
+        {% endfor %}
     {% endfor %}
 
+    <div id="checkout-error" style="color: red;"></div>
     <button type="submit">Proceed To Payment</button>
 
 </form>
 
 <script>
+function validateCheckoutForm() {
+    const error = document.getElementById("checkout-error");
+    error.textContent = "";
+
+    for (const select of document.querySelectorAll("select[required]")) {
+        if (!select.value) {
+            error.textContent = "Please select a ticket type and class for every flight.";
+            select.focus();
+            return false;
+        }
+    }
+
+    return true;
+}
+</script>
+
+<script>
 document.querySelectorAll(".class-select").forEach(classSelect => {
     classSelect.addEventListener("change", function () {
         const passenger = this.getAttribute("data-passenger");
+        const leg = this.getAttribute("data-leg");
         const selectedClassId = this.value;
-        const seatSelect = document.getElementById("seatId" + passenger);
+        const seatSelect = document.getElementById("seatId" + passenger + "_" + leg);
 
         for (const option of seatSelect.options) {
             if (option.value === "") {
@@ -77,7 +93,6 @@ document.querySelectorAll(".class-select").forEach(classSelect => {
             }
 
             const matchesClass = option.getAttribute("data-class-id") === selectedClassId;
-
             option.hidden = !matchesClass;
             option.disabled = !matchesClass;
         }

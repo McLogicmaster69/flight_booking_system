@@ -158,6 +158,18 @@ private fun enrichBookingRowsFromSeats(bookingRows: List<Array<Any?>>): List<Arr
             ).firstOrNull()?.dataClass
         }
 
+        val route = flight?.routeId?.let { routeId ->
+            RouteData.queryDatabase(routeId).firstOrNull()?.dataClass
+        }
+
+        val startDestination = route?.startDestination?.let { destinationId ->
+            DestinationData.queryDatabase(destinationId).firstOrNull()?.dataClass
+        }
+
+        val endDestination = route?.endDestination?.let { destinationId ->
+            DestinationData.queryDatabase(destinationId).firstOrNull()?.dataClass
+        }
+
         results.add(
             arrayOf(
                 bookingReference,
@@ -166,7 +178,9 @@ private fun enrichBookingRowsFromSeats(bookingRows: List<Array<Any?>>): List<Arr
                 flight?.time?.toString() ?: "Not assigned",
                 seat?.number ?: "Not assigned",
                 seatClass?.name ?: "Not assigned",
-                ticketType?.name ?: "Not assigned"
+                ticketType?.name ?: "Not assigned",
+                startDestination?.cityName ?: "Not assigned",
+                endDestination?.cityName ?: "Not assigned"
             )
         )
     }

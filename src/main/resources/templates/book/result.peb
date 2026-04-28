@@ -11,32 +11,29 @@
 
 <br>
 <h2>Flights</h2>
-{% for flight in flightInfo %}
+<form action="/checkout" method="post">
 
-<div class="flight-search-card">
-    <h3>{{ flight.startDestination }} to {{ flight.endDestination }}</h3>
-    <h4>{{ flight.dateTime }}</h4>
-    <form action="/checkout" method="post">
+    <input type="hidden" name="tickets" id="ticketsInput" value="1">
+    <input type="hidden" name="token" value="{{ token }}">
 
-        <input type="hidden" name="tickets" id="ticketsInput" value="1">
-        <input type="hidden" name="start" value="{{ flight.startDestination }}">
-        <input type="hidden" name="end" value="{{ flight.endDestination }}">
-        <input type="hidden" name="dateTime" value="{{ flight.dateTime }}">
-
-        <div>
-            <button type="button" onclick="changeTickets(-1)">-</button>
-            <span id="ticketCount">1</span>
-            <button type="button" onclick="changeTickets(1)">+</button>
+    {% for flight in flightInfo %}
+        <div class="flight-search-card">
+            <h3>{{ flight.startDestination }} to {{ flight.endDestination }}</h3>
+            <h4>{{ flight.dateTime }}</h4>
         </div>
-
         <br>
+    {% endfor %}
 
-        <button type="submit" onclick="updateTickets()">Continue</button>
-    </form>
-</div>
-<br>
+    <div>
+        <button type="button" onclick="changeTickets(-1)">-</button>
+        <span id="ticketCount">1</span>
+        <button type="button" onclick="changeTickets(1)">+</button>
+    </div>
 
-{% endfor %}
+    <br>
+
+    <button type="submit" onclick="updateTickets()">Continue</button>
+</form>
 
 <script>
     let tickets = 1;

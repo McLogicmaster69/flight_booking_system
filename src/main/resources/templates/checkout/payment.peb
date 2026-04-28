@@ -22,14 +22,6 @@
             </div>
         {% endif %}
 
-        {% for i in 1..tickets %}
-        <input type="hidden" name="classId{{ i }}" value="{{ classIds[i-1] }}">
-        <input type="hidden" name="seatId{{ i }}" value="{{ seatIds[i-1] }}">
-        <input type="hidden" name="typeId{{ i }}" value="{{ typeIds[i-1] }}">
-        <input type="hidden" name="lastName{{ i }}" value="{{ lastNames[i-1] }}">
-        <input type="hidden" name="passport{{ i }}" value="{{ passportNumbers[i-1] }}">
-        {% endfor %}
-
         <h3>Total: £{{ displayTotal }}</h3>
 
         <form id="payment-form">
@@ -113,21 +105,34 @@ form.addEventListener("submit", async (e) => {
 
         } else {
 
+            console.log({
+                {% for selection in selections %}
+                "classId{{ selection.passenger }}_{{ selection.leg }}": "{{ selection.classId }}",
+                "seatId{{ selection.passenger }}_{{ selection.leg }}": "{% if selection.seatId != null %}{{ selection.seatId }}{% endif %}",
+                "typeId{{ selection.passenger }}_{{ selection.leg }}": "{{ selection.typeId }}",
+                {% endfor %}
+            });
+
             const confirmRes = await fetch("/confirm-booking", {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: new URLSearchParams({
                     email: email,
-                    flightId: "{{ flightId }}",
+                    token: "{{ token }}",
                     tickets: "{{ tickets }}",
                     totalAmount: "{{ totalAmount }}",
+
                     {% for i in 1..tickets %}
                     lastName{{ i }}: "{{ lastNames[i-1] }}",
                     passport{{ i }}: "{{ passportNumbers[i-1] }}",
-                    classId{{ i }}: "{{ classIds[i-1] }}",
-                    seatId{{ i }}: "{{ seatIds[i-1] }}",
-                    typeId{{ i }}: "{{ typeIds[i-1] }}",
                     {% endfor %}
+
+                    {% for selection in selections %}
+                    classId{{ selection.passenger }}_{{ selection.leg }}: "{{ selection.classId }}",
+                    seatId{{ selection.passenger }}_{{ selection.leg }}: "{% if selection.seatId != null %}{{ selection.seatId }}{% endif %}",
+                    typeId{{ selection.passenger }}_{{ selection.leg }}: "{{ selection.typeId }}",
+                    {% endfor %}
+
                 })
             });
 
