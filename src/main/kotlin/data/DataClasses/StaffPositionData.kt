@@ -2,7 +2,7 @@ package data
 
 object StaffPositionColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val NAME = Column<String?>("name", "VARCHAR")
+    val NAME = Column<String?>("name", "VARCHAR NOT NULL UNIQUE")
 
     val ALL = listOf(ID, NAME)
     val COLUMN_NAMES = ALL.map { it.name }
@@ -17,6 +17,13 @@ data class StaffPositionData(
 
     override val tableName = "staff_positions"
     override val tableColumns = StaffPositionColumns.ALL
+
+    override val initialRows : List<StaffPositionData>
+        get() = listOf(
+            StaffPositionData(name = "Pilot"),
+            StaffPositionData(name = "Copilot"),
+            StaffPositionData(name = "Flight Attendant")
+        )
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(

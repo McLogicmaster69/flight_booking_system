@@ -166,12 +166,6 @@
             const firstInvalid = form.querySelector('[aria-invalid="true"]');
             if (firstInvalid) firstInvalid.focus();
         }
-
-        const parts = departValue.split("-");
-        if (parts.length === 3) {
-            departEl.value = `${parts[2]}/${parts[1]}/${parts[0]}`;
-        }
-
     });
 })();
 </script>

@@ -44,9 +44,10 @@
             {% endfor %}
         </select>
         <select class="general-input seat-select" name="seatId{{ i }}" id="seatId{{ i }}" data-passenger="{{ i }}">
-            <option value="">Random seat - free</option>
+            <option value="">Select a class first</option>
+
             {% for seat in availableSeats %}
-                <option value="{{ seat.id }}" data-class-id="{{ seat.classId }}">
+                <option value="{{ seat.id }}" data-class-id="{{ seat.classId }}" hidden disabled>
                     Seat {{ seat.number }} - £5
                 </option>
             {% endfor %}
@@ -60,19 +61,26 @@
 
 <script>
 document.querySelectorAll(".class-select").forEach(classSelect => {
-    classSelect.addEventListener("change", () => {
-        const passenger = classSelect.dataset.passenger;
-        const selectedClassId = classSelect.value;
+    classSelect.addEventListener("change", function () {
+        const passenger = this.getAttribute("data-passenger");
+        const selectedClassId = this.value;
         const seatSelect = document.getElementById("seatId" + passenger);
 
-        Array.from(seatSelect.options).forEach(option => {
+        for (const option of seatSelect.options) {
             if (option.value === "") {
+                option.textContent = selectedClassId
+                    ? "Random seat - free"
+                    : "Select a class first";
                 option.hidden = false;
-                return;
+                option.disabled = false;
+                continue;
             }
 
-            option.hidden = option.dataset.classId !== selectedClassId;
-        });
+            const matchesClass = option.getAttribute("data-class-id") === selectedClassId;
+
+            option.hidden = !matchesClass;
+            option.disabled = !matchesClass;
+        }
 
         seatSelect.value = "";
     });

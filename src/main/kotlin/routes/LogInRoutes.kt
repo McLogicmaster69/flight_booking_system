@@ -9,6 +9,7 @@ import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import io.pebbletemplates.pebble.PebbleEngine
 import java.io.StringWriter
+import java.security.SecureRandom
 import utils.jsMode
 import utils.logValidationError
 import utils.timed
@@ -40,7 +41,7 @@ private suspend fun ApplicationCall.handleLogInLoad() {
 
         val model = mapOf(
             "title" to "Log In / Sign Up",
-            "isNav" to true
+            "inNav" to true
         )
 
         val template = pebble.getTemplate("auth/login.peb")
@@ -114,6 +115,8 @@ private suspend fun ApplicationCall.handleLogInPost() {
 private suspend fun ApplicationCall.handleLogOut() {
     timed("T2_log_out", jsMode()) {
         sessions.clear<SessionToken>()
+        sessions.clear<StaffSession>()
+        sessions.clear<Temp2FASession>()
         respondRedirect("/")
     }
 }
@@ -199,6 +202,14 @@ private suspend fun ApplicationCall.handleVerifyPost() {
         }
 
         val user = userQuery.first().dataClass
+        val adminQuery = AdminData.queryDatabase(
+            whereArgs = WhereArgs(
+                "${AdminColumns.LOGIN_ID.name} = ?",
+                listOf(user.loginId)
+            )
+        )
+
+        val isAdmin = adminQuery.isNotEmpty()
         
         if (user.verifiedAccount != true) {
             user.verifiedAccount = true
@@ -206,7 +217,11 @@ private suspend fun ApplicationCall.handleVerifyPost() {
         }
 
         sessions.set(SessionData.createSession(user.id).toTokenSession())
-        response.headers.append("HX-Redirect", "/")
+        if (isAdmin) {
+            response.headers.append("HX-Redirect", "/admin")
+        } else {
+            response.headers.append("HX-Redirect", "/")
+        }
         respond(HttpStatusCode.OK)
     }
 }
@@ -292,5 +307,10 @@ private suspend fun ApplicationCall.handleSendVerification() {
 }
 
 fun generate2FACode(): String {
-    return (100000..999999).random().toString()
+    val chars = "0123456789"
+    val secureRandom = SecureRandom()
+
+    return (1..6)
+        .map { chars[secureRandom.nextInt(chars.length)] }
+        .joinToString("")
 }

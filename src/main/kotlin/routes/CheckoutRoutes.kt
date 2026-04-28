@@ -9,6 +9,7 @@ import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import io.pebbletemplates.pebble.PebbleEngine
 import java.io.StringWriter
+import java.security.SecureRandom
 import utils.jsMode
 import utils.logValidationError
 import utils.timed
@@ -81,7 +82,7 @@ private suspend fun ApplicationCall.handleCheckoutPost() {
 
         val model = mapOf(
             "title" to "Checkout",
-            "isNav" to true,
+            "inNav" to true,
             "tickets" to tickets,
             "start" to start,
             "end" to end,
@@ -203,7 +204,7 @@ private suspend fun ApplicationCall.handlePaymentPost() {
 
         val model = mapOf(
             "title" to "Payment",
-            "isNav" to true,
+            "inNav" to true,
             "flightId" to flightId,
             "tickets" to tickets,
             "lastNames" to lastNames,
@@ -258,8 +259,10 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
         val flightId = confirmparams["flightId"]?.toIntOrNull()
         val email = confirmparams["email"]
         val tickets = (confirmparams["tickets"]?.toIntOrNull() ?: 1).coerceAtLeast(1)
+        val totalAmount = confirmparams["totalAmount"]?.toLongOrNull()
+        var signedInUser: UserData? = null
 
-        if (flightId == null || email.isNullOrBlank()) {
+        if (flightId == null || email.isNullOrBlank() || totalAmount == null || totalAmount <= 0) {
             respondText("Invalid booking data", status = HttpStatusCode.BadRequest)
             return@timed
         }
@@ -274,6 +277,8 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
                 respondText("Could not identify logged in user", status = HttpStatusCode.BadRequest)
                 return@timed
             }
+
+            signedInUser = user
 
             BookerData.queryDatabase(
                 whereArgs = WhereArgs("${BookerColumns.USER_ID.name} = ?", listOf(user.id))
@@ -300,7 +305,7 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
             }
         }
 
-        val bookingRef = generateBookingReference()
+        val bookingRef = generateSecureBookingReference()
         val passengerNames = mutableListOf<String>()
 
         for (i in 1..tickets) {
@@ -367,6 +372,11 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
             ).insertIntoDatabase()
         }
 
+        signedInUser?.let { user ->
+            val pointsEarned = (totalAmount / 100L * 10L).toInt()
+            user.awardPoints(pointsEarned)
+        }
+
         val flight = FlightData.queryDatabase(
             whereArgs = WhereArgs("id = ?", listOf(flightId))
         ).firstOrNull()?.dataClass
@@ -407,10 +417,12 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
     }
 }
 
-fun generateBookingReference(): String {
+fun generateSecureBookingReference(): String {
     val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    val secureRandom = SecureRandom()
+
     return (1..6)
-        .map { chars.random() }
+        .map { chars[secureRandom.nextInt(chars.length)] }
         .joinToString("")
 }
 
@@ -420,7 +432,7 @@ private suspend fun ApplicationCall.handlePaymentSuccessLoad() {
 
         val model = mapOf(
             "title" to "Payment Success",
-            "isNav" to true
+            "inNav" to true
         )
 
         val template = pebble.getTemplate("checkout/payment-success.peb")

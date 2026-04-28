@@ -4,6 +4,7 @@ import java.io.File
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
+import org.mindrot.jbcrypt.BCrypt
 
 fun anyToBool(i : Any?) : Boolean? = (i as? Int)?.let { it != 0}
 
@@ -89,6 +90,7 @@ object DatabaseManager {
 
         initialisedTables.clear()
 
+        seedAdminAccount()
         println("Database initilisation completed")
     }
 
@@ -249,6 +251,44 @@ object DatabaseManager {
             stmt.setObject(values.size + 1, id)
             stmt.executeUpdate()
         }
+    }
+
+    fun seedAdminAccount() {
+        val adminEmail = "alidos37pro@gmail.com"
+        val adminPassword = "admin123"
+
+        val existing = LoginData.queryDatabase(
+            whereArgs = WhereArgs(
+                "${LoginColumns.EMAIL.name} = ?",
+                listOf(adminEmail)
+            )
+        )
+
+        if (existing.isNotEmpty()) {
+            println("Admin already exists")
+            return
+        }
+
+        println("Seeding admin account")
+
+        val passwordHash = BCrypt.hashpw(adminPassword, BCrypt.gensalt())
+
+        val loginId = LoginData(
+            email = adminEmail,
+            passwordHash = passwordHash
+        ).insertIntoDatabase()
+
+        UserData(
+            firstName = "Admin",
+            lastName = "User",
+            verifiedAccount = true,
+            loyalityPoints = 0,
+            loginId = loginId
+        ).insertIntoDatabase()
+
+        AdminData(
+            loginId = loginId
+        ).insertIntoDatabase()
     }
 
 }

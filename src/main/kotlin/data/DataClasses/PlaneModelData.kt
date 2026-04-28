@@ -27,11 +27,13 @@ data class PlaneModelData(
         get() = listOf(
             PlaneModelData(
                 name = "Boeing 737-800",
-                manufacturerId = ManufacturerData.getManufacturerId("Boeing")
+                manufacturerId = ManufacturerData.getManufacturerId("Boeing"),
+                capacity = 189
             ),
             PlaneModelData(
                 name = "Airbus A321",
-                manufacturerId = ManufacturerData.getManufacturerId("Airbus")
+                manufacturerId = ManufacturerData.getManufacturerId("Airbus"),
+                capacity = 220
             )
         )
 
