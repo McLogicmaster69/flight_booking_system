@@ -1,0 +1,108 @@
+package data
+
+import auth.*
+
+object StaffSessionColumns {
+    val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
+    val STAFF_ID = Column<Int>("staff_id", "INTEGER NOT NULL REFERENCES users(id)")
+    val SESSION_TOKEN = Column<String>("session_token", "STRING NOT NULL")
+
+    val ALL = listOf(ID, STAFF_ID, SESSION_TOKEN)
+    val COLUMN_NAMES = ALL.map { it.name }
+}
+
+data class StaffSessionData(
+
+    override val id: Int = 0,
+    var staffId : Int = 0,
+    var sessionToken : String = ""
+
+) : DataClass<StaffSessionData>(id) {
+
+    override val tableName = "staff_sessions"
+    override val tableColumns = StaffSessionColumns.ALL
+
+    override fun mapDataToColumns () : Map<Column<*>, Any?> =
+        mapOf(
+            StaffSessionColumns.STAFF_ID to staffId,
+            StaffSessionColumns.SESSION_TOKEN to sessionToken.toString()
+        )
+
+    override fun mapRowToData(row : Array<Any?>) : StaffSessionData =
+        StaffSessionData(
+            id = castRowElement(row, StaffSessionColumns.ID),
+            staffId = castRowElement(row, StaffSessionColumns.STAFF_ID),
+            sessionToken = castRowElement(row, StaffSessionColumns.SESSION_TOKEN)
+        )
+
+    override fun debugData() {
+        println("Staff session data: (\"$id\", \"$staffId\", \"$sessionToken\")")
+    }
+
+    fun toTokenSession() : StaffSessionToken {
+        return StaffSessionToken(sessionToken)
+    }
+
+    companion object {
+        val EMPTY : StaffSessionData
+            get() = StaffSessionData()
+
+        fun queryDatabase (
+            joinArgs : JoinArgs? = null,
+            whereArgs : WhereArgs? = null
+        ) : List<QueryResult<StaffSessionData>> {
+            return EMPTY.queryDatabase(joinArgs, whereArgs)
+        }
+
+        fun updateTable (
+            values : Map<Column<*>, Any?>,
+            whereArgs : WhereArgs
+        ) : Int = EMPTY.updateTable(values, whereArgs)
+
+        fun delete(
+            id : Int
+        ) : Int {
+            return StaffSessionData(id = id).delete()
+        }
+
+        fun createSession(
+            staffId : Int
+        ) : StaffSessionData {
+            val token : String = EMPTY.generateSecureToken()
+
+            val session = StaffSessionData(
+                staffId = staffId,
+                sessionToken = token
+            )
+
+            val id : Int = session.insertIntoDatabase()
+            return StaffSessionData (
+                id = id,
+                staffId = staffId,
+                sessionToken = token
+            )
+        }
+
+        fun queryDatabase(
+            token : String
+        ) : List<QueryResult<StaffSessionData>> {
+            val joinArgs : JoinArgs = JoinArgs(
+                joinType = "INNER",
+                joinTable = UserData.EMPTY.tableName,
+                joinTable1Column = StaffSessionColumns.STAFF_ID.name,
+                joinTable2Column = UserColumns.ID.name,
+                joinSelectColumns = UserColumns.ALL.map { it.name }
+            )
+
+            val whereArgs : WhereArgs = WhereArgs(
+                whereClause = "${EMPTY.tableName}.${StaffSessionColumns.SESSION_TOKEN.name} = ?",
+                whereArgs = listOf(token)
+            )
+
+            return queryDatabase(
+                joinArgs = joinArgs,
+                whereArgs = whereArgs
+            )
+        }
+    }
+}

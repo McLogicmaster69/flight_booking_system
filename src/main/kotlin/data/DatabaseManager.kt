@@ -5,6 +5,8 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
 import org.mindrot.jbcrypt.BCrypt
+import data.AdminSessionData
+import data.StaffSessionData
 
 fun anyToBool(i : Any?) : Boolean? = (i as? Int)?.let { it != 0}
 
@@ -54,6 +56,7 @@ object DatabaseManager {
         initialisedTables = mutableListOf()
         val dataClasses: List<DataClass<*>> = listOf(
             AdminData.EMPTY,
+            AdminSessionData.EMPTY,
             AssignedFlightStaffData.EMPTY,
             BookedSeatData.EMPTY,
             BookerData.EMPTY,
@@ -78,6 +81,7 @@ object DatabaseManager {
             SessionData.EMPTY,
             StaffData.EMPTY,
             StaffPositionData.EMPTY,
+            StaffSessionData.EMPTY,
             TicketTypeData.EMPTY,
             TimezoneData.EMPTY,
             TwoFAData.EMPTY,

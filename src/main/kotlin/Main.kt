@@ -109,7 +109,12 @@ fun Application.configureSessions() {
             cookie.httpOnly = true
             cookie.extensions["SameSite"] = "Strict"
         }
-        cookie<StaffSession>("STAFF_SESSION") {
+        cookie<StaffSessionToken>("STAFF_TOKEN_SESSION") {
+            cookie.path = "/"
+            cookie.httpOnly = true
+            cookie.extensions["SameSite"] = "Strict"
+        }
+        cookie<AdminSessionToken>("ADMIN_TOKEN_SESSION") {
             cookie.path = "/"
             cookie.httpOnly = true
             cookie.extensions["SameSite"] = "Strict"

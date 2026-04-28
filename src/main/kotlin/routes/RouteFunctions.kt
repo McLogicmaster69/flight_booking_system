@@ -82,7 +82,7 @@ fun ApplicationCall.fullEvaluate(
         }
     }
 
-    val isStaff = sessions.get<StaffSession>() != null
+    val isStaff = sessions.get<StaffSessionToken>() != null
 
     template.evaluate(
         writer,
