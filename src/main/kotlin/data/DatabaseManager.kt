@@ -5,13 +5,13 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
 import org.mindrot.jbcrypt.BCrypt
-import data.AdminSessionData
-import data.StaffSessionData
+import org.json.JSONObject
 
 fun anyToBool(i : Any?) : Boolean? = (i as? Int)?.let { it != 0}
 
 object DatabaseManager {
     private val dbFilePath : String = "data/database.db"
+    private val adminJSONFilePath : String = "data/admin.json"
     private val connection : Connection
     private var initialisedTables : MutableList<DataClass<*>> = mutableListOf()
 
@@ -258,8 +258,14 @@ object DatabaseManager {
     }
 
     fun seedAdminAccount() {
-        val adminEmail = "alidos37pro@gmail.com"
-        val adminPassword = "admin123"
+        val adminJSONFile : File = File(adminJSONFilePath)
+        require(adminJSONFile.exists()) { "Admin JSON file cannot be found" }
+
+        val adminJSONString = adminJSONFile.readText(Charsets.UTF_8).trimIndent()
+        val adminJSONObject = JSONObject(adminJSONString)
+
+        val adminEmail = adminJSONObject.getString("email")
+        val adminPassword = adminJSONObject.getString("password")
 
         val existing = LoginData.queryDatabase(
             whereArgs = WhereArgs(
