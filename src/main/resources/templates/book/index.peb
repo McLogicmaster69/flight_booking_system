@@ -30,9 +30,9 @@
       <label for="maxDuration">Max Duration (Hours)</label>
       <input class="general-input" id="maxDuration" name="maxDuration" type="text" placeholder="e.g. 15">
 
-      <label for="priceRange">Price Range</label>
-      <input class="general-input" id="priceRange" name="priceRange" type="range" min="0" max="100" value="40"
-        aria-label="Price Range">
+      <label for="priceRange">Max Price</label>
+      <input class="general-input" id="priceRange" name="priceRange" type="range" min="0" max="100" value="100">
+      <small>0 = £0, 100 = no limit</small>
 
       <label for="sortBy">Sort By</label>
       <select class="general-input" id="sortBy" name="sortBy">

@@ -37,6 +37,7 @@ fun getResultHTML(result : JourneyFlightTimePath, index : Int) : String {
             <h2>${result.locationNames.first()} to ${result.locationNames.last()}</h2>
             <div class="flight-result-info">
                 <p>Duration: ${representAsTime(result.totalMinutes)}</p>
+                <p>Price from: £${getJourneyPriceDisplay(result)}</p>
                 <p>${if (result.locationNames.size <= 2) "Direct" else "Layovers: ${result.locationNames.size - 2}"}</p>
             </div>
         </a>
@@ -114,12 +115,36 @@ private suspend fun ApplicationCall.handleSearchResults() {
             else -> MAX_LAYOVERS
         }
 
-        val results: List<JourneyFlightTimePath> = FlightData.getJourneyFlight(
+        val maxDurationHours = parameters["maxDuration"]?.toDoubleOrNull()
+        val maxDurationMinutes = maxDurationHours?.let { (it * 60).toLong() }
+
+        val priceRange = parameters["priceRange"]?.toIntOrNull() ?: 100
+        val maxPricePence = if (priceRange >= 100) {
+            Long.MAX_VALUE
+        } else {
+            priceRange * 1000L
+        }
+
+        val sortBy = parameters["sortBy"].orEmpty().trim()
+
+        var results: List<JourneyFlightTimePath> = FlightData.getJourneyFlight(
             start,
             end,
             date,
             layovers
         )
+
+        if (maxDurationMinutes != null) {
+            results = results.filter { it.totalMinutes <= maxDurationMinutes }
+        }
+
+        results = results.filter { getJourneyPrice(it) <= maxPricePence }
+
+        results = when (sortBy) {
+            "Cheapest to Most Expensive" -> results.sortedBy { getJourneyPrice(it) }
+            "Fastest to Slowest" -> results.sortedBy { it.totalMinutes }
+            else -> results.sortedBy { it.totalMinutes }
+        }
 
         respondText(getResultsHTML(results), ContentType.Text.Html)
     }
@@ -171,4 +196,12 @@ private suspend fun ApplicationCall.handleGetResult() {
         fullEvaluate(template, writer, model)
         respondText(writer.toString(), ContentType.Text.Html)
     }
+}
+
+fun getJourneyPrice(path: JourneyFlightTimePath): Long {
+    return path.totalMinutes * 50L // pence, £0.50 per minute
+}
+
+fun getJourneyPriceDisplay(path: JourneyFlightTimePath): String {
+    return "%.2f".format(getJourneyPrice(path) / 100.0)
 }
