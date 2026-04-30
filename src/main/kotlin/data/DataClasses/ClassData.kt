@@ -8,6 +8,12 @@ object ClassColumns {
     val COLUMN_NAMES = ALL.map { it.name }
 }
 
+object Classes {
+    val FIRST_CLASS = "First Class"
+    val BUSINESS = "Business"
+    val ECONOMY = "Economy"
+}
+
 data class ClassData(
 
     override val id: Int = 0,
@@ -20,9 +26,9 @@ data class ClassData(
 
     override val initialRows: List<ClassData>
         get() = listOf(
-            ClassData(name = "First Class"),
-            ClassData(name = "Business"),
-            ClassData(name = "Economy")
+            ClassData(name = Classes.FIRST_CLASS),
+            ClassData(name = Classes.BUSINESS),
+            ClassData(name = Classes.ECONOMY)
         )
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =

@@ -5,6 +5,8 @@ import java.time.LocalTime
 import java.time.LocalDateTime
 import java.time.Duration
 import kotlin.math.roundToInt
+import results.CreateFlightResults
+import results.StaffAssignmentResults
 
 const val TRANSFER_TIME : Int = 120
 const val MAX_TIME : Int = 2880
@@ -349,6 +351,118 @@ data class FlightData(
                 return emptyList<JourneyFlightTimePath>()
 
             return flights.sortedBy { it.totalMinutes }
+        }
+
+        fun getAvailablePlane (
+            modelId : Int,
+            locationId : Int,
+            date : LocalDate,
+            time : LocalTime
+        ) : PlaneData? {
+            val availablePlanes : List<QueryResult<PlaneData>> = PlaneData.queryDatabase(
+                whereArgs = WhereArgs(
+                    whereClause = "${PlaneColumns.MODEL_ID} = ? AND ${PlaneColumns.CURRENT_LOCATION} = ?",
+                    whereArgs = listOf(modelId, locationId)
+                )
+            )
+
+            val planeAvailableAtTime : List<QueryResult<PlaneData>> = availablePlanes.filter { 
+                LocalDateTime.of(
+                    it.dataClass.currentLocationDate, 
+                    it.dataClass.currentLocationTime
+                ).isBefore(LocalDateTime.of(date, time))
+            }
+
+            return planeAvailableAtTime.firstOrNull()?.dataClass
+        }
+
+        fun assignStaffToFlight (
+            flightId : Int,
+            pilots : Int,
+            attendants : Int
+        ) : StaffAssignmentResults {
+            val flight : FlightData = queryDatabase(flightId).firstOrNull()?.dataClass ?: return StaffAssignmentResults(flightId, listOf(), listOf(), "Could not find flight")
+            val route : RouteData = RouteData.queryDatabase(flight.routeId).firstOrNull()?.dataClass ?: return StaffAssignmentResults(flightId, listOf(), listOf(), "Could not find route")
+            val pilotRole : StaffPositionData = StaffPositionData.queryDatabase(StaffPositions.PILOT).firstOrNull()?.dataClass ?: return StaffAssignmentResults(flightId, listOf(), listOf(), "Could not find pilot role")
+            val copilotRole : StaffPositionData = StaffPositionData.queryDatabase(StaffPositions.COPILOT).firstOrNull()?.dataClass ?: return StaffAssignmentResults(flightId, listOf(), listOf(), "Could not find copilot role")
+            val attendantRole : StaffPositionData = StaffPositionData.queryDatabase(StaffPositions.FLIGHT_ATTENDANT).firstOrNull()?.dataClass ?: return StaffAssignmentResults(flightId, listOf(), listOf(), "Could not find attendant role")
+
+            val startTime : LocalDateTime = LocalDateTime.of(
+                flight.date,
+                flight.time
+            ).minusHours(1)
+            val endTime : LocalDateTime = startTime.plusMinutes(route.duration.hour * 60L + route.duration.minute + 120L)
+
+            val availableStaff : List<QueryResult<StaffData>> = StaffData.queryDatabase(
+                whereArgs = WhereArgs(
+                    whereClause = """
+                        SELECT 1
+                        FROM ${AssignedFlightStaffData.EMPTY.tableName}
+                        INNER JOIN ${FlightData.EMPTY.tableName}
+                        ON ${FlightData.EMPTY.tableName}.${FlightColumns.ID.name} = ${AssignedFlightStaffData.EMPTY.tableName}.${AssignedFlightStaffColumns.FLIGHT_ID.name}
+                        WHERE ${AssignedFlightStaffData.EMPTY.tableName}.${AssignedFlightStaffColumns.STAFF_ID} = ${StaffData.EMPTY.tableName}.${StaffColumns.ID.name}
+                        AND ((
+                                ${FlightData.EMPTY.tableName}.${FlightColumns.DATE.name} > ?
+                            OR (
+                                ${FlightData.EMPTY.tableName}.${FlightColumns.DATE.name} = ? AND ${FlightData.EMPTY.tableName}.${FlightColumns.TIME.name} >= ?
+                            )) AND (
+                                ${FlightData.EMPTY.tableName}.${FlightColumns.DATE.name} < ?
+                            OR (
+                                ${FlightData.EMPTY.tableName}.${FlightColumns.DATE.name} = ? AND ${FlightData.EMPTY.tableName}.${FlightColumns.TIME.name} <= ?
+                            ))
+                        )
+                    """,
+                    whereArgs = listOf(
+                        startTime.toLocalDate(),
+                        startTime.toLocalDate(),
+                        startTime.toLocalTime(),
+                        endTime.toLocalDate(),
+                        endTime.toLocalDate(),
+                        endTime.toLocalTime()
+                    ),
+                    notExists = true
+                )
+            )
+
+            if (availableStaff.isEmpty()) return StaffAssignmentResults(flightId, listOf(), listOf(), "No available staff")
+
+            val availablePilots : List<QueryResult<StaffData>> = availableStaff.filter { it.dataClass.positionId == pilotRole.id || it.dataClass.positionId == copilotRole.id }
+            val availableAttendants : List<QueryResult<StaffData>> = availableStaff.filter { it.dataClass.positionId == attendantRole.id }
+            val sortedPilots : List<ScoredStaffData> = availablePilots.map { ScoredStaffData(it.dataClass, 0) }
+            val sortedAttendants : List<ScoredStaffData> = availableAttendants.map { ScoredStaffData(it.dataClass, 0) }
+
+            return StaffAssignmentResults(
+                flightId,
+                sortedPilots.take(pilots).map{ it.staffData.id },
+                sortedAttendants.take(attendants).map{ it.staffData.id },
+                null
+            )
+        }
+
+        fun createFlight (
+            routeId : Int,
+            modelId : Int,
+            date : LocalDate,
+            time : LocalTime
+        ) : CreateFlightResults {
+            val route : RouteData = RouteData.queryDatabase(routeId).firstOrNull()?.dataClass ?: return CreateFlightResults(returnMessage = "Could not find route")
+            val model : PlaneModelData = PlaneModelData.queryDatabase(modelId).firstOrNull()?.dataClass ?: return CreateFlightResults(returnMessage = "Could not find plane model")
+            val plane : PlaneData = getAvailablePlane(modelId, route.startDestination, date, time) ?: return CreateFlightResults(returnMessage = "Could not find an available plane")
+
+            val flightId = FlightData(
+                planeId = plane.id,
+                routeId = routeId,
+                date = date,
+                time = time
+            ).insertIntoDatabase()
+
+            SeatData.generateSeatsForFlight(flightId)
+            val staffResults : StaffAssignmentResults = assignStaffToFlight(flightId, model.pilots, model.attendants)
+
+            return CreateFlightResults (
+                flightId = flightId,
+                staffResults = staffResults
+            )
         }
     }
 }

@@ -207,8 +207,14 @@ object DatabaseManager {
 
         val sql = buildString {
             append("SELECT $columnStr FROM $table")
+
             if (joinArgs != null) append(" ${joinArgs.joinType} JOIN ${joinArgs.joinTable} ON $table.${joinArgs.joinTable1Column} = ${joinArgs.joinTable}.${joinArgs.joinTable2Column}")
-            if (whereArgs != null) append(" WHERE ${whereArgs.whereClause}")
+            
+            if (whereArgs != null) {
+                append(" WHERE")
+                if (whereArgs.notExists) append(" NOT EXISTS")
+                append(" (${whereArgs.whereClause})")
+            } 
         }
 
         var totalSize = columns.size

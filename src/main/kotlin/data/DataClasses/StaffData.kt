@@ -11,6 +11,13 @@ object StaffColumns {
     val COLUMN_NAMES = ALL.map { it.name }
 }
 
+data class ScoredStaffData (
+
+    val staffData : StaffData,
+    val score : Int = 0
+
+)
+
 data class StaffData(
 
     override val id: Int = 0,
@@ -51,7 +58,8 @@ data class StaffData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null) : List<QueryResult<StaffData>> {
+            whereArgs : WhereArgs? = null
+        ) : List<QueryResult<StaffData>> {
             return EMPTY.queryDatabase(joinArgs, whereArgs)
         }
 

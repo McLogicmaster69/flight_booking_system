@@ -70,7 +70,7 @@ data class SeatData(
 
         fun generateSeatsForFlight(flightId: Int) {
             val existingSeats = queryDatabase(
-                whereArgs = WhereArgs("flight_id = ?", listOf(flightId))
+                whereArgs = WhereArgs("${SeatColumns.FLIGHT_ID.name} = ?", listOf(flightId))
             )
 
             if (existingSeats.isNotEmpty()) return
@@ -87,22 +87,22 @@ data class SeatData(
                 whereArgs = WhereArgs("id = ?", listOf(plane.modelId))
             ).firstOrNull()?.dataClass ?: return
 
-            val capacity = model.capacity ?: return
+            val capacity = model.capacity
 
             val firstClassId = ClassData.queryDatabase(
-                whereArgs = WhereArgs("name = ?", listOf("First Class"))
+                whereArgs = WhereArgs("${ClassColumns.NAME.name} = ?", listOf(Classes.FIRST_CLASS))
             ).firstOrNull()?.dataClass?.id ?: return
 
             val businessClassId = ClassData.queryDatabase(
-                whereArgs = WhereArgs("name = ?", listOf("Business"))
+                whereArgs = WhereArgs("${ClassColumns.NAME.name} = ?", listOf(Classes.BUSINESS))
             ).firstOrNull()?.dataClass?.id ?: return
 
             val economyClassId = ClassData.queryDatabase(
-                whereArgs = WhereArgs("name = ?", listOf("Economy"))
+                whereArgs = WhereArgs("${ClassColumns.NAME.name} = ?", listOf(Classes.ECONOMY))
             ).firstOrNull()?.dataClass?.id ?: return
 
             val adultTypeId = TicketTypeData.queryDatabase(
-                whereArgs = WhereArgs("name = ?", listOf("Adult"))
+                whereArgs = WhereArgs("${TicketTypeColumns.NAME.name} = ?", listOf(TicketTypes.ADULT))
             ).firstOrNull()?.dataClass?.id ?: return
 
             for (seatNumber in 1..capacity) {
@@ -125,14 +125,14 @@ data class SeatData(
         fun getAvailableSeats(flightId: Int, classId: Int): List<SeatData> {
             val seats = queryDatabase(
                 whereArgs = WhereArgs(
-                    "flight_id = ? AND class_id = ?",
+                    "${SeatColumns.FLIGHT_ID.name} = ? AND ${SeatColumns.CLASS_ID.name} = ?",
                     listOf(flightId, classId)
                 )
             ).map { it.dataClass }
 
             return seats.filter { seat ->
                 BookedSeatData.queryDatabase(
-                    whereArgs = WhereArgs("seat_id = ?", listOf(seat.id))
+                    whereArgs = WhereArgs("${BookedSeatColumns.SEAT_ID.name} = ?", listOf(seat.id))
                 ).isEmpty()
             }
         }
@@ -143,7 +143,7 @@ data class SeatData(
 
         fun isSeatAvailable(seatId: Int): Boolean {
             return BookedSeatData.queryDatabase(
-                whereArgs = WhereArgs("seat_id = ?", listOf(seatId))
+                whereArgs = WhereArgs("${BookedSeatColumns.SEAT_ID.name} = ?", listOf(seatId))
             ).isEmpty()
         }
     }

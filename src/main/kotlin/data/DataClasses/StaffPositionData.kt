@@ -8,6 +8,12 @@ object StaffPositionColumns {
     val COLUMN_NAMES = ALL.map { it.name }
 }
 
+object StaffPositions {
+    val PILOT = "Pilot"
+    val COPILOT = "Copilot"
+    val FLIGHT_ATTENDANT = "Flight Attendant"
+}
+
 data class StaffPositionData(
 
     override val id: Int = 0,
@@ -20,9 +26,9 @@ data class StaffPositionData(
 
     override val initialRows : List<StaffPositionData>
         get() = listOf(
-            StaffPositionData(name = "Pilot"),
-            StaffPositionData(name = "Copilot"),
-            StaffPositionData(name = "Flight Attendant")
+            StaffPositionData(name = StaffPositions.PILOT),
+            StaffPositionData(name = StaffPositions.COPILOT),
+            StaffPositionData(name = StaffPositions.FLIGHT_ATTENDANT)
         )
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
@@ -46,9 +52,12 @@ data class StaffPositionData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null) : List<QueryResult<StaffPositionData>> {
+            whereArgs : WhereArgs? = null
+        ) : List<QueryResult<StaffPositionData>> {
             return EMPTY.queryDatabase(joinArgs, whereArgs)
         }
+
+        fun queryDatabase (name : String) : List<QueryResult<StaffPositionData>> = queryDatabase(whereArgs = WhereArgs("${StaffPositionColumns.NAME.name} = ?", listOf(name)))
 
         fun updateTable (
             values : Map<Column<*>, Any?>,

@@ -5,8 +5,10 @@ object PlaneModelColumns {
     val NAME = Column<String>("name", "STRING NOT NULL")
     val MANUFACTURER_ID = Column<Int>("manufacturer_id", "INTEGER NOT NULL REFERENCES manufacturers(id)")
     val CAPACITY = Column<Int>("capacity", "INTEGER NOT NULL")
+    val PILOTS = Column<Int>("pilots", "INTEGER NOT NULL")
+    val ATTENDANTS = Column<Int>("attendants", "INTEGER NOT NULL")
 
-    val ALL = listOf(ID, NAME, MANUFACTURER_ID, CAPACITY)
+    val ALL = listOf(ID, NAME, MANUFACTURER_ID, CAPACITY, PILOTS, ATTENDANTS)
     val COLUMN_NAMES = ALL.map { it.name }
 }
 
@@ -15,7 +17,9 @@ data class PlaneModelData(
     override val id : Int = 0,
     var name : String = "",
     var manufacturerId : Int = 0,
-    var capacity : Int = 0
+    var capacity : Int = 0,
+    var pilots : Int = 0,
+    var attendants : Int = 0
 
 ) : DataClass<PlaneModelData>(id) {
 
@@ -28,12 +32,16 @@ data class PlaneModelData(
             PlaneModelData(
                 name = "Boeing 737-800",
                 manufacturerId = ManufacturerData.getManufacturerId("Boeing"),
-                capacity = 189
+                capacity = 189,
+                pilots = 2,
+                attendants = 4
             ),
             PlaneModelData(
                 name = "Airbus A321",
                 manufacturerId = ManufacturerData.getManufacturerId("Airbus"),
-                capacity = 220
+                capacity = 220,
+                pilots = 2,
+                attendants = 4
             )
         )
 
@@ -46,7 +54,9 @@ data class PlaneModelData(
         mapOf(
             PlaneModelColumns.NAME to name,
             PlaneModelColumns.MANUFACTURER_ID to manufacturerId,
-            PlaneModelColumns.CAPACITY to capacity
+            PlaneModelColumns.CAPACITY to capacity,
+            PlaneModelColumns.PILOTS to pilots,
+            PlaneModelColumns.ATTENDANTS to attendants
         )
 
     override fun mapRowToData(row : Array<Any?>) : PlaneModelData =
@@ -54,11 +64,13 @@ data class PlaneModelData(
             id = castRowElement(row, PlaneModelColumns.ID),
             name = castRowElement(row, PlaneModelColumns.NAME),
             manufacturerId = castRowElement(row, PlaneModelColumns.MANUFACTURER_ID),
-            capacity = castRowElement(row, PlaneModelColumns.CAPACITY)
+            capacity = castRowElement(row, PlaneModelColumns.CAPACITY),
+            pilots = castRowElement(row, PlaneModelColumns.PILOTS),
+            attendants = castRowElement(row, PlaneModelColumns.ATTENDANTS)
         )
 
     override fun debugData() {
-        println("Plane model data: (\"$id\", \"$name\", \"$manufacturerId\", \"$capacity\")")
+        println("Plane model data: (\"$id\", \"$name\", \"$manufacturerId\", \"$capacity\", \"$pilots\", \"$attendants\")")
     }
 
     companion object {
@@ -67,13 +79,16 @@ data class PlaneModelData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null) : List<QueryResult<PlaneModelData>> {
+            whereArgs : WhereArgs? = null
+        ) : List<QueryResult<PlaneModelData>> {
             return EMPTY.queryDatabase(joinArgs, whereArgs)
         }
 
+        fun queryDatabase(id : Int) : List<QueryResult<PlaneModelData>> = queryDatabase(whereArgs = WhereArgs("${PlaneModelColumns.ID.name} = ?", listOf(id)))
+
         fun getPlaneModelId(name: String): Int {
             return queryDatabase(
-                whereArgs = WhereArgs("name = ?", listOf(name))
+                whereArgs = WhereArgs("${PlaneModelColumns.NAME.name} = ?", listOf(name))
             ).firstOrNull()?.dataClass?.id ?: -1
         }
 

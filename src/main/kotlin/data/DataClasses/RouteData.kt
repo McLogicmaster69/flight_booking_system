@@ -155,6 +155,8 @@ data class RouteData(
             )
         }
 
+        fun queryDatabase(id : Int) : List<QueryResult<RouteData>> = queryDatabase(whereArgs = WhereArgs("${RouteColumns.ID.name} = ?", listOf(id)))
+
         fun getPathByLayovers (
             destinationArgs : DestinationArgs,
             layovers : Int = 2
@@ -319,8 +321,6 @@ data class RouteData(
                 layovers
             )
         }
-
-        fun queryDatabase(id : Int) : List<QueryResult<RouteData>> = queryDatabase(whereArgs = WhereArgs("${RouteColumns.ID.name} = ?", listOf(id)))
 
         fun getDuration(id : Int) : LocalTime {
             val query = queryDatabase(id)

@@ -8,6 +8,11 @@ object TicketTypeColumns {
     val COLUMN_NAMES = ALL.map { it.name }
 }
 
+object TicketTypes {
+    val ADULT = "Adult"
+    val CHILD = "Child"
+}
+
 data class TicketTypeData(
 
     override val id: Int = 0,
@@ -20,8 +25,8 @@ data class TicketTypeData(
 
     override val initialRows: List<TicketTypeData>
         get() = listOf(
-            TicketTypeData(name = "Adult"),
-            TicketTypeData(name = "Child")
+            TicketTypeData(name = TicketTypes.ADULT),
+            TicketTypeData(name = TicketTypes.CHILD)
         )
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
