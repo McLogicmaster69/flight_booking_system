@@ -320,125 +320,6 @@ data class FlightData(
             return flights.sortedBy { it.totalMinutes }
         }
 
-        fun getAvailablePlane (
-            modelId : Int,
-            locationId : Int,
-            date : LocalDate,
-            time : LocalTime
-        ) : PlaneData? {
-            val availablePlanes : List<QueryResult<PlaneData>> = PlaneData.queryDatabase(
-                whereArgs = WhereArgs(
-                    whereClause = "${PlaneColumns.MODEL_ID} = ?",
-                    whereArgs = listOf(modelId)
-                )
-            )
-
-            val planeAvailableAtTime : List<QueryResult<PlaneData>> = availablePlanes.filter { 
-                LocalDateTime.of(
-                    it.dataClass.currentLocationDate, 
-                    it.dataClass.currentLocationTime
-                ).isBefore(LocalDateTime.of(date, time))
-            }
-            
-            return planeAvailableAtTime.firstOrNull()?.dataClass
-        }
-
-        fun scoreStaffMember (
-            staff : StaffData,
-            flight : FlightData,
-            route : RouteData
-        ) : Int {
-            return 0
-        }
-
-        fun assignStaffToFlight (
-            flightId : Int,
-            pilots : Int,
-            attendants : Int
-        ) : StaffAssignmentResults {
-            val flight : FlightData = queryDatabase(flightId).firstOrNull()?.dataClass ?: return StaffAssignmentResults(flightId, listOf(), listOf(), "Could not find flight")
-            val route : RouteData = RouteData.queryDatabase(flight.routeId).firstOrNull()?.dataClass ?: return StaffAssignmentResults(flightId, listOf(), listOf(), "Could not find route")
-            val pilotRole : StaffPositionData = StaffPositionData.queryDatabase(StaffPositions.PILOT).firstOrNull()?.dataClass ?: return StaffAssignmentResults(flightId, listOf(), listOf(), "Could not find pilot role")
-            val copilotRole : StaffPositionData = StaffPositionData.queryDatabase(StaffPositions.COPILOT).firstOrNull()?.dataClass ?: return StaffAssignmentResults(flightId, listOf(), listOf(), "Could not find copilot role")
-            val attendantRole : StaffPositionData = StaffPositionData.queryDatabase(StaffPositions.FLIGHT_ATTENDANT).firstOrNull()?.dataClass ?: return StaffAssignmentResults(flightId, listOf(), listOf(), "Could not find attendant role")
-
-            val startTime : LocalDateTime = LocalDateTime.of(
-                flight.date,
-                flight.time
-            ).minusHours(1)
-            val endTime : LocalDateTime = startTime.plusMinutes(route.duration.hour * 60L + route.duration.minute + 120L)
-
-            val availableStaff : List<QueryResult<StaffData>> = StaffData.queryDatabase(
-                whereArgs = WhereArgs(
-                    whereClause = """
-                        SELECT 1
-                        FROM ${AssignedFlightStaffData.EMPTY.tableName}
-                        INNER JOIN ${FlightData.EMPTY.tableName}
-                        ON ${FlightData.EMPTY.tableName}.${FlightColumns.ID.name} = ${AssignedFlightStaffData.EMPTY.tableName}.${AssignedFlightStaffColumns.FLIGHT_ID.name}
-                        WHERE ${AssignedFlightStaffData.EMPTY.tableName}.${AssignedFlightStaffColumns.STAFF_ID} = ${StaffData.EMPTY.tableName}.${StaffColumns.ID.name}
-                        AND ((
-                                ${FlightData.EMPTY.tableName}.${FlightColumns.DATE.name} > ?
-                            OR (
-                                ${FlightData.EMPTY.tableName}.${FlightColumns.DATE.name} = ? AND ${FlightData.EMPTY.tableName}.${FlightColumns.TIME.name} >= ?
-                            )) AND (
-                                ${FlightData.EMPTY.tableName}.${FlightColumns.DATE.name} < ?
-                            OR (
-                                ${FlightData.EMPTY.tableName}.${FlightColumns.DATE.name} = ? AND ${FlightData.EMPTY.tableName}.${FlightColumns.TIME.name} <= ?
-                            ))
-                        )
-                    """,
-                    whereArgs = listOf(
-                        startTime.toLocalDate(),
-                        startTime.toLocalDate(),
-                        startTime.toLocalTime(),
-                        endTime.toLocalDate(),
-                        endTime.toLocalDate(),
-                        endTime.toLocalTime()
-                    ),
-                    notExists = true
-                )
-            )
-
-            if (availableStaff.isEmpty()) return StaffAssignmentResults(flightId, listOf(), listOf(), "No available staff")
-
-            val availablePilots : List<QueryResult<StaffData>> = availableStaff.filter { it.dataClass.positionId == pilotRole.id || it.dataClass.positionId == copilotRole.id }
-            val availableAttendants : List<QueryResult<StaffData>> = availableStaff.filter { it.dataClass.positionId == attendantRole.id }
-
-            val sortedPilots : List<QueryResult<StaffData>> = availablePilots.mapNotNull { pilot ->
-                val score = scoreStaffMember(pilot.dataClass, flight, route)
-                if (score >= 0) pilot to score else null
-            } .sortedBy { it.second } .map { it.first }
-
-            val sortedAttendants : List<QueryResult<StaffData>> = availableAttendants.mapNotNull { attendant ->
-                val score = scoreStaffMember(attendant.dataClass, flight, route)
-                if (score >= 0) attendant to score else null
-            } .sortedBy { it.second } .map { it.first }
-
-            val selectedPilots : List<QueryResult<StaffData>> = sortedPilots.take(pilots)
-            val selectedAttendants : List<QueryResult<StaffData>> = sortedAttendants.take(attendants)
-
-            selectedPilots.forEach { pilot ->
-                AssignedFlightStaffData(
-                    flightId = flight.id,
-                    staffId = pilot.dataClass.id
-                ).insertIntoDatabase() 
-            }
-
-            selectedAttendants.forEach { attendant ->
-                AssignedFlightStaffData(
-                    flightId = flight.id,
-                    staffId = attendant.dataClass.id
-                ).insertIntoDatabase() 
-            }
-
-            return StaffAssignmentResults(
-                flightId,
-                selectedPilots.map{ it.dataClass.id },
-                selectedAttendants.map{ it.dataClass.id },
-                null
-            )
-        }
-
         fun createFlight (
             routeId : Int,
             modelId : Int,
@@ -447,7 +328,7 @@ data class FlightData(
         ) : CreateFlightResults {
             val route : RouteData = RouteData.queryDatabase(routeId).firstOrNull()?.dataClass ?: return CreateFlightResults(returnMessage = "Could not find route")
             val model : PlaneModelData = PlaneModelData.queryDatabase(modelId).firstOrNull()?.dataClass ?: return CreateFlightResults(returnMessage = "Could not find plane model")
-            val plane : PlaneData = getAvailablePlane(modelId, route.startDestination, date, time) ?: return CreateFlightResults(returnMessage = "Could not find an available plane")
+            val plane : PlaneData = PlaneData.getAvailablePlane(modelId, route.startDestination, date, time) ?: return CreateFlightResults(returnMessage = "Could not find an available plane")
 
             val flightId = FlightData(
                 planeId = plane.id,
@@ -457,7 +338,7 @@ data class FlightData(
             ).insertIntoDatabase()
 
             SeatData.generateSeatsForFlight(flightId)
-            val staffResults : StaffAssignmentResults = assignStaffToFlight(flightId, model.pilots, model.attendants)
+            val staffResults : StaffAssignmentResults = AssignedFlightStaffData.assignStaffToFlight(flightId, model.pilots, model.attendants)
 
             return CreateFlightResults (
                 flightId = flightId,
