@@ -15,6 +15,40 @@ object DatabaseManager {
     private val connection : Connection
     private var initialisedTables : MutableList<DataClass<*>> = mutableListOf()
 
+    private val dataClasses: List<DataClass<*>> = listOf(
+        AdminData.EMPTY,
+        AdminSessionData.EMPTY,
+        AssignedFlightStaffData.EMPTY,
+        BookedSeatData.EMPTY,
+        BookerData.EMPTY,
+        BookingData.EMPTY,
+        CartItemData.EMPTY,
+        ClassData.EMPTY,
+        CountryData.EMPTY,
+        DestinationData.EMPTY,
+        FlightData.EMPTY,
+        FlightSearchData.EMPTY,
+        FlightSearchFlightData.EMPTY,
+        GuestData.EMPTY,
+        LoginData.EMPTY,
+        ManufacturerData.EMPTY,
+        PaymentMethodData.EMPTY,
+        PlaneData.EMPTY,
+        PlaneModelData.EMPTY,
+        PlaneSeatData.EMPTY,
+        RemainingSeatData.EMPTY,
+        RouteData.EMPTY,
+        SeatData.EMPTY,
+        SessionData.EMPTY,
+        StaffData.EMPTY,
+        StaffPositionData.EMPTY,
+        StaffSessionData.EMPTY,
+        TicketTypeData.EMPTY,
+        TimezoneData.EMPTY,
+        TwoFAData.EMPTY,
+        UserData.EMPTY
+    )
+
     init {
         connection = connect()
     }
@@ -54,39 +88,6 @@ object DatabaseManager {
     fun createTables() {
         println("Initialising database")
         initialisedTables = mutableListOf()
-        val dataClasses: List<DataClass<*>> = listOf(
-            AdminData.EMPTY,
-            AdminSessionData.EMPTY,
-            AssignedFlightStaffData.EMPTY,
-            BookedSeatData.EMPTY,
-            BookerData.EMPTY,
-            BookingData.EMPTY,
-            CartItemData.EMPTY,
-            ClassData.EMPTY,
-            CountryData.EMPTY,
-            DestinationData.EMPTY,
-            FlightData.EMPTY,
-            FlightSearchData.EMPTY,
-            FlightSearchFlightData.EMPTY,
-            GuestData.EMPTY,
-            LoginData.EMPTY,
-            ManufacturerData.EMPTY,
-            PaymentMethodData.EMPTY,
-            PlaneData.EMPTY,
-            PlaneModelData.EMPTY,
-            PlaneSeatData.EMPTY,
-            RemainingSeatData.EMPTY,
-            RouteData.EMPTY,
-            SeatData.EMPTY,
-            SessionData.EMPTY,
-            StaffData.EMPTY,
-            StaffPositionData.EMPTY,
-            StaffSessionData.EMPTY,
-            TicketTypeData.EMPTY,
-            TimezoneData.EMPTY,
-            TwoFAData.EMPTY,
-            UserData.EMPTY
-        )
 
         for (dataClass in dataClasses) {
             initialiseTable(dataClass)
@@ -307,4 +308,11 @@ object DatabaseManager {
         ).insertIntoDatabase()
     }
 
+    fun debugDatabase() {
+        for (dataClass in dataClasses) {
+            println("Printing ${dataClass.tableName}")
+            println(dataClass.tableColumns.joinToString(", ") { it.name })
+            dataClass.debugTable()
+        }
+    }
 }

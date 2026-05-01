@@ -96,6 +96,10 @@ abstract class DataClass<T : DataClass<T>> ( open val id : Int = 0 ) {
         return rows.map { QueryResult<T>(mapRowToData(it), mapRawRows(tables.toList(), columns.toList(), it)) }
     }
 
+    fun debugTable () {
+        queryDatabase().forEach { it.dataClass.debugData() }
+    }
+
     fun insertIntoDatabase(ignore : Boolean = false) : Int {
         val values = mapDataToColumns()
         return DatabaseManager.insertIntoTable(tableName, values, ignore)

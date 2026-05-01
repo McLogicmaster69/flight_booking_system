@@ -67,5 +67,15 @@ data class StaffPositionData(
         fun delete(id : Int) : Int {
             return StaffPositionData(id = id).delete()
         }
+
+        fun getStaffPositionId (position : String) : Int {
+            val query : List<QueryResult<StaffPositionData>> = queryDatabase(whereArgs = WhereArgs("${StaffPositionColumns.NAME.name} = ?", listOf(position)))
+            if (query.isEmpty()) {
+                println("Could not find staff position $position")
+                return -1
+            }
+
+            return query.first().dataClass.id
+        }
     }
 }

@@ -38,39 +38,6 @@ data class FlightData(
 
     override val initialRows : List<FlightData>
         get() = listOf(
-            FlightData(
-                routeId = RouteData.getRouteId(
-                    DestinationArgs(
-                        DestinationData.getDestinationId("Luton"),
-                        DestinationData.getDestinationId("Tokyo")
-                    )
-                ),
-                planeId = PlaneData.getPlaneId("Boeing 737-800"),
-                date = LocalDate.parse("2026-05-15"),
-                time = LocalTime.parse("12:00")
-            ),
-            FlightData(
-                routeId = RouteData.getRouteId(
-                    DestinationArgs(
-                        DestinationData.getDestinationId("Luton"),
-                        DestinationData.getDestinationId("Berlin")
-                    )
-                ),
-                planeId = PlaneData.getPlaneId("Airbus A321"),
-                date = LocalDate.parse("2026-05-15"),
-                time = LocalTime.parse("10:00")
-            ),
-            FlightData(
-                routeId = RouteData.getRouteId(
-                    DestinationArgs(
-                        DestinationData.getDestinationId("Berlin"),
-                        DestinationData.getDestinationId("Tokyo")
-                    )
-                ),
-                planeId = PlaneData.getPlaneId("Boeing 737-800"),
-                date = LocalDate.parse("2026-05-15"),
-                time = LocalTime.parse("16:00")
-            )
         )
 
     override val requiredTables : List<DataClass<*>>
@@ -361,8 +328,8 @@ data class FlightData(
         ) : PlaneData? {
             val availablePlanes : List<QueryResult<PlaneData>> = PlaneData.queryDatabase(
                 whereArgs = WhereArgs(
-                    whereClause = "${PlaneColumns.MODEL_ID} = ? AND ${PlaneColumns.CURRENT_LOCATION} = ?",
-                    whereArgs = listOf(modelId, locationId)
+                    whereClause = "${PlaneColumns.MODEL_ID} = ?",
+                    whereArgs = listOf(modelId)
                 )
             )
 
@@ -372,8 +339,16 @@ data class FlightData(
                     it.dataClass.currentLocationTime
                 ).isBefore(LocalDateTime.of(date, time))
             }
-
+            
             return planeAvailableAtTime.firstOrNull()?.dataClass
+        }
+
+        fun scoreStaffMember (
+            staff : StaffData,
+            flight : FlightData,
+            route : RouteData
+        ) : Int {
+            return 0
         }
 
         fun assignStaffToFlight (
@@ -428,13 +403,38 @@ data class FlightData(
 
             val availablePilots : List<QueryResult<StaffData>> = availableStaff.filter { it.dataClass.positionId == pilotRole.id || it.dataClass.positionId == copilotRole.id }
             val availableAttendants : List<QueryResult<StaffData>> = availableStaff.filter { it.dataClass.positionId == attendantRole.id }
-            val sortedPilots : List<ScoredStaffData> = availablePilots.map { ScoredStaffData(it.dataClass, 0) }
-            val sortedAttendants : List<ScoredStaffData> = availableAttendants.map { ScoredStaffData(it.dataClass, 0) }
+
+            val sortedPilots : List<QueryResult<StaffData>> = availablePilots.mapNotNull { pilot ->
+                val score = scoreStaffMember(pilot.dataClass, flight, route)
+                if (score >= 0) pilot to score else null
+            } .sortedBy { it.second } .map { it.first }
+
+            val sortedAttendants : List<QueryResult<StaffData>> = availableAttendants.mapNotNull { attendant ->
+                val score = scoreStaffMember(attendant.dataClass, flight, route)
+                if (score >= 0) attendant to score else null
+            } .sortedBy { it.second } .map { it.first }
+
+            val selectedPilots : List<QueryResult<StaffData>> = sortedPilots.take(pilots)
+            val selectedAttendants : List<QueryResult<StaffData>> = sortedAttendants.take(attendants)
+
+            selectedPilots.forEach { pilot ->
+                AssignedFlightStaffData(
+                    flightId = flight.id,
+                    staffId = pilot.dataClass.id
+                ).insertIntoDatabase() 
+            }
+
+            selectedAttendants.forEach { attendant ->
+                AssignedFlightStaffData(
+                    flightId = flight.id,
+                    staffId = attendant.dataClass.id
+                ).insertIntoDatabase() 
+            }
 
             return StaffAssignmentResults(
                 flightId,
-                sortedPilots.take(pilots).map{ it.staffData.id },
-                sortedAttendants.take(attendants).map{ it.staffData.id },
+                selectedPilots.map{ it.dataClass.id },
+                selectedAttendants.map{ it.dataClass.id },
                 null
             )
         }
