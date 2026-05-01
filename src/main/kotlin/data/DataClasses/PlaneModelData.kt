@@ -3,7 +3,7 @@ package data
 object PlaneModelColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
     val NAME = Column<String>("name", "STRING NOT NULL")
-    val MANUFACTURER_ID = Column<Int>("manufacturer_id", "INTEGER NOT NULL REFERENCES manufacturers(id)")
+    val MANUFACTURER_ID = Column<Int>("manufacturer_id", "INTEGER NOT NULL REFERENCES ${ManufacturerData.EMPTY.tableName}(id)")
     val CAPACITY = Column<Int>("capacity", "INTEGER NOT NULL")
     val PILOTS = Column<Int>("pilots", "INTEGER NOT NULL")
     val ATTENDANTS = Column<Int>("attendants", "INTEGER NOT NULL")

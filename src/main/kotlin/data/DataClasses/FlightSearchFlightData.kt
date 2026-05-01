@@ -2,8 +2,8 @@ package data
 
 object FlightSearchFlightColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val FLIGHT_SEARCH_ID = Column<Int>("flight_search_id", "INTEGER NOT NULL REFERENCES flight_searches(id)")
-    val FLIGHT_ID = Column<Int>("flight_id", "INTEGER NOT NULL REFERENCES flights(id)")
+    val FLIGHT_SEARCH_ID = Column<Int>("flight_search_id", "INTEGER NOT NULL REFERENCES ${FlightSearchData.EMPTY.tableName}(id)")
+    val FLIGHT_ID = Column<Int>("flight_id", "INTEGER NOT NULL REFERENCES ${FlightData.EMPTY.tableName}(id)")
     val POSITION = Column<Int>("position", "INTEGER NOT NULL")
 
     val ALL = listOf(ID, FLIGHT_SEARCH_ID, FLIGHT_ID, POSITION)

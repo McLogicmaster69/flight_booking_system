@@ -2,8 +2,8 @@ package data
 
 object BookedSeatColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val SEAT_ID = Column<Int>("seat_id", "INTEGER NOT NULL REFERENCES seats(id)")
-    val BOOKING_ID = Column<Int>("booking_id", "INTEGER NOT NULL REFERENCES bookings(id)")
+    val SEAT_ID = Column<Int>("seat_id", "INTEGER NOT NULL REFERENCES ${SeatData.EMPTY.tableName}(id)")
+    val BOOKING_ID = Column<Int>("booking_id", "INTEGER NOT NULL REFERENCES ${BookingData.EMPTY.tableName}(id)")
 
     val ALL = listOf(ID, SEAT_ID, BOOKING_ID)
     val COLUMN_NAMES = ALL.map { it.name }

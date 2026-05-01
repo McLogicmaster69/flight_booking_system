@@ -7,8 +7,8 @@ import results.StaffAssignmentResults
 
 object AssignedFlightStaffColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val FLIGHT_ID = Column<Int>("flight_id", "INTEGER NOT NULL REFERENCES flights(id)")
-    val STAFF_ID = Column<Int>("staff_id", "INTEGER NOT NULL REFERENCES staff(id)")
+    val FLIGHT_ID = Column<Int>("flight_id", "INTEGER NOT NULL REFERENCES ${FlightData.EMPTY.tableName}(id)")
+    val STAFF_ID = Column<Int>("staff_id", "INTEGER NOT NULL REFERENCES ${StaffData.EMPTY.tableName}(id)")
 
     val ALL = listOf(ID, FLIGHT_ID, STAFF_ID)
     val COLUMN_NAMES = ALL.map { it.name }

@@ -2,7 +2,7 @@ package data
 
 object AdminColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val LOGIN_ID = Column<Int>("login_id", "INTEGER NOT NULL REFERENCES login_info(id)")
+    val LOGIN_ID = Column<Int>("login_id", "INTEGER NOT NULL REFERENCES ${LoginData.EMPTY.tableName}(id)")
 
     val ALL = listOf(ID, LOGIN_ID)
     val COLUMN_NAMES = ALL.map { it.name }

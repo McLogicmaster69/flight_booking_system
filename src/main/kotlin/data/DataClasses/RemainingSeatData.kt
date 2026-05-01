@@ -2,7 +2,7 @@ package data
 
 object RemainingSeatColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val SEAT_ID = Column<Int>("seat_id", "INTEGER NOT NULL REFERENCES seats(id)")
+    val SEAT_ID = Column<Int>("seat_id", "INTEGER NOT NULL REFERENCES ${SeatData.EMPTY.tableName}(id)")
 
     val ALL = listOf(ID, SEAT_ID)
     val COLUMN_NAMES = ALL.map { it.name }

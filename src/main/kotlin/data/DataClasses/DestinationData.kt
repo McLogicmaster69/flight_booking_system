@@ -2,9 +2,9 @@ package data
 
 object DestinationColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val COUNTRY_ID = Column<Int>("country_id", "INTEGER NOT NULL REFERENCES countries(id)")
+    val COUNTRY_ID = Column<Int>("country_id", "INTEGER NOT NULL REFERENCES ${CountryData.EMPTY.tableName}(id)")
     val CITY_NAME = Column<String>("city_name", "STRING NOT NULL")
-    val TIMEZONE_ID = Column<Int>("timezone_id", "INTEGER NOT NULL REFERENCES timezones(id)")
+    val TIMEZONE_ID = Column<Int>("timezone_id", "INTEGER NOT NULL REFERENCES ${TimezoneData.EMPTY.tableName}(id)")
 
     val ALL = listOf(ID, COUNTRY_ID, CITY_NAME, TIMEZONE_ID)
     val COLUMN_NAMES = ALL.map { it.name }

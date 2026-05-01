@@ -4,8 +4,8 @@ import java.time.LocalTime
 
 object RouteColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val START_DESTINATION = Column<Int>("start_destination", "INTEGER NOT NULL REFERENCES destinations(id)")
-    val END_DESTINATION = Column<Int>("end_destination", "INTEGER NOT NULL REFERENCES destinations(id)")
+    val START_DESTINATION = Column<Int>("start_destination", "INTEGER NOT NULL REFERENCES ${DestinationData.EMPTY.tableName}(id)")
+    val END_DESTINATION = Column<Int>("end_destination", "INTEGER NOT NULL REFERENCES ${DestinationData.EMPTY.tableName}(id)")
     val DURATION = Column<String>("duration", "STRING NOT NULL")
 
     val ALL = listOf(ID, START_DESTINATION, END_DESTINATION, DURATION)

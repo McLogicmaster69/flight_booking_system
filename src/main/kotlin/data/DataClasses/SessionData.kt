@@ -4,7 +4,7 @@ import auth.*
 
 object SessionColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val USER_ID = Column<Int>("user_id", "INTEGER NOT NULL REFERENCES users(id)")
+    val USER_ID = Column<Int>("user_id", "INTEGER NOT NULL REFERENCES ${UserData.EMPTY.tableName}(id)")
     val SESSION_TOKEN = Column<String>("session_token", "STRING NOT NULL")
 
     val ALL = listOf(ID, USER_ID, SESSION_TOKEN)

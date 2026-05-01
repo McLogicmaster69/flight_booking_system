@@ -4,8 +4,8 @@ import java.time.LocalTime
 
 object PlaneSeatColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val PLANE_MODEL_ID = Column<Int>("plane_model_id", "INTEGER NOT NULL REFERENCES plane_models(id)")
-    val CLASS_ID = Column<Int>("class_id", "INTEGER NOT NULL REFERENCES classes(id)")
+    val PLANE_MODEL_ID = Column<Int>("plane_model_id", "INTEGER NOT NULL REFERENCES ${PlaneModelData.EMPTY.tableName}(id)")
+    val CLASS_ID = Column<Int>("class_id", "INTEGER NOT NULL REFERENCES ${ClassData.EMPTY.tableName}(id)")
     val ROW = Column<Int>("amount", "INTEGER NOT NULL")
     val LETTER = Column<String>("letter", "STRING NOT NULL")
 

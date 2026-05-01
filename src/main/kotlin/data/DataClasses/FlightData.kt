@@ -13,8 +13,8 @@ const val MAX_TIME : Int = 2880
 
 object FlightColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val ROUTE_ID = Column<Int>("route_id", "INTEGER NOT NULL REFERENCES routes(id)")
-    val PLANE_ID = Column<Int>("plane_id", "INTEGER NOT NULL REFERENCES planes(id)")
+    val ROUTE_ID = Column<Int>("route_id", "INTEGER NOT NULL REFERENCES ${RouteData.EMPTY.tableName}(id)")
+    val PLANE_ID = Column<Int>("plane_id", "INTEGER NOT NULL REFERENCES ${PlaneData.EMPTY.tableName}(id)")
     val DATE = Column<String>("date", "STRING NOT NULL")
     val TIME = Column<String>("time", "STRING NOT NULL")
 

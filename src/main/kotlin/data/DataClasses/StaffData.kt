@@ -4,9 +4,9 @@ object StaffColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
     val FIRSTNAME = Column<String?>("firstname", "VARCHAR")
     val LASTNAME = Column<String?>("lastname", "VARCHAR")
-    val POSITION_ID = Column<Int>("position_id", "INTEGER NOT NULL REFERENCES staff_positions(id)")
-    val LOGIN_ID = Column<Int>("login_id", "INTEGER NOT NULL REFERENCES login_info(id)")
-    val HOME_ID = Column<Int>("home_id", "INTEGER NOT NULL REFERENCES countries(id)")
+    val POSITION_ID = Column<Int>("position_id", "INTEGER NOT NULL REFERENCES ${StaffPositionData.EMPTY.tableName}(id)")
+    val LOGIN_ID = Column<Int>("login_id", "INTEGER NOT NULL REFERENCES ${LoginData.EMPTY.tableName}(id)")
+    val HOME_ID = Column<Int>("home_id", "INTEGER NOT NULL REFERENCES ${CountryData.EMPTY.tableName}(id)")
 
     val ALL = listOf(ID, FIRSTNAME, LASTNAME, POSITION_ID, LOGIN_ID, HOME_ID)
     val COLUMN_NAMES = ALL.map { it.name }

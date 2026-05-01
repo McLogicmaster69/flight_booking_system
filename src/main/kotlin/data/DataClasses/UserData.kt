@@ -6,7 +6,7 @@ object UserColumns {
     val LASTNAME = Column<String?>("lastname", "VARCHAR")
     val VERIFIED = Column<Boolean?>("verified_account", "BOOL")
     val LOYALITY_POINTS = Column<Int>("loyality_points", "INT NOT NULL")
-    val LOGIN_ID = Column<Int>("login_id", "INTEGER NOT NULL REFERENCES login_info(id)")
+    val LOGIN_ID = Column<Int>("login_id", "INTEGER NOT NULL REFERENCES ${LoginData.EMPTY.tableName}(id)")
 
     val ALL = listOf(ID, FIRSTNAME, LASTNAME, VERIFIED, LOYALITY_POINTS, LOGIN_ID)
     val COLUMN_NAMES = ALL.map { it.name }

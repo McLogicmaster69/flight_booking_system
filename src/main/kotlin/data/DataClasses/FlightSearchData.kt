@@ -7,8 +7,8 @@ import java.time.Instant
 object FlightSearchColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY")
     val TOKEN = Column<String>("token", "VARCHAR NOT NULL UNIQUE")
-    val START_DESTINATION = Column<Int>("start_destination", "INTEGER NOT NULL REFERENCES destinations(id)")
-    val END_DESTINATION = Column<Int>("end_destination", "INTEGER NOT NULL REFERENCES destinations(id)")
+    val START_DESTINATION = Column<Int>("start_destination", "INTEGER NOT NULL REFERENCES ${DestinationData.EMPTY.tableName}(id)")
+    val END_DESTINATION = Column<Int>("end_destination", "INTEGER NOT NULL REFERENCES ${DestinationData.EMPTY.tableName}(id)")
     val DATE = Column<String>("date", "STRING NOT NULL")
     val CREATED_AT = Column<Timestamp>("created_at", "TIMESTAMP NOT NULL")
 

@@ -6,10 +6,10 @@ import java.time.LocalDateTime
 
 object PlaneColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val MODEL_ID = Column<Int>("model_id", "INTEGER NOT NULL REFERENCES plane_models(id)")
-    val CURRENT_LOCATION = Column<Int>("current_location", "INTEGER NOT NULL REFERENCES destinations(id)")
-    val CURRENT_LOCATION_DATE = Column<String>("current_location_date", "STRING NOT NULL REFERENCES destinations(id)")
-    val CURRENT_LOCATION_TIME = Column<String>("current_location_time", "STRING NOT NULL REFERENCES destinations(id)")
+    val MODEL_ID = Column<Int>("model_id", "INTEGER NOT NULL REFERENCES ${PlaneModelData.EMPTY.tableName}(id)")
+    val CURRENT_LOCATION = Column<Int>("current_location", "INTEGER NOT NULL REFERENCES ${DestinationData.EMPTY.tableName}(id)")
+    val CURRENT_LOCATION_DATE = Column<String>("current_location_date", "STRING NOT NULL REFERENCES ${DestinationData.EMPTY.tableName}(id)")
+    val CURRENT_LOCATION_TIME = Column<String>("current_location_time", "STRING NOT NULL REFERENCES ${DestinationData.EMPTY.tableName}(id)")
 
     val ALL = listOf(ID, MODEL_ID, CURRENT_LOCATION, CURRENT_LOCATION_DATE, CURRENT_LOCATION_TIME)
     val COLUMN_NAMES = ALL.map { it.name }

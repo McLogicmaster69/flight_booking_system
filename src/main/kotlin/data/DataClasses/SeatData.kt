@@ -2,9 +2,9 @@ package data
 
 object SeatColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val FLIGHT_ID = Column<Int>("flight_id", "INTEGER NOT NULL REFERENCES flights(id)")
-    val CLASS_ID = Column<Int>("class_id", "INTEGER NOT NULL REFERENCES classes(id)")
-    val TYPE_ID = Column<Int>("type_id", "INTEGER NOT NULL REFERENCES ticket_types(id)")
+    val FLIGHT_ID = Column<Int>("flight_id", "INTEGER NOT NULL REFERENCES ${FlightData.EMPTY.tableName}(id)")
+    val CLASS_ID = Column<Int>("class_id", "INTEGER NOT NULL REFERENCES ${ClassData.EMPTY.tableName}(id)")
+    val TYPE_ID = Column<Int>("type_id", "INTEGER NOT NULL REFERENCES ${TicketTypeData.EMPTY.tableName}(id)")
     val NUMBER = Column<Int>("number", "INTEGER NOT NULL")
     val PRICE = Column<Float>("price", "INTEGER NOT NULL")
 

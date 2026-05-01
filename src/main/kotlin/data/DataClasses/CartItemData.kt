@@ -2,8 +2,8 @@ package data
 
 object CartItemColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val USER_ID = Column<Int>("user_id", "INTEGER NOT NULL REFERENCES users(id)")
-    val SEAT_ID = Column<Int>("seat_id", "INTEGER NOT NULL REFERENCES seats(id)")
+    val USER_ID = Column<Int>("user_id", "INTEGER NOT NULL REFERENCES ${UserData.EMPTY.tableName}(id)")
+    val SEAT_ID = Column<Int>("seat_id", "INTEGER NOT NULL REFERENCES ${SeatData.EMPTY.tableName}(id)")
 
     val ALL = listOf(ID, USER_ID, SEAT_ID)
     val COLUMN_NAMES = ALL.map { it.name }

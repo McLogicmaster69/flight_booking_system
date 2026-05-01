@@ -2,8 +2,8 @@ package data
 
 object BookerColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val USER_ID = Column<Int?>("user_id", "INTEGER REFERENCES users(id)")
-    val GUEST_ID = Column<Int?>("guest_id", "INTEGER REFERENCES guests(id)")
+    val USER_ID = Column<Int?>("user_id", "INTEGER REFERENCES ${UserData.EMPTY.tableName}(id)")
+    val GUEST_ID = Column<Int?>("guest_id", "INTEGER REFERENCES ${GuestData.EMPTY.tableName}(id)")
 
     val ALL = listOf(ID, USER_ID, GUEST_ID)
     val COLUMN_NAMES = ALL.map { it.name }

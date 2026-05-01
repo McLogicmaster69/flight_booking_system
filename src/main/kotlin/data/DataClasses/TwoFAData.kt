@@ -4,7 +4,7 @@ import java.sql.Timestamp
 
 object TwoFAColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY")
-    val USER_ID = Column<Int>("user_id", "INTEGER REFERENCES users(id)")
+    val USER_ID = Column<Int>("user_id", "INTEGER REFERENCES ${UserData.EMPTY.tableName}(id)")
     val TTL = Column<Timestamp>("ttl", "TIMESTAMP NOT NULL")
     val CODE_HASH = Column<String>("code_hash", "VARCHAR NOT NULL")
     val ATTEMPTS = Column<Int>("attempts", "INTEGER NOT NULL DEFAULT 0")
