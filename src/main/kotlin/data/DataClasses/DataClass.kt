@@ -51,6 +51,9 @@ abstract class DataClass<T : DataClass<T>> ( open val id : Int = 0 ) {
             ?: LocalTime.parse("00:00")
     }
 
+    open fun initTable() {
+    }
+
     fun mapRawRows(
         tables : List<String>,
         columns : List<String>,
