@@ -23,7 +23,7 @@ data class RouteData(
 
     override val tableName = "routes"
     override val tableColumns = RouteColumns.ALL
-    override val tableAdditionalSQL = "UNIQUE (start_destination, end_destination)"
+    override val tableAdditionalSQL = "UNIQUE (${RouteColumns.START_DESTINATION.name}, ${RouteColumns.END_DESTINATION.name})"
 
     override val initialRows : List<RouteData>
         get() = listOf(

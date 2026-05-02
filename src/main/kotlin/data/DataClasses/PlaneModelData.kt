@@ -25,7 +25,7 @@ data class PlaneModelData(
 
     override val tableName = "plane_models"
     override val tableColumns = PlaneModelColumns.ALL
-    override val tableAdditionalSQL = "UNIQUE (name, manufacturer_id)"
+    override val tableAdditionalSQL = "UNIQUE (${PlaneModelColumns.NAME.name}, ${PlaneModelColumns.MANUFACTURER_ID.name})"
 
     override val initialRows: List<PlaneModelData>
         get() = listOf(
