@@ -136,12 +136,12 @@ data class AssignedFlightStaffData(
             val sortedPilots : List<QueryResult<StaffData>> = availablePilots.mapNotNull { pilot ->
                 val score = scoreStaffMember(pilot.dataClass, flight, route)
                 if (score >= 0) pilot to score else null
-            } .sortedBy { it.second } .map { it.first }
+            } .sortedByDescending { it.second } .map { it.first }
 
             val sortedAttendants : List<QueryResult<StaffData>> = availableAttendants.mapNotNull { attendant ->
                 val score = scoreStaffMember(attendant.dataClass, flight, route)
                 if (score >= 0) attendant to score else null
-            } .sortedBy { it.second } .map { it.first }
+            } .sortedByDescending { it.second } .map { it.first }
 
             val selectedPilots : List<QueryResult<StaffData>> = sortedPilots.take(pilots)
             val selectedAttendants : List<QueryResult<StaffData>> = sortedAttendants.take(attendants)

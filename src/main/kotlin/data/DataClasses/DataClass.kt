@@ -100,6 +100,8 @@ abstract class DataClass<T : DataClass<T>> ( open val id : Int = 0 ) {
     }
 
     fun debugTable () {
+        println("Printing ${tableName}")
+        println(tableColumns.joinToString(", ") { it.name })
         queryDatabase().forEach { it.dataClass.debugData() }
     }
 

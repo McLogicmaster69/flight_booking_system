@@ -13,6 +13,7 @@ object DatabaseManager {
     private val dbFilePath : String = "data/database.db"
     private val adminJSONFilePath : String = "data/admin.json"
     private val connection : Connection
+    private var initialisedTables : MutableList<DataClass<*>> = mutableListOf()
 
     private val dataClasses: List<DataClass<*>> = listOf(
         AdminData.EMPTY,
@@ -86,32 +87,44 @@ object DatabaseManager {
 
     fun createTables() {
         println("Initialising database")
+        initialisedTables = mutableListOf()
 
-        // Create tables
         for (dataClass in dataClasses) {
-            println("Initialising ${dataClass.tableName}")
-            DatabaseManager.createTable(
-                dataClass.tableName,
-                dataClass.tableCreateSQL,
-                dataClass.tableAdditionalSQL
-            )
+            initialiseTable(dataClass)
         }
 
-        // Insert initial rows
-        for (dataClass in dataClasses) {
-            println("Adding initial rows for ${dataClass.tableName}")
-            for (row in dataClass.initialRows) {
-                row.insertIntoDatabase(true)
-            }
-        }
-
-        // Init table function
-        for (dataClass in dataClasses) {
-            dataClass.initTable()
-        }
+        initialisedTables.clear()
 
         seedAdminAccount()
         println("Database initilisation completed")
+    }
+
+    fun initialiseTable(dataClass : DataClass<*>) {
+        if (initialisedTables.any { it::class == dataClass::class })
+            return
+
+        println("Initialising ${dataClass.tableName}")
+
+        DatabaseManager.createTable(
+            dataClass.tableName,
+            dataClass.tableCreateSQL,
+            dataClass.tableAdditionalSQL
+        )
+
+        for (requirement in dataClass.requiredTables) { // WARNING: If two tables require records from one another when initialising, this will break :)
+            initialiseTable(requirement)
+        }
+
+        println("Adding rows to ${dataClass.tableName}")
+            
+        for (row in dataClass.initialRows) {
+            row.insertIntoDatabase(true)
+        }
+
+        initialisedTables.add(dataClass)
+        dataClass.initTable()
+
+        println("Finished initialising ${dataClass.tableName}")
     }
 
     fun insertIntoTable(
@@ -302,8 +315,6 @@ object DatabaseManager {
 
     fun debugDatabase() {
         for (dataClass in dataClasses) {
-            println("Printing ${dataClass.tableName}")
-            println(dataClass.tableColumns.joinToString(", ") { it.name })
             dataClass.debugTable()
         }
     }

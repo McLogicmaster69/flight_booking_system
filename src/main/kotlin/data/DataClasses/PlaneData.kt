@@ -8,8 +8,8 @@ object PlaneColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
     val MODEL_ID = Column<Int>("model_id", "INTEGER NOT NULL REFERENCES ${PlaneModelData.EMPTY.tableName}(id)")
     val CURRENT_LOCATION = Column<Int>("current_location", "INTEGER NOT NULL REFERENCES ${DestinationData.EMPTY.tableName}(id)")
-    val CURRENT_LOCATION_DATE = Column<String>("current_location_date", "STRING NOT NULL REFERENCES ${DestinationData.EMPTY.tableName}(id)")
-    val CURRENT_LOCATION_TIME = Column<String>("current_location_time", "STRING NOT NULL REFERENCES ${DestinationData.EMPTY.tableName}(id)")
+    val CURRENT_LOCATION_DATE = Column<String>("current_location_date", "STRING NOT NULL")
+    val CURRENT_LOCATION_TIME = Column<String>("current_location_time", "STRING NOT NULL")
 
     val ALL = listOf(ID, MODEL_ID, CURRENT_LOCATION, CURRENT_LOCATION_DATE, CURRENT_LOCATION_TIME)
     val COLUMN_NAMES = ALL.map { it.name }
@@ -30,14 +30,31 @@ data class PlaneData(
 
     override val initialRows: List<PlaneData>
         get() = listOf(
-            PlaneData(modelId = PlaneModelData.getPlaneModelId("Boeing 737-800")),
-            PlaneData(modelId = PlaneModelData.getPlaneModelId("Airbus A321"))
+            PlaneData(modelId = PlaneModelData.getPlaneModelId("Boeing 737-800"), currentLocation = DestinationData.getDestinationId("Luton")),
+            PlaneData(modelId = PlaneModelData.getPlaneModelId("Airbus A321"), currentLocation = DestinationData.getDestinationId("Luton"))
         )
 
     override val requiredTables: List<DataClass<*>>
         get() = listOf(
-            PlaneModelData.EMPTY
+            PlaneModelData.EMPTY,
+            DestinationData.EMPTY
         )
+
+    override fun initTable() {
+        val models : List<QueryResult<PlaneModelData>> = PlaneModelData.queryDatabase()
+        val destinations : List<QueryResult<DestinationData>> = DestinationData.queryDatabase()
+
+        models.forEach { model ->
+            destinations.forEach { destination ->
+                for (i in 1..5) {
+                    PlaneData (
+                        modelId = model.dataClass.id,
+                        currentLocation = destination.dataClass.id
+                    ).insertIntoDatabase()
+                }
+            }
+        }
+    }
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(

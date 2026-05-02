@@ -21,7 +21,7 @@ data class DestinationData(
 
     override val tableName = "destinations"
     override val tableColumns = DestinationColumns.ALL
-    override val tableAdditionalSQL = "UNIQUE (country_id, city_name)"
+    override val tableAdditionalSQL = "UNIQUE (${DestinationColumns.COUNTRY_ID.name}, ${DestinationColumns.CITY_NAME.name})"
 
     override val initialRows : List<DestinationData>
         get() = listOf(
