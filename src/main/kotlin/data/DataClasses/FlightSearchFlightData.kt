@@ -2,8 +2,8 @@ package data
 
 object FlightSearchFlightColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val FLIGHT_SEARCH_ID = Column<Int>("flight_search_id", "INTEGER NOT NULL REFERENCES flight_searches(id)")
-    val FLIGHT_ID = Column<Int>("flight_id", "INTEGER NOT NULL REFERENCES flights(id)")
+    val FLIGHT_SEARCH_ID = Column<Int>("flight_search_id", "INTEGER NOT NULL REFERENCES ${FlightSearchData.EMPTY.tableName}(id)")
+    val FLIGHT_ID = Column<Int>("flight_id", "INTEGER NOT NULL REFERENCES ${FlightData.EMPTY.tableName}(id)")
     val POSITION = Column<Int>("position", "INTEGER NOT NULL")
 
     val ALL = listOf(ID, FLIGHT_SEARCH_ID, FLIGHT_ID, POSITION)
@@ -21,6 +21,11 @@ data class FlightSearchFlightData(
 
     override val tableName = "flight_search_flights"
     override val tableColumns = FlightSearchFlightColumns.ALL
+
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_flight_searches_flights_flight_search_id", FlightSearchFlightColumns.FLIGHT_SEARCH_ID.name),
+        IndexArgs("inx_flight_searches_flights_flight_id", FlightSearchFlightColumns.FLIGHT_ID.name)
+    )
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
@@ -47,9 +52,11 @@ data class FlightSearchFlightData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null        
         ) : List<QueryResult<FlightSearchFlightData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs)
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
         }
 
         fun updateTable (

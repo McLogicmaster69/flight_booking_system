@@ -5,14 +5,16 @@ import java.time.LocalTime
 import java.time.LocalDateTime
 import java.time.Duration
 import kotlin.math.roundToInt
+import results.CreateFlightResults
+import results.StaffAssignmentResults
 
 const val TRANSFER_TIME : Int = 120
 const val MAX_TIME : Int = 2880
 
 object FlightColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val ROUTE_ID = Column<Int>("route_id", "INTEGER NOT NULL REFERENCES routes(id)")
-    val PLANE_ID = Column<Int>("plane_id", "INTEGER NOT NULL REFERENCES planes(id)")
+    val ROUTE_ID = Column<Int>("route_id", "INTEGER NOT NULL REFERENCES ${RouteData.EMPTY.tableName}(id)")
+    val PLANE_ID = Column<Int>("plane_id", "INTEGER NOT NULL REFERENCES ${PlaneData.EMPTY.tableName}(id)")
     val DATE = Column<String>("date", "STRING NOT NULL")
     val TIME = Column<String>("time", "STRING NOT NULL")
 
@@ -32,7 +34,13 @@ data class FlightData(
 
     override val tableName = "flights"
     override val tableColumns = FlightColumns.ALL
-    override val tableAdditionalSQL = "UNIQUE (route_id, plane_id, date, time)"
+    override val tableAdditionalSQL = "UNIQUE (${FlightColumns.ROUTE_ID.name}, ${FlightColumns.PLANE_ID.name}, ${FlightColumns.DATE.name}, ${FlightColumns.TIME.name})"
+
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_flights_route_id", FlightColumns.ROUTE_ID.name),
+        IndexArgs("inx_flights_plane_id", FlightColumns.PLANE_ID.name),
+        IndexArgs("inx_flights_date_time", "${FlightColumns.DATE.name}, ${FlightColumns.TIME.name}")
+    )
 
     override val initialRows : List<FlightData>
         get() = listOf(
@@ -116,10 +124,74 @@ data class FlightData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null        
         ) : List<QueryResult<FlightData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs)
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
         }
+
+        fun queryDatabase (
+            routeIds : List<Int>,
+            joinArgs : JoinArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null 
+        ) : List<QueryResult<FlightData>> {
+            val whereClause = routeIds.joinToString(" OR ") { "${FlightColumns.ROUTE_ID.name} = ?" }
+            val whereArgs = routeIds.map { it as Any? }
+            return EMPTY.queryDatabase(joinArgs, WhereArgs(whereClause, whereArgs), orderByArgs, limitArgs)
+        }
+
+        fun queryDatabase (
+            routeIds : List<Int>,
+            date : LocalDate,
+            joinArgs : JoinArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null  
+        ) : List<QueryResult<FlightData>> {
+            val whereClause = "(" + routeIds.joinToString(" OR ") { "${FlightColumns.ROUTE_ID.name} = ?" } + ") AND ${FlightColumns.DATE.name} = ?"
+            val whereArgs = routeIds.map { it as Any? } + listOf(date.toString())
+            return EMPTY.queryDatabase(joinArgs, WhereArgs(whereClause, whereArgs), orderByArgs, limitArgs)
+        }
+
+        fun queryDatabase (
+            destinationArgs : DestinationArgs,
+            joinArgs : JoinArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null  
+        ) : List<QueryResult<FlightData>> {
+            val routes : List<QueryResult<RouteData>> = RouteData.queryDatabase(destinationArgs, joinArgs)
+            val routeIds : List<Int> = routes.map { route ->
+                route.dataClass.id
+            }
+            return queryDatabase(routeIds, joinArgs, orderByArgs, limitArgs)
+        }
+
+        fun queryDatabase (
+            destinationArgs : DestinationArgs,
+            date : LocalDate,
+            joinArgs : JoinArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null  
+        ) : List<QueryResult<FlightData>> {
+            val routes : List<QueryResult<RouteData>> = RouteData.queryDatabase(destinationArgs, joinArgs)
+            val routeIds : List<Int> = routes.map { route ->
+                route.dataClass.id
+            }
+            return queryDatabase(routeIds, date, joinArgs, orderByArgs, limitArgs)
+        }
+
+        fun queryDatabase (
+            destinationArgs : DestinationArgs,
+            dateTime : LocalDateTime,
+            joinArgs : JoinArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null  
+        ) : List<QueryResult<FlightData>> {
+            return queryDatabase(destinationArgs, dateTime.toLocalDate(), joinArgs, orderByArgs, limitArgs)
+        }
+
+        fun queryDatabase(id : Int) : List<QueryResult<FlightData>> = queryDatabase(whereArgs = WhereArgs("${FlightColumns.ID.name} = ?", listOf(id)))
 
         fun updateTable (
             values : Map<Column<*>, Any?>,
@@ -129,56 +201,6 @@ data class FlightData(
         fun delete(id : Int) : Int {
             return FlightData(id = id).delete()
         }
-
-        fun queryDatabase (
-            routeIds : List<Int>,
-            joinArgs : JoinArgs? = null
-        ) : List<QueryResult<FlightData>> {
-            val whereClause = routeIds.joinToString(" OR ") { "${FlightColumns.ROUTE_ID.name} = ?" }
-            val whereArgs = routeIds.map { it as Any? }
-            return EMPTY.queryDatabase(joinArgs, WhereArgs(whereClause, whereArgs))
-        }
-
-        fun queryDatabase (
-            routeIds : List<Int>,
-            date : LocalDate,
-            joinArgs : JoinArgs? = null
-        ) : List<QueryResult<FlightData>> {
-            val whereClause = "(" + routeIds.joinToString(" OR ") { "${FlightColumns.ROUTE_ID.name} = ?" } + ") AND ${FlightColumns.DATE.name} = ?"
-            val whereArgs = routeIds.map { it as Any? } + listOf(date.toString())
-            return EMPTY.queryDatabase(joinArgs, WhereArgs(whereClause, whereArgs))
-        }
-
-        fun queryDatabase (
-            destinationArgs : DestinationArgs,
-            joinArgs : JoinArgs? = null
-        ) : List<QueryResult<FlightData>> {
-            val routes : List<QueryResult<RouteData>> = RouteData.queryDatabase(destinationArgs, joinArgs)
-            val routeIds : List<Int> = routes.map { route ->
-                route.dataClass.id
-            }
-            return queryDatabase(routeIds, joinArgs)
-        }
-
-        fun queryDatabase (
-            destinationArgs : DestinationArgs,
-            date : LocalDate,
-            joinArgs : JoinArgs? = null
-        ) : List<QueryResult<FlightData>> {
-            val routes : List<QueryResult<RouteData>> = RouteData.queryDatabase(destinationArgs, joinArgs)
-            val routeIds : List<Int> = routes.map { route ->
-                route.dataClass.id
-            }
-            return queryDatabase(routeIds, date, joinArgs)
-        }
-
-        fun queryDatabase (
-            destinationArgs : DestinationArgs,
-            dateTime : LocalDateTime,
-            joinArgs : JoinArgs? = null
-        ) : List<QueryResult<FlightData>> = queryDatabase(destinationArgs, dateTime.toLocalDate(), joinArgs)
-
-        fun queryDatabase(id : Int) : List<QueryResult<FlightData>> = queryDatabase(whereArgs = WhereArgs("${FlightColumns.ID.name} = ?", listOf(id)))
 
         private fun offsetTimeByZone (
             dateTime : LocalDateTime,
@@ -360,6 +382,32 @@ data class FlightData(
                 return emptyList<JourneyFlightTimePath>()
 
             return flights.sortedBy { it.totalMinutes }
+        }
+
+        fun createFlight (
+            routeId : Int,
+            modelId : Int,
+            date : LocalDate,
+            time : LocalTime
+        ) : CreateFlightResults {
+            val route : RouteData = RouteData.queryDatabase(routeId).firstOrNull()?.dataClass ?: return CreateFlightResults(returnMessage = "Could not find route")
+            val model : PlaneModelData = PlaneModelData.queryDatabase(modelId).firstOrNull()?.dataClass ?: return CreateFlightResults(returnMessage = "Could not find plane model")
+            val plane : PlaneData = PlaneData.getAvailablePlane(modelId, route.startDestination, date, time) ?: return CreateFlightResults(returnMessage = "Could not find an available plane")
+
+            val flightId = FlightData(
+                planeId = plane.id,
+                routeId = routeId,
+                date = date,
+                time = time
+            ).insertIntoDatabase()
+
+            SeatData.generateSeatsForFlight(flightId)
+            val staffResults : StaffAssignmentResults = AssignedFlightStaffData.assignStaffToFlight(flightId, model.pilots, model.attendants)
+
+            return CreateFlightResults (
+                flightId = flightId,
+                staffResults = staffResults
+            )
         }
     }
 }

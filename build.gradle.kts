@@ -54,6 +54,9 @@ dependencies {
 
     // Stripe API
     implementation("com.stripe:stripe-java:24.16.0")
+
+    // JSON
+    implementation("org.json:json:20230227")
 }
 
 application {

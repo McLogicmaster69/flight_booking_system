@@ -6,7 +6,7 @@ object UserColumns {
     val LASTNAME = Column<String?>("lastname", "VARCHAR")
     val VERIFIED = Column<Boolean?>("verified_account", "BOOL")
     val LOYALITY_POINTS = Column<Int>("loyality_points", "INT NOT NULL")
-    val LOGIN_ID = Column<Int>("login_id", "INTEGER NOT NULL REFERENCES login_info(id)")
+    val LOGIN_ID = Column<Int>("login_id", "INTEGER NOT NULL REFERENCES ${LoginData.EMPTY.tableName}(id)")
 
     val ALL = listOf(ID, FIRSTNAME, LASTNAME, VERIFIED, LOYALITY_POINTS, LOGIN_ID)
     val COLUMN_NAMES = ALL.map { it.name }
@@ -25,6 +25,10 @@ data class UserData(
 
     override val tableName = "users"
     override val tableColumns = UserColumns.ALL
+
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_users_login_id", UserColumns.LOGIN_ID.name)
+    )
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
@@ -65,8 +69,12 @@ data class UserData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null
-        ) : List<QueryResult<UserData>> = EMPTY.queryDatabase(joinArgs, whereArgs)
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null        
+        ) : List<QueryResult<UserData>> {
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
+        }
 
         fun updateTable (
             values : Map<Column<*>, Any?>,

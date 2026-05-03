@@ -2,8 +2,8 @@ package data
 
 object CartItemColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val USER_ID = Column<Int>("user_id", "INTEGER NOT NULL REFERENCES users(id)")
-    val SEAT_ID = Column<Int>("seat_id", "INTEGER NOT NULL REFERENCES seats(id)")
+    val USER_ID = Column<Int>("user_id", "INTEGER NOT NULL REFERENCES ${UserData.EMPTY.tableName}(id)")
+    val SEAT_ID = Column<Int>("seat_id", "INTEGER NOT NULL REFERENCES ${SeatData.EMPTY.tableName}(id)")
 
     val ALL = listOf(ID, USER_ID, SEAT_ID)
     val COLUMN_NAMES = ALL.map { it.name }
@@ -19,6 +19,11 @@ data class CartItemData(
 
     override val tableName = "cart_items"
     override val tableColumns = CartItemColumns.ALL
+
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_cart_items_user_id", CartItemColumns.USER_ID.name),
+        IndexArgs("inx_cart_items_seat_id", CartItemColumns.SEAT_ID.name)
+    )
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
@@ -43,9 +48,11 @@ data class CartItemData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null        
         ) : List<QueryResult<CartItemData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs)
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
         }
 
         fun updateTable (

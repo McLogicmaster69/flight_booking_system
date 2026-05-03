@@ -5,15 +5,49 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
 import org.mindrot.jbcrypt.BCrypt
-import data.AdminSessionData
-import data.StaffSessionData
+import org.json.JSONObject
 
 fun anyToBool(i : Any?) : Boolean? = (i as? Int)?.let { it != 0}
 
 object DatabaseManager {
     private val dbFilePath : String = "data/database.db"
+    private val adminJSONFilePath : String = "data/admin.json"
     private val connection : Connection
     private var initialisedTables : MutableList<DataClass<*>> = mutableListOf()
+
+    private val dataClasses: List<DataClass<*>> = listOf(
+        AdminData.EMPTY,
+        AdminSessionData.EMPTY,
+        AssignedFlightStaffData.EMPTY,
+        BookedSeatData.EMPTY,
+        BookerData.EMPTY,
+        BookingData.EMPTY,
+        CartItemData.EMPTY,
+        ClassData.EMPTY,
+        CountryData.EMPTY,
+        DestinationData.EMPTY,
+        FlightData.EMPTY,
+        FlightSearchData.EMPTY,
+        FlightSearchFlightData.EMPTY,
+        GuestData.EMPTY,
+        LoginData.EMPTY,
+        ManufacturerData.EMPTY,
+        PaymentMethodData.EMPTY,
+        PlaneData.EMPTY,
+        PlaneModelData.EMPTY,
+        PlaneSeatData.EMPTY,
+        RemainingSeatData.EMPTY,
+        RouteData.EMPTY,
+        SeatData.EMPTY,
+        SessionData.EMPTY,
+        StaffData.EMPTY,
+        StaffPositionData.EMPTY,
+        StaffSessionData.EMPTY,
+        TicketTypeData.EMPTY,
+        TimezoneData.EMPTY,
+        TwoFAData.EMPTY,
+        UserData.EMPTY
+    )
 
     init {
         connection = connect()
@@ -51,42 +85,17 @@ object DatabaseManager {
         executeSQL(sql)
     }
 
+    fun createIndexes(table : String, indexes : List<IndexArgs>) {
+        if (table.isBlank()) return;
+
+        for (index in indexes) {
+            executeSQL("CREATE INDEX IF NOT EXISTS ${index.indexName} ON ${table}(${index.columnName})")
+        }
+    }
+
     fun createTables() {
         println("Initialising database")
         initialisedTables = mutableListOf()
-        val dataClasses: List<DataClass<*>> = listOf(
-            AdminData.EMPTY,
-            AdminSessionData.EMPTY,
-            AssignedFlightStaffData.EMPTY,
-            BookedSeatData.EMPTY,
-            BookerData.EMPTY,
-            BookingData.EMPTY,
-            CartItemData.EMPTY,
-            ClassData.EMPTY,
-            CountryData.EMPTY,
-            DestinationData.EMPTY,
-            FlightData.EMPTY,
-            FlightSearchData.EMPTY,
-            FlightSearchFlightData.EMPTY,
-            GuestData.EMPTY,
-            LoginData.EMPTY,
-            ManufacturerData.EMPTY,
-            PaymentMethodData.EMPTY,
-            PlaneData.EMPTY,
-            PlaneModelData.EMPTY,
-            PlaneSeatData.EMPTY,
-            RemainingSeatData.EMPTY,
-            RouteData.EMPTY,
-            SeatData.EMPTY,
-            SessionData.EMPTY,
-            StaffData.EMPTY,
-            StaffPositionData.EMPTY,
-            StaffSessionData.EMPTY,
-            TicketTypeData.EMPTY,
-            TimezoneData.EMPTY,
-            TwoFAData.EMPTY,
-            UserData.EMPTY
-        )
 
         for (dataClass in dataClasses) {
             initialiseTable(dataClass)
@@ -104,21 +113,31 @@ object DatabaseManager {
 
         println("Initialising ${dataClass.tableName}")
 
-        DatabaseManager.createTable(
+        createTable(
             dataClass.tableName,
             dataClass.tableCreateSQL,
             dataClass.tableAdditionalSQL
         )
 
+        createIndexes(
+            dataClass.tableName,
+            dataClass.indexes
+        )
+
         for (requirement in dataClass.requiredTables) { // WARNING: If two tables require records from one another when initialising, this will break :)
             initialiseTable(requirement)
         }
+
+        println("Adding rows to ${dataClass.tableName}")
             
         for (row in dataClass.initialRows) {
             row.insertIntoDatabase(true)
         }
 
         initialisedTables.add(dataClass)
+        dataClass.initTable()
+
+        println("Finished initialising ${dataClass.tableName}")
     }
 
     fun insertIntoTable(
@@ -199,7 +218,9 @@ object DatabaseManager {
         table : String,
         columns : List<String>,
         joinArgs : JoinArgs? = null,
-        whereArgs : WhereArgs? = null
+        whereArgs : WhereArgs? = null,
+        orderByArgs : OrderByArgs? = null,
+        limitArgs : LimitArgs? = null
     ): List<Array<Any?>> {
 
         var columnStr = columns.joinToString(", ") { "$table.$it" }
@@ -207,8 +228,11 @@ object DatabaseManager {
 
         val sql = buildString {
             append("SELECT $columnStr FROM $table")
+
             if (joinArgs != null) append(" ${joinArgs.joinType} JOIN ${joinArgs.joinTable} ON $table.${joinArgs.joinTable1Column} = ${joinArgs.joinTable}.${joinArgs.joinTable2Column}")
-            if (whereArgs != null) append(" WHERE ${whereArgs.whereClause}")
+            if (whereArgs != null) append(" WHERE (${whereArgs.whereClause})")
+            if (orderByArgs != null) append(" ORDER BY ${orderByArgs.orderArgs.joinToString(", ") { "${it.orderColumn} ${if (it.ascending) "ASC" else "DESC"}" }}")
+            if (limitArgs != null) append(" LIMIT ${limitArgs.limitAmount}")
         }
 
         var totalSize = columns.size
@@ -258,8 +282,14 @@ object DatabaseManager {
     }
 
     fun seedAdminAccount() {
-        val adminEmail = "alidos37pro@gmail.com"
-        val adminPassword = "admin123"
+        val adminJSONFile : File = File(adminJSONFilePath)
+        require(adminJSONFile.exists()) { "Admin JSON file cannot be found" }
+
+        val adminJSONString = adminJSONFile.readText(Charsets.UTF_8).trimIndent()
+        val adminJSONObject = JSONObject(adminJSONString)
+
+        val adminEmail = adminJSONObject.getString("email")
+        val adminPassword = adminJSONObject.getString("password")
 
         val existing = LoginData.queryDatabase(
             whereArgs = WhereArgs(
@@ -295,4 +325,9 @@ object DatabaseManager {
         ).insertIntoDatabase()
     }
 
+    fun debugDatabase() {
+        for (dataClass in dataClasses) {
+            dataClass.debugTable()
+        }
+    }
 }

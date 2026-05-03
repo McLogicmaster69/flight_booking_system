@@ -247,8 +247,12 @@ data class TimezoneData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null
-        ) : List<QueryResult<TimezoneData>> = EMPTY.queryDatabase(joinArgs, whereArgs)
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null        
+        ) : List<QueryResult<TimezoneData>> {
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
+        }
 
         fun queryDatabase (id : Int) : List<QueryResult<TimezoneData>> = queryDatabase(whereArgs = WhereArgs("${TimezoneColumns.ID.name} = ?", listOf(id)))
 
