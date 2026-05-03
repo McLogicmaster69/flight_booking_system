@@ -28,6 +28,11 @@ data class PlaneData(
     override val tableName = "planes"
     override val tableColumns = PlaneColumns.ALL
 
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_planes_model_id", PlaneColumns.MODEL_ID.name),
+        IndexArgs("inx_planes_current_location", PlaneColumns.CURRENT_LOCATION.name)
+    )
+
     override val initialRows: List<PlaneData>
         get() = listOf(
             PlaneData(modelId = PlaneModelData.getPlaneModelId("Boeing 737-800"), currentLocation = DestinationData.getDestinationId("Luton")),
@@ -39,22 +44,6 @@ data class PlaneData(
             PlaneModelData.EMPTY,
             DestinationData.EMPTY
         )
-
-    override fun initTable() {
-        val models : List<QueryResult<PlaneModelData>> = PlaneModelData.queryDatabase()
-        val destinations : List<QueryResult<DestinationData>> = DestinationData.queryDatabase()
-
-        models.forEach { model ->
-            destinations.forEach { destination ->
-                for (i in 1..5) {
-                    PlaneData (
-                        modelId = model.dataClass.id,
-                        currentLocation = destination.dataClass.id
-                    ).insertIntoDatabase()
-                }
-            }
-        }
-    }
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(

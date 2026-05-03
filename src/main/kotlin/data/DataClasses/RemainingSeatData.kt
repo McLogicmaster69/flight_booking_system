@@ -18,6 +18,10 @@ data class RemainingSeatData(
     override val tableName = "remaining_seats"
     override val tableColumns = RemainingSeatColumns.ALL
 
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_remaining_seats_seat_id", RemainingSeatColumns.SEAT_ID.name)
+    )
+
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
             RemainingSeatColumns.SEAT_ID to seatId

@@ -30,6 +30,11 @@ data class FlightSearchData(
     override val tableName = "flight_searches"
     override val tableColumns = FlightSearchColumns.ALL
 
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_flight_searches_start_destination", FlightSearchColumns.START_DESTINATION.name),
+        IndexArgs("inx_flight_searches_end_destination", FlightSearchColumns.END_DESTINATION.name)
+    )
+
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
             FlightSearchColumns.TOKEN to token,

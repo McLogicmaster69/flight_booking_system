@@ -85,6 +85,14 @@ object DatabaseManager {
         executeSQL(sql)
     }
 
+    fun createIndexes(table : String, indexes : List<IndexArgs>) {
+        if (table.isBlank()) return;
+
+        for (index in indexes) {
+            executeSQL("CREATE INDEX IF NOT EXISTS ${index.indexName} ON ${table}(${index.columnName})")
+        }
+    }
+
     fun createTables() {
         println("Initialising database")
         initialisedTables = mutableListOf()
@@ -105,10 +113,15 @@ object DatabaseManager {
 
         println("Initialising ${dataClass.tableName}")
 
-        DatabaseManager.createTable(
+        createTable(
             dataClass.tableName,
             dataClass.tableCreateSQL,
             dataClass.tableAdditionalSQL
+        )
+
+        createIndexes(
+            dataClass.tableName,
+            dataClass.indexes
         )
 
         for (requirement in dataClass.requiredTables) { // WARNING: If two tables require records from one another when initialising, this will break :)

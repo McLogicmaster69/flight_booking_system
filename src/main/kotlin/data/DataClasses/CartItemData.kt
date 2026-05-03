@@ -20,6 +20,11 @@ data class CartItemData(
     override val tableName = "cart_items"
     override val tableColumns = CartItemColumns.ALL
 
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_cart_items_user_id", CartItemColumns.USER_ID.name),
+        IndexArgs("inx_cart_items_seat_id", CartItemColumns.SEAT_ID.name)
+    )
+
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
             CartItemColumns.USER_ID to userId,

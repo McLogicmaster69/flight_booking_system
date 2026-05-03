@@ -18,6 +18,10 @@ data class AdminData(
     override val tableName = "admins"
     override val tableColumns = AdminColumns.ALL
 
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_admins_login_id", AdminColumns.LOGIN_ID.name)
+    )
+
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
             AdminColumns.LOGIN_ID to loginId

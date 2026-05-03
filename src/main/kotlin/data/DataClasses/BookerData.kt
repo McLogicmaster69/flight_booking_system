@@ -20,6 +20,11 @@ data class BookerData(
     override val tableName = "bookers"
     override val tableColumns = BookerColumns.ALL
 
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_bookers_user_id", BookerColumns.USER_ID.name),
+        IndexArgs("inx_bookers_guest_id", BookerColumns.GUEST_ID.name)
+    )
+
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
             BookerColumns.USER_ID to userId,

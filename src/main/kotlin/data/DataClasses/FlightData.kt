@@ -36,6 +36,12 @@ data class FlightData(
     override val tableColumns = FlightColumns.ALL
     override val tableAdditionalSQL = "UNIQUE (${FlightColumns.ROUTE_ID.name}, ${FlightColumns.PLANE_ID.name}, ${FlightColumns.DATE.name}, ${FlightColumns.TIME.name})"
 
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_flights_route_id", FlightColumns.ROUTE_ID.name),
+        IndexArgs("inx_flights_plane_id", FlightColumns.PLANE_ID.name),
+        IndexArgs("inx_flights_date_time", "${FlightColumns.DATE.name}, ${FlightColumns.TIME.name}")
+    )
+
     override val initialRows : List<FlightData>
         get() = listOf(
         )

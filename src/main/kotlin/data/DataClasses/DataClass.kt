@@ -12,6 +12,7 @@ abstract class DataClass<T : DataClass<T>> ( open val id : Int = 0 ) {
     open val tableAdditionalSQL : String = ""
     open val initialRows : List<T> = emptyList<T>()
     open val requiredTables : List<DataClass<*>> = emptyList<DataClass<*>>()
+    open val indexes : List<IndexArgs> = emptyList()
 
     private val random = SecureRandom()
 

@@ -28,6 +28,12 @@ data class StaffData(
     override val tableName = "staff"
     override val tableColumns = StaffColumns.ALL
 
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_staff_login_id", StaffColumns.LOGIN_ID.name),
+        IndexArgs("inx_staff_current_location", StaffColumns.CURRENT_LOCATION.name),
+        IndexArgs("inx_staff_home_id", StaffColumns.HOME_ID.name)
+    )
+
     override val requiredTables : List<DataClass<*>>
         get() = listOf(
             StaffPositionData.EMPTY,
@@ -39,45 +45,6 @@ data class StaffData(
     override val initialRows: List<StaffData>
         get() = listOf(
         )
-
-    override fun initTable () {
-        // THIS IS FOR TEST PURPOSES AND SHOULD BE DELETED BEFORE GOING LIVE
-        val destinations : List<QueryResult<DestinationData>> = DestinationData.queryDatabase()
-        var currentFella : Long = 0L
-
-        destinations.forEach { destination ->
-            for (i in 1..100) {
-                val loginId = LoginData(
-                    email = "${currentFella.toString()}@${currentFella.toString()}",
-                    passwordHash = currentFella.toString()
-                ).insertIntoDatabase()
-                StaffData (
-                    firstName = currentFella.toString(),
-                    lastName = currentFella.toString(),
-                    positionId = StaffPositionData.getStaffPositionId(StaffPositions.FLIGHT_ATTENDANT),
-                    loginId = loginId,
-                    homeId = destination.dataClass.countryId,
-                    currentLocation = destination.dataClass.id
-                ).insertIntoDatabase()
-                currentFella += 1
-            }
-            for (i in 1..20) {
-                val loginId = LoginData(
-                    email = "${currentFella.toString()}@${currentFella.toString()}",
-                    passwordHash = currentFella.toString()
-                ).insertIntoDatabase()
-                StaffData (
-                    firstName = currentFella.toString(),
-                    lastName = currentFella.toString(),
-                    positionId = StaffPositionData.getStaffPositionId(StaffPositions.PILOT),
-                    loginId = loginId,
-                    homeId = destination.dataClass.countryId,
-                    currentLocation = destination.dataClass.id
-                ).insertIntoDatabase()
-                currentFella += 1
-            }
-        }
-    }
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(

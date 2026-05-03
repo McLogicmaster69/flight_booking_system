@@ -22,6 +22,11 @@ data class SessionData(
     override val tableName = "sessions"
     override val tableColumns = SessionColumns.ALL
 
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_sessions_user_id", SessionColumns.USER_ID.name),
+        IndexArgs("inx_sessions_session_token", SessionColumns.SESSION_TOKEN.name)
+    )
+
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
             SessionColumns.USER_ID to userId,

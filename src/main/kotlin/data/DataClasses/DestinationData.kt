@@ -23,6 +23,11 @@ data class DestinationData(
     override val tableColumns = DestinationColumns.ALL
     override val tableAdditionalSQL = "UNIQUE (${DestinationColumns.COUNTRY_ID.name}, ${DestinationColumns.CITY_NAME.name})"
 
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_destinations_country_id", DestinationColumns.COUNTRY_ID.name),
+        IndexArgs("inx_destinations_timezone_id", DestinationColumns.TIMEZONE_ID.name)
+    )
+
     override val initialRows : List<DestinationData>
         get() = listOf(
             DestinationData(countryId = CountryData.getCountryId("United Kingdom"), cityName = "Luton", timezoneId = TimezoneData.getTimezoneId("GMT")),

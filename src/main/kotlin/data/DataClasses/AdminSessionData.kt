@@ -22,6 +22,11 @@ data class AdminSessionData(
     override val tableName = "admin_sessions"
     override val tableColumns = AdminSessionColumns.ALL
 
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_admin_sessions_admin_id", AdminSessionColumns.ADMIN_ID.name),
+        IndexArgs("inx_admin_session_token", AdminSessionColumns.SESSION_TOKEN.name)
+    )
+
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
             AdminSessionColumns.ADMIN_ID to adminId,

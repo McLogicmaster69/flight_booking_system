@@ -28,6 +28,11 @@ data class AssignedFlightStaffData(
     override val tableName = "assigned_flight_staff"
     override val tableColumns = AssignedFlightStaffColumns.ALL
 
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_assigned_flight_staff_flight_id", AssignedFlightStaffColumns.FLIGHT_ID.name),
+        IndexArgs("inx_assigned_flight_staff_staff_id", AssignedFlightStaffColumns.STAFF_ID.name)
+    )
+
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
             AssignedFlightStaffColumns.FLIGHT_ID to flightId,

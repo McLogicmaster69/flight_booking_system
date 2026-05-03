@@ -24,13 +24,16 @@ data class BookingData(
     override val tableName = "bookings"
     override val tableColumns = BookingColumns.ALL
 
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_bookings_booker_id", BookingColumns.BOOKER_ID.name)
+    )
+
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
             BookingColumns.BOOKER_ID to bookerId,
             BookingColumns.PASSPORT_NUMBER to passportNumber,
             BookingColumns.LASTNAME to lastname,
             BookingColumns.BOOKING_REFERENCE to bookingReference
-            
         )
 
     override fun mapRowToData(row : Array<Any?>) : BookingData =

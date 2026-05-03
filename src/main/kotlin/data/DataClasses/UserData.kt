@@ -26,6 +26,10 @@ data class UserData(
     override val tableName = "users"
     override val tableColumns = UserColumns.ALL
 
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_users_login_id", UserColumns.LOGIN_ID.name)
+    )
+
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
             UserColumns.FIRSTNAME to firstName,

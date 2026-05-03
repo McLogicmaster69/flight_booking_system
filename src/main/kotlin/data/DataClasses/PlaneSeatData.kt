@@ -27,6 +27,10 @@ data class PlaneSeatData(
     override val tableColumns = PlaneSeatColumns.ALL
     override val tableAdditionalSQL = "UNIQUE (${PlaneSeatColumns.PLANE_MODEL_ID.name}, ${PlaneSeatColumns.CLASS_ID.name})"
 
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_plane_seats_plane_model_id", PlaneSeatColumns.PLANE_MODEL_ID.name)
+    )
+
     override val initialRows : List<PlaneSeatData>
         get() = listOf(
         )

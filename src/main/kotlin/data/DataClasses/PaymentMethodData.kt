@@ -28,6 +28,10 @@ data class PaymentMethodData(
     override val tableName = "payment_methods"
     override val tableColumns = PaymentMethodColumns.ALL
 
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_payment_methods_user_id", PaymentMethodColumns.USER_ID.name)
+    )
+
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
             PaymentMethodColumns.USER_ID to userId,

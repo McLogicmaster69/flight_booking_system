@@ -20,6 +20,11 @@ data class BookedSeatData(
     override val tableName = "booked_seats"
     override val tableColumns = BookedSeatColumns.ALL
 
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_booked_seats_seat_id", BookedSeatColumns.SEAT_ID.name),
+        IndexArgs("inx_booked_seats_booking_id", BookedSeatColumns.BOOKING_ID.name)
+    )
+
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
             BookedSeatColumns.SEAT_ID to seatId,

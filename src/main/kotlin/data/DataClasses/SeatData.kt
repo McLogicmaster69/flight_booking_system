@@ -26,6 +26,10 @@ data class SeatData(
     override val tableName = "seats"
     override val tableColumns = SeatColumns.ALL
 
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_seats_flight_id", SeatColumns.FLIGHT_ID.name)
+    )
+
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
             SeatColumns.FLIGHT_ID to flightId,

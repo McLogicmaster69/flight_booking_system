@@ -25,8 +25,12 @@ data class TwoFAData(
 
 ) : DataClass<TwoFAData>(id) {
 
-    override val tableName = "TwoFAData"
+    override val tableName = "two_fa_data"
     override val tableColumns = TwoFAColumns.ALL
+
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_two_fa_data_sessions_staff_id", TwoFAColumns.USER_ID.name)
+    )
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
