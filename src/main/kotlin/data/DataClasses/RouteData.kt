@@ -44,6 +44,11 @@ data class RouteData(
                 duration = LocalTime.parse("02:00")
             ),
             RouteData(
+                startDestination = DestinationData.getDestinationId("Tokyo"),
+                endDestination = DestinationData.getDestinationId("Luton"),
+                duration = LocalTime.parse("02:00")
+            ),
+            RouteData(
                 startDestination = DestinationData.getDestinationId("Berlin"),
                 endDestination = DestinationData.getDestinationId("Tokyo"),
                 duration = LocalTime.parse("06:00")

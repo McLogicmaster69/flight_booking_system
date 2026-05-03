@@ -44,6 +44,50 @@ data class FlightData(
 
     override val initialRows : List<FlightData>
         get() = listOf(
+            FlightData(
+                routeId = RouteData.getRouteId(
+                    DestinationArgs(
+                        DestinationData.getDestinationId("Luton"),
+                        DestinationData.getDestinationId("Tokyo")
+                    )
+                ),
+                planeId = PlaneData.getPlaneId("Boeing 737-800"),
+                date = LocalDate.parse("2026-05-15"),
+                time = LocalTime.parse("12:00")
+            ),
+            FlightData(
+                routeId = RouteData.getRouteId(
+                    DestinationArgs(
+                        DestinationData.getDestinationId("Tokyo"),
+                        DestinationData.getDestinationId("Luton")
+                    )
+                ),
+                planeId = PlaneData.getPlaneId("Boeing 737-800"),
+                date = LocalDate.parse("2026-05-20"),
+                time = LocalTime.parse("12:00")
+            ),
+            FlightData(
+                routeId = RouteData.getRouteId(
+                    DestinationArgs(
+                        DestinationData.getDestinationId("Luton"),
+                        DestinationData.getDestinationId("Berlin")
+                    )
+                ),
+                planeId = PlaneData.getPlaneId("Airbus A321"),
+                date = LocalDate.parse("2026-05-15"),
+                time = LocalTime.parse("10:00")
+            ),
+            FlightData(
+                routeId = RouteData.getRouteId(
+                    DestinationArgs(
+                        DestinationData.getDestinationId("Berlin"),
+                        DestinationData.getDestinationId("Tokyo")
+                    )
+                ),
+                planeId = PlaneData.getPlaneId("Boeing 737-800"),
+                date = LocalDate.parse("2026-05-15"),
+                time = LocalTime.parse("16:00")
+            )
         )
 
     override val requiredTables : List<DataClass<*>>
