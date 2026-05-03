@@ -3,7 +3,10 @@ package data
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.LocalDateTime
+import java.time.Duration
 import results.StaffAssignmentResults
+
+const val HOURS_BETWEEN_FLIGHT : Int = 3
 
 object AssignedFlightStaffColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
@@ -48,9 +51,11 @@ data class AssignedFlightStaffData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null
         ) : List<QueryResult<AssignedFlightStaffData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs)
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
         }
 
         fun updateTable (
@@ -77,7 +82,53 @@ data class AssignedFlightStaffData(
             flight : FlightData,
             route : RouteData
         ) : Int {
-            return 0
+            var points : Int = 20
+
+            val endCountry = DestinationData.queryDatabase(route.endDestination).firstOrNull()?.dataClass?.id ?: -2
+            val pastAssignments : List<QueryResult<AssignedFlightStaffData>> = queryDatabase(
+                joinArgs = JoinArgs(
+                    joinType = "INNER",
+                    joinTable = FlightData.EMPTY.tableName,
+                    joinTable1Column = AssignedFlightStaffColumns.FLIGHT_ID.name,
+                    joinTable2Column = FlightColumns.ID.name,
+                    joinSelectColumns = FlightColumns.COLUMN_NAMES
+                ),
+                whereArgs = WhereArgs (
+                    whereClause = """
+                        ${AssignedFlightStaffData.EMPTY.tableName}.${AssignedFlightStaffColumns.STAFF_ID.name} = ?
+                        AND ${FlightData.EMPTY.tableName}.${FlightColumns.DATE.name} >= ?
+                    """,
+                    whereArgs = listOf(
+                        staff.id,
+                        flight.date.minusDays(14L)
+                    )
+                ),
+                orderByArgs = OrderByArgs(
+                    orderArgs = listOf(
+                        OrderArgs("${FlightData.EMPTY.tableName}.${FlightColumns.DATE.name}", false),
+                        OrderArgs("${FlightData.EMPTY.tableName}.${FlightColumns.TIME.name}", false)
+                    )
+                )
+            )
+
+            if (staff.homeId == endCountry) points += 30
+            if (pastAssignments.isEmpty()) {
+                points += 25
+            } else {
+                points += Duration.between(
+                    LocalDateTime.of(
+                        flight.date,
+                        flight.time
+                    ),
+                    LocalDateTime.of(
+                        LocalDate.parse(pastAssignments.first().getColumn(FlightData.EMPTY.tableName, FlightColumns.DATE.name)!!.columnVal as String),
+                        LocalTime.parse(pastAssignments.first().getColumn(FlightData.EMPTY.tableName, FlightColumns.TIME.name)!!.columnVal as String)
+                    )
+                ).toHours().toInt() / 2
+                points -= pastAssignments.size
+            }
+
+            return points
         }
 
         fun assignStaffToFlight (
@@ -91,40 +142,35 @@ data class AssignedFlightStaffData(
             val copilotRole : StaffPositionData = StaffPositionData.queryDatabase(StaffPositions.COPILOT).firstOrNull()?.dataClass ?: return StaffAssignmentResults(flightId, listOf(), listOf(), "Could not find copilot role")
             val attendantRole : StaffPositionData = StaffPositionData.queryDatabase(StaffPositions.FLIGHT_ATTENDANT).firstOrNull()?.dataClass ?: return StaffAssignmentResults(flightId, listOf(), listOf(), "Could not find attendant role")
 
-            val startTime : LocalDateTime = LocalDateTime.of(
+            val endTime : LocalDateTime = LocalDateTime.of(
                 flight.date,
                 flight.time
-            ).minusHours(1)
-            val endTime : LocalDateTime = startTime.plusMinutes(route.duration.hour * 60L + route.duration.minute + 120L)
+            ).plusMinutes(route.duration.hour * 60L + route.duration.minute + HOURS_BETWEEN_FLIGHT * 60L)
 
             val availableStaff : List<QueryResult<StaffData>> = StaffData.queryDatabase(
                 whereArgs = WhereArgs(
                     whereClause = """
-                        SELECT 1
-                        FROM ${AssignedFlightStaffData.EMPTY.tableName}
-                        INNER JOIN ${FlightData.EMPTY.tableName}
-                        ON ${FlightData.EMPTY.tableName}.${FlightColumns.ID.name} = ${AssignedFlightStaffData.EMPTY.tableName}.${AssignedFlightStaffColumns.FLIGHT_ID.name}
-                        WHERE ${AssignedFlightStaffData.EMPTY.tableName}.${AssignedFlightStaffColumns.STAFF_ID} = ${StaffData.EMPTY.tableName}.${StaffColumns.ID.name}
-                        AND ((
+                        ${StaffData.EMPTY.tableName}.${StaffColumns.CURRENT_LOCATION} = ?
+                        AND NOT EXISTS (
+                            SELECT 1
+                            FROM ${AssignedFlightStaffData.EMPTY.tableName}
+                            INNER JOIN ${FlightData.EMPTY.tableName}
+                            ON ${FlightData.EMPTY.tableName}.${FlightColumns.ID.name} = ${AssignedFlightStaffData.EMPTY.tableName}.${AssignedFlightStaffColumns.FLIGHT_ID.name}
+                            WHERE ${AssignedFlightStaffData.EMPTY.tableName}.${AssignedFlightStaffColumns.STAFF_ID} = ${StaffData.EMPTY.tableName}.${StaffColumns.ID.name}
+                            AND (
                                 ${FlightData.EMPTY.tableName}.${FlightColumns.DATE.name} > ?
-                            OR (
-                                ${FlightData.EMPTY.tableName}.${FlightColumns.DATE.name} = ? AND ${FlightData.EMPTY.tableName}.${FlightColumns.TIME.name} >= ?
-                            )) AND (
-                                ${FlightData.EMPTY.tableName}.${FlightColumns.DATE.name} < ?
-                            OR (
-                                ${FlightData.EMPTY.tableName}.${FlightColumns.DATE.name} = ? AND ${FlightData.EMPTY.tableName}.${FlightColumns.TIME.name} <= ?
-                            ))
+                                OR (
+                                    ${FlightData.EMPTY.tableName}.${FlightColumns.DATE.name} = ? AND ${FlightData.EMPTY.tableName}.${FlightColumns.TIME.name} >= ?
+                                )
+                            )
                         )
                     """,
                     whereArgs = listOf(
-                        startTime.toLocalDate(),
-                        startTime.toLocalDate(),
-                        startTime.toLocalTime(),
+                        route.startDestination,
                         endTime.toLocalDate(),
                         endTime.toLocalDate(),
                         endTime.toLocalTime()
-                    ),
-                    notExists = true
+                    )
                 )
             )
 

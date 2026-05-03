@@ -52,8 +52,11 @@ data class ClassData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null) : List<QueryResult<ClassData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs)
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null
+        ) : List<QueryResult<ClassData>> {
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
         }
 
         fun updateTable (

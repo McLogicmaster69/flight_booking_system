@@ -239,8 +239,11 @@ data class CountryData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null) : List<QueryResult<CountryData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs)
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null
+        ) : List<QueryResult<CountryData>> {
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
         }
 
         fun updateTable (

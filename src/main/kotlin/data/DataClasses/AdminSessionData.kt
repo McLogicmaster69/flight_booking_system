@@ -49,9 +49,11 @@ data class AdminSessionData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null
         ) : List<QueryResult<AdminSessionData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs)
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
         }
 
         fun updateTable (

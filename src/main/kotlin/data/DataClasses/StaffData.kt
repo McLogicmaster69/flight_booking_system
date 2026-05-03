@@ -6,9 +6,10 @@ object StaffColumns {
     val LASTNAME = Column<String?>("lastname", "VARCHAR")
     val POSITION_ID = Column<Int>("position_id", "INTEGER NOT NULL REFERENCES ${StaffPositionData.EMPTY.tableName}(id)")
     val LOGIN_ID = Column<Int>("login_id", "INTEGER NOT NULL REFERENCES ${LoginData.EMPTY.tableName}(id)")
+    val CURRENT_LOCATION = Column<Int>("current_location", "INTEGER NOT NULL REFERENCES ${DestinationData.EMPTY.tableName}(id)")
     val HOME_ID = Column<Int>("home_id", "INTEGER NOT NULL REFERENCES ${CountryData.EMPTY.tableName}(id)")
 
-    val ALL = listOf(ID, FIRSTNAME, LASTNAME, POSITION_ID, LOGIN_ID, HOME_ID)
+    val ALL = listOf(ID, FIRSTNAME, LASTNAME, POSITION_ID, LOGIN_ID, CURRENT_LOCATION, HOME_ID)
     val COLUMN_NAMES = ALL.map { it.name }
 }
 
@@ -19,6 +20,7 @@ data class StaffData(
     var lastName: String? = null,
     var positionId: Int = 0,
     var loginId: Int = 0,
+    var currentLocation: Int = 0,
     var homeId: Int = 0
 
 ) : DataClass<StaffData>(id) {
@@ -29,54 +31,53 @@ data class StaffData(
     override val requiredTables : List<DataClass<*>>
         get() = listOf(
             StaffPositionData.EMPTY,
-            LoginData.EMPTY
+            LoginData.EMPTY,
+            DestinationData.EMPTY,
+            CountryData.EMPTY
         )
     
     override val initialRows: List<StaffData>
         get() = listOf(
-            StaffData(
-                firstName = "A",
-                lastName = "1",
-                positionId = StaffPositionData.getStaffPositionId(StaffPositions.PILOT),
-                loginId = LoginData.getLoginData("a@1"),
-                homeId = CountryData.queryDatabase().first().dataClass.id
-            ),
-            StaffData(
-                firstName = "B",
-                lastName = "2",
-                positionId = StaffPositionData.getStaffPositionId(StaffPositions.PILOT),
-                loginId = LoginData.getLoginData("b@2"),
-                homeId = CountryData.queryDatabase().first().dataClass.id
-            ),
-            StaffData(
-                firstName = "C",
-                lastName = "3",
-                positionId = StaffPositionData.getStaffPositionId(StaffPositions.FLIGHT_ATTENDANT),
-                loginId = LoginData.getLoginData("c@3"),
-                homeId = CountryData.queryDatabase().first().dataClass.id
-            ),
-            StaffData(
-                firstName = "D",
-                lastName = "4",
-                positionId = StaffPositionData.getStaffPositionId(StaffPositions.FLIGHT_ATTENDANT),
-                loginId = LoginData.getLoginData("d@4"),
-                homeId = CountryData.queryDatabase().first().dataClass.id
-            ),
-            StaffData(
-                firstName = "E",
-                lastName = "5",
-                positionId = StaffPositionData.getStaffPositionId(StaffPositions.FLIGHT_ATTENDANT),
-                loginId = LoginData.getLoginData("e@5"),
-                homeId = CountryData.queryDatabase().first().dataClass.id
-            ),
-            StaffData(
-                firstName = "F",
-                lastName = "6",
-                positionId = StaffPositionData.getStaffPositionId(StaffPositions.FLIGHT_ATTENDANT),
-                loginId = LoginData.getLoginData("f@6"),
-                homeId = CountryData.queryDatabase().first().dataClass.id
-            )
         )
+
+    override fun initTable () {
+        // THIS IS FOR TEST PURPOSES AND SHOULD BE DELETED BEFORE GOING LIVE
+        val destinations : List<QueryResult<DestinationData>> = DestinationData.queryDatabase()
+        var currentFella : Long = 0L
+
+        destinations.forEach { destination ->
+            for (i in 1..100) {
+                val loginId = LoginData(
+                    email = "${currentFella.toString()}@${currentFella.toString()}",
+                    passwordHash = currentFella.toString()
+                ).insertIntoDatabase()
+                StaffData (
+                    firstName = currentFella.toString(),
+                    lastName = currentFella.toString(),
+                    positionId = StaffPositionData.getStaffPositionId(StaffPositions.FLIGHT_ATTENDANT),
+                    loginId = loginId,
+                    homeId = destination.dataClass.countryId,
+                    currentLocation = destination.dataClass.id
+                ).insertIntoDatabase()
+                currentFella += 1
+            }
+            for (i in 1..20) {
+                val loginId = LoginData(
+                    email = "${currentFella.toString()}@${currentFella.toString()}",
+                    passwordHash = currentFella.toString()
+                ).insertIntoDatabase()
+                StaffData (
+                    firstName = currentFella.toString(),
+                    lastName = currentFella.toString(),
+                    positionId = StaffPositionData.getStaffPositionId(StaffPositions.PILOT),
+                    loginId = loginId,
+                    homeId = destination.dataClass.countryId,
+                    currentLocation = destination.dataClass.id
+                ).insertIntoDatabase()
+                currentFella += 1
+            }
+        }
+    }
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
@@ -84,6 +85,7 @@ data class StaffData(
             StaffColumns.LASTNAME to lastName,
             StaffColumns.POSITION_ID to positionId,
             StaffColumns.LOGIN_ID to loginId,
+            StaffColumns.CURRENT_LOCATION to currentLocation,
             StaffColumns.HOME_ID to homeId
         )
 
@@ -94,11 +96,12 @@ data class StaffData(
             lastName = castRowElement(row, StaffColumns.LASTNAME),
             positionId = castRowElement(row, StaffColumns.POSITION_ID),
             loginId = castRowElement(row, StaffColumns.LOGIN_ID),
+            currentLocation = castRowElement(row, StaffColumns.CURRENT_LOCATION),
             homeId = castRowElement(row, StaffColumns.HOME_ID)
         )
 
     override fun debugData() {
-        println("Staff data: (\"$id\", \"$firstName\", \"$lastName\", \"$positionId\", \"$loginId\", \"$homeId\")")
+        println("Staff data: (\"$id\", \"$firstName\", \"$lastName\", \"$positionId\", \"$loginId\", \"$currentLocation\", \"$homeId\")")
     }
 
     companion object {
@@ -107,9 +110,11 @@ data class StaffData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null        
         ) : List<QueryResult<StaffData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs)
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
         }
 
         fun updateTable (

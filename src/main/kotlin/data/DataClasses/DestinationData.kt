@@ -71,8 +71,12 @@ data class DestinationData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null
-        ) : List<QueryResult<DestinationData>> = EMPTY.queryDatabase(joinArgs, whereArgs)
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null        
+        ) : List<QueryResult<DestinationData>> {
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
+        }
 
         fun updateTable (
             values : Map<Column<*>, Any?>,

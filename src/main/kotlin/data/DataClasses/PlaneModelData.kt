@@ -79,9 +79,11 @@ data class PlaneModelData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null        
         ) : List<QueryResult<PlaneModelData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs)
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
         }
 
         fun queryDatabase(id : Int) : List<QueryResult<PlaneModelData>> = queryDatabase(whereArgs = WhereArgs("${PlaneModelColumns.ID.name} = ?", listOf(id)))

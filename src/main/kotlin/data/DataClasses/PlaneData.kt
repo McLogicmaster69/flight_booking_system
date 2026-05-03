@@ -83,9 +83,11 @@ data class PlaneData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null        
         ) : List<QueryResult<PlaneData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs)
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
         }
 
         fun getPlaneId(modelName: String): Int {

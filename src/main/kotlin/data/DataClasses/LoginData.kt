@@ -22,24 +22,6 @@ data class LoginData(
 
     override val initialRows: List<LoginData>
         get() = listOf(
-            LoginData(
-                email = "a@1"
-            ),
-            LoginData(
-                email = "b@2"
-            ),
-            LoginData(
-                email = "c@3"
-            ),
-            LoginData(
-                email = "d@4"
-            ),
-            LoginData(
-                email = "e@5"
-            ),
-            LoginData(
-                email = "f@6"
-            )
         )
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
@@ -65,8 +47,11 @@ data class LoginData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null) : List<QueryResult<LoginData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs)
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null
+        ) : List<QueryResult<LoginData>> {
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
         }
 
         fun getLoginData (email : String) : Int {

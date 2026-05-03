@@ -205,7 +205,9 @@ object DatabaseManager {
         table : String,
         columns : List<String>,
         joinArgs : JoinArgs? = null,
-        whereArgs : WhereArgs? = null
+        whereArgs : WhereArgs? = null,
+        orderByArgs : OrderByArgs? = null,
+        limitArgs : LimitArgs? = null
     ): List<Array<Any?>> {
 
         var columnStr = columns.joinToString(", ") { "$table.$it" }
@@ -215,12 +217,9 @@ object DatabaseManager {
             append("SELECT $columnStr FROM $table")
 
             if (joinArgs != null) append(" ${joinArgs.joinType} JOIN ${joinArgs.joinTable} ON $table.${joinArgs.joinTable1Column} = ${joinArgs.joinTable}.${joinArgs.joinTable2Column}")
-            
-            if (whereArgs != null) {
-                append(" WHERE")
-                if (whereArgs.notExists) append(" NOT EXISTS")
-                append(" (${whereArgs.whereClause})")
-            } 
+            if (whereArgs != null) append(" WHERE (${whereArgs.whereClause})")
+            if (orderByArgs != null) append(" ORDER BY ${orderByArgs.orderArgs.joinToString(", ") { "${it.orderColumn} ${if (it.ascending) "ASC" else "DESC"}" }}")
+            if (limitArgs != null) append(" LIMIT ${limitArgs.limitAmount}")
         }
 
         var totalSize = columns.size

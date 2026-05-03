@@ -78,7 +78,9 @@ abstract class DataClass<T : DataClass<T>> ( open val id : Int = 0 ) {
 
     fun queryDatabase (
         joinArgs : JoinArgs? = null,
-        whereArgs : WhereArgs? = null
+        whereArgs : WhereArgs? = null,
+        orderByArgs : OrderByArgs? = null,
+        limitArgs : LimitArgs? = null        
     ) : List<QueryResult<T>> {
 
         val columnNames = tableColumns.map { it.name }
@@ -86,7 +88,10 @@ abstract class DataClass<T : DataClass<T>> ( open val id : Int = 0 ) {
             tableName,
             columnNames,
             joinArgs,
-            whereArgs)
+            whereArgs,
+            orderByArgs,
+            limitArgs
+        )
 
         val columns : MutableList<String> = columnNames.toMutableList()
         val tables : MutableList<String> = MutableList(columns.size) { tableName }

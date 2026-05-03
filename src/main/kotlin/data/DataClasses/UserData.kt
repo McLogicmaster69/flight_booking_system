@@ -65,8 +65,12 @@ data class UserData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null
-        ) : List<QueryResult<UserData>> = EMPTY.queryDatabase(joinArgs, whereArgs)
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null        
+        ) : List<QueryResult<UserData>> {
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
+        }
 
         fun updateTable (
             values : Map<Column<*>, Any?>,
