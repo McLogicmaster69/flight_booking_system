@@ -1,4 +1,4 @@
-/* ROOT VARIABLES */
+/* src/main/resources/static/css/custom.css */
 :root {
   --aa-blue: #0d5ca6;
   --aa-blue-dark: #083b6b;
@@ -17,14 +17,12 @@
   --shadow: 0 10px 26px rgba(16,42,67,.12);
 }
 
-/* BASE */
 * { box-sizing: border-box; }
 
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -50,7 +48,6 @@ a:hover {
   outline-offset: 2px;
 }
 
-/* LAYOUT */
 .site-shell {
   width: 50%;
   margin-left: 25%;
@@ -71,7 +68,6 @@ a:hover {
   color: var(--muted);
 }
 
-/* HEADER*/
 .site-header {
   background: #fff;
   border-bottom: 1px solid #dbe5ef;
@@ -81,7 +77,6 @@ a:hover {
   max-width: 1120px;
   margin: 0 auto;
   padding: 14px 16px 10px;
-
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -91,7 +86,6 @@ a:hover {
   display: flex;
   align-items: center;
   gap: 10px;
-
   font-weight: 700;
   color: #111827;
 }
@@ -99,9 +93,7 @@ a:hover {
 .brand-mark {
   width: 34px;
   height: 22px;
-
   border-radius: 2px;
-
   background: linear-gradient(
     135deg,
     #1a73bf 0 55%,
@@ -121,7 +113,6 @@ a:hover {
   max-width: 1120px;
   margin: 0 auto;
   padding: 0 16px;
-
   display: flex;
   gap: 2px;
 }
@@ -136,13 +127,11 @@ a:hover {
   background: #eaf2fb;
 }
 
-/* CARDS */
 .card {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 12px;
   box-shadow: var(--shadow);
-
   padding: 16px;
   margin-bottom: 18px;
 }
@@ -152,7 +141,6 @@ a:hover {
   color: #17324d;
 }
 
-/* GRID */
 .grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
@@ -164,15 +152,11 @@ a:hover {
 .col-6  { grid-column: span 6; }
 .col-12 { grid-column: span 12; }
 
-/* FORMS */
 label {
   display: block;
-
   font-size: 12px;
   font-weight: 700;
-
   margin-bottom: 6px;
-
   text-transform: uppercase;
 }
 
@@ -180,10 +164,8 @@ input,
 select {
   width: 100%;
   height: 38px;
-
   border: 1px solid #c8d5e2;
   border-radius: 6px;
-
   padding: 8px 10px;
 }
 
@@ -191,22 +173,17 @@ input::placeholder {
   color: #94a3b8;
 }
 
-/* BUTTONS */
 button,
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   min-height: 38px;
   padding: 0 14px;
-
   border-radius: 6px;
   border: 1px solid #0c5aa1;
-
   background: linear-gradient(#28a0f0,#0a74c9);
   color: white;
-
   font-weight: 700;
   cursor: pointer;
 }
@@ -229,7 +206,6 @@ button,
   flex-wrap: wrap;
 }
 
-/* TABLES */
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -248,19 +224,14 @@ button,
   background: #f8fbfe;
 }
 
-/* BADGES */
 .badge {
   display: inline-block;
-
   padding: 4px 10px;
   border-radius: 999px;
-
   font-size: 12px;
   font-weight: 700;
-
   background: #eef6ff;
   color: #195e9f;
-
   border: 1px solid #cddff1;
 }
 
@@ -269,7 +240,6 @@ button,
   color: var(--success);
 }
 
-/* AUTH FORMS */
 .auth-form {
   display: flex;
   flex-direction: column;
@@ -291,7 +261,6 @@ button,
   margin-top: 1rem;
 }
 
-/* OTHER PAGES*/
 .general-input{
   margin-bottom: 8px;
 }
@@ -300,7 +269,6 @@ button,
   width: 100%;
 }
 
-/* UTILITIES */
 .muted {
   color: var(--muted);
 }
@@ -321,7 +289,6 @@ button,
   color: #8093a6;
 }
 
-/* Flight Searching */
 .flight-result-container {
   padding: 0 10px;
 }
@@ -338,19 +305,14 @@ button,
   display: flex;
   justify-content: space-between;
   align-items: center;
-
   width: 100%;
-
   padding: 2rem 1rem;
-
   background-color: #fafafa;
   border: 3px solid #0c5aa1;
   border-radius: 0px;
-
   text-decoration: none;
   color: black;
   cursor: pointer;
-
   box-sizing: border-box;
 }
 
@@ -366,10 +328,9 @@ button,
 .flight-result-info {
   display: flex;
   flex-direction: column;
-  align-items: flex-end; /* right-align text */
+  align-items: flex-end;
 }
 
-/* Homepage search validation */
 .homepage-hero {
   padding: 48px 0;
 }
@@ -424,8 +385,6 @@ button,
 .homepage-search-actions {
   display: flex;
 }
-
-/* PAYMENT AND CHECKOUT */
 
 .payment-container {
     display: flex;
@@ -499,8 +458,6 @@ button,
     color: #555;
 }
 
-/* MANAGE BOOKINGS*/
-
 .booking-results {
     display: grid;
     gap: 1rem;
@@ -526,29 +483,123 @@ button,
     color: #555;
 }
 
-/* RESPONSIVE */
-
 @media (max-width: 980px) {
-
   .grid {
     grid-template-columns: repeat(6,1fr);
   }
-
 }
 
 @media (max-width: 640px) {
-
   .header-top {
     flex-direction: column;
     align-items: flex-start;
   }
-
   .table {
     font-size: 14px;
   }
-
 }
 
+/* Accessibility Modifications */
+
+body.text-size-large {
+  font-size: 1.25rem;
+}
+
+body.text-size-large h1 { font-size: 2.75rem; }
+body.text-size-large h2 { font-size: 2.25rem; }
+body.text-size-large h3 { font-size: 1.75rem; }
+body.text-size-large input, body.text-size-large select, body.text-size-large button {
+  font-size: 1.1rem;
+}
+
+body.high-contrast {
+  --aa-blue: #ffff00;
+  --aa-blue-dark: #ccff00;
+  --aa-sky: #00ffff;
+  --ink: #ffffff;
+  --muted: #eeeeee;
+  --line: #ffffff;
+  --panel: #000000;
+  --bg: #000000;
+  --success: #00ff00;
+  --danger: #ff0000;
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+body.high-contrast * {
+  border-color: #ffffff !important;
+}
+
+body.high-contrast a, body.high-contrast .brand-mark + div {
+  color: #ffff00 !important;
+  text-decoration: underline;
+}
+
+body.high-contrast .card,
+body.high-contrast .site-header,
+body.high-contrast .flight-search-card,
+body.high-contrast .homepage-search-card,
+body.high-contrast .payment-card,
+body.high-contrast .booking-card {
+  background: #000000 !important;
+  border: 2px solid #ffffff !important;
+  color: #ffffff !important;
+}
+
+body.high-contrast button,
+body.high-contrast .btn,
+body.high-contrast .flight-result-button,
+body.high-contrast .pay-btn {
+  background: #000000 !important;
+  color: #ffff00 !important;
+  border: 2px solid #ffff00 !important;
+}
+
+body.high-contrast input,
+body.high-contrast select {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+}
+
+body.high-contrast .primary-nav a:hover,
+body.high-contrast .primary-nav a.is-active {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+body.palette-colorblind {
+  --success: #009E73;
+  --danger: #D55E00;
+  --aa-blue: #0072B2;
+  --aa-blue-dark: #005f9e;
+  --aa-sky: #56B4E9;
+}
+
+body.palette-colorblind .brand-mark {
+  background: linear-gradient(135deg, #0072B2 0 55%, #D55E00 55% 74%, #fff 74% 82%, #0072B2 82%);
+}
+
+body.palette-colorblind button,
+body.palette-colorblind .btn,
+body.palette-colorblind .pay-btn {
+  background: linear-gradient(#56B4E9, #0072B2);
+  border-color: #005f9e;
+}
+
+body.reduce-motion * {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+
+body.enhanced-focus *:focus,
+body.enhanced-focus *:focus-visible {
+  outline: 4px solid #ff00ff !important;
+  outline-offset: 4px !important;
+  background-color: rgba(255, 0, 255, 0.1) !important;
+}
 #chat-widget {
   position: fixed;
   bottom: 20px;
@@ -557,7 +608,7 @@ button,
 }
 
 #chat-toggle {
-  background: var(--aa-blue);
+  background: var(--aa-blue, #0d5ca6);
   color: white;
   border: none;
   border-radius: 50%;
@@ -565,7 +616,7 @@ button,
   height: 60px;
   font-size: 24px;
   cursor: pointer;
-  box-shadow: var(--shadow);
+  box-shadow: 0 10px 26px rgba(16,42,67,.12);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -576,19 +627,20 @@ button,
   height: 450px;
   background: white;
   border-radius: 12px;
-  box-shadow: var(--shadow);
+  box-shadow: 0 10px 26px rgba(16,42,67,.12);
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line, #d9e1ea);
+  margin-bottom: 10px;
 }
 
 #chat-window.hidden,
 #chat-toggle.hidden {
-  display: none;
+  display: none !important;
 }
 
 #chat-header {
-  background: var(--aa-blue);
+  background: var(--aa-blue, #0d5ca6);
   color: white;
   padding: 15px;
   border-radius: 12px 12px 0 0;
@@ -621,11 +673,14 @@ button,
 #chat-input-area {
   display: flex;
   padding: 10px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--line, #d9e1ea);
   gap: 10px;
 }
 
 #chat-input {
   flex: 1;
   margin-bottom: 0;
+  padding: 8px;
+  border: 1px solid #c8d5e2;
+  border-radius: 6px;
 }

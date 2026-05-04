@@ -1,35 +1,67 @@
 {% extends "_layout/base.peb" %}
 
-{% set activePage = 'settings' %}
-{% set inNav = true %}
+    {% set activePage = 'settings' %}
+    {% set inNav = true %}
 
 {% block content %}
 
     <h2>Accessibility &amp; Preferences</h2>
 
     <p style="color: var(--wf-muted); margin-top: 0;">
-      Settings will be saved across sessions if you are logged in or accept cookies.
+      Settings will be saved across sessions using local storage.
     </p>
 
-    <form method="post" action="#" aria-label="Accessibility settings">
-      <label for="palette">Website Color Palette (Dropdown)</label>
-      <select id="palette" name="palette">
-        <option>Default</option>
-        <option>Color Blind Friendly</option>
-        <option>High Contrast</option>
+    <form id="settings-form" aria-label="Accessibility settings">
+      <label for="palette">Color Palette</label>
+      <select id="palette" name="palette" class="general-input">
+        <option value="default">Default</option>
+        <option value="colorblind">Colorblind Friendly (Okabe-Ito)</option>
       </select>
 
-      <div style="display:flex; align-items:center; justify-content: space-between; gap: 14px;">
-        <div><strong>Enable Screen Reader Assistance</strong></div>
-        <input type="checkbox" aria-label="Enable Screen Reader Assistance" style="width:auto; height: 18px;">
+      <label for="textSize">Text Size</label>
+      <select id="textSize" name="textSize" class="general-input">
+        <option value="default">Default</option>
+        <option value="large">Large</option>
+      </select>
+
+      <div style="display:flex; align-items:center; justify-content: space-between; gap: 14px; margin-bottom: 12px;">
+        <div><strong>High Contrast Mode</strong></div>
+        <input type="checkbox" id="highContrast" aria-label="High Contrast Mode" style="width:auto; height: 18px;">
       </div>
 
-      <div style="display:flex; align-items:center; justify-content: space-between; gap: 14px;">
-        <div><strong>Enable AI Assistant (Chatbot)</strong></div>
-        <input type="checkbox" checked aria-label="Enable AI Assistant" style="width:auto; height: 18px;">
+      <div style="display:flex; align-items:center; justify-content: space-between; gap: 14px; margin-bottom: 12px;">
+        <div><strong>Reduce Motion</strong></div>
+        <input type="checkbox" id="reduceMotion" aria-label="Reduce Motion" style="width:auto; height: 18px;">
       </div>
 
-      <button type="button">SAVE SETTINGS BUTTON</button>
+      <div style="display:flex; align-items:center; justify-content: space-between; gap: 14px; margin-bottom: 18px;">
+        <div><strong>Enhanced Focus</strong></div>
+        <input type="checkbox" id="enhancedFocus" aria-label="Enhanced Focus" style="width:auto; height: 18px;">
+      </div>
+
+      <button type="button" class="wf-btn" onclick="saveSettings()">SAVE SETTINGS</button>
+      <div id="settings-status" style="margin-top: 14px; color: var(--success); font-weight: bold;"></div>
     </form>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("palette").value = localStorage.getItem("a11y_palette") || "default";
+        document.getElementById("textSize").value = localStorage.getItem("a11y_text_size") || "default";
+        document.getElementById("highContrast").checked = localStorage.getItem("a11y_high_contrast") === "true";
+        document.getElementById("reduceMotion").checked = localStorage.getItem("a11y_reduce_motion") === "true";
+        document.getElementById("enhancedFocus").checked = localStorage.getItem("a11y_enhanced_focus") === "true";
+      });
+
+      function saveSettings() {
+        localStorage.setItem("a11y_palette", document.getElementById("palette").value);
+        localStorage.setItem("a11y_text_size", document.getElementById("textSize").value);
+        localStorage.setItem("a11y_high_contrast", document.getElementById("highContrast").checked);
+        localStorage.setItem("a11y_reduce_motion", document.getElementById("reduceMotion").checked);
+        localStorage.setItem("a11y_enhanced_focus", document.getElementById("enhancedFocus").checked);
+        
+        document.getElementById("settings-status").innerText = "Settings saved successfully! Refreshing...";
+        setTimeout(() => window.location.reload(), 800);
+      }
+    </script>
 
 {% endblock %}

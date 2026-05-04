@@ -1,16 +1,57 @@
-{% extends "_layout/base.peb" %}
+    {% extends "_layout/base.peb" %}
 
-{% set activePage = 'help' %}
-{% set inNav = true %}
+        {% set activePage = 'help' %}
+        {% set inNav = true %}
 
-{% block content %}
+    {% block content %}
 
 <h2 class="wf-title">Help Center</h2>
+<div class="wf-rule"></div>
 
-<h3 style="margin-top: 0;">Frequently Asked Questions (FAQ)</h3>
+<div class="grid">
+    <section class="col-12">
+        <h3 style="margin-top: 0;">Frequently Asked Questions (FAQ)</h3>
 
-<div>
-  <h3 style="margin-top: 0;">Report a Bug / Submit a Complaint</h3>
+        <div class="card">
+            <h4>How do I earn Loyalty Points?</h4>
+            <p class="muted">You earn loyalty points automatically every time you book a flight while logged into your account. Points are calculated at 10% of your total ticket cost in pence. For example, a £100 flight earns you 1,000 points.</p>
+        </div>
+
+        <div class="card">
+            <h4>Do I need an account to book a flight?</h4>
+            <p class="muted">No, you can easily checkout as a Guest using just your email address. However, checking out as a guest means you will not accumulate loyalty points for that journey.</p>
+        </div>
+
+        <div class="card">
+            <h4>How can I manage my existing bookings?</h4>
+            <p class="muted">Navigate to the <strong>Manage</strong> tab in the navigation bar. If you are logged in, your upcoming bookings will appear automatically. If you booked as a guest, you can manually search for your itinerary using your unique Booking Reference (sent to your email) and your Last Name.</p>
+        </div>
+
+        <div class="card">
+            <h4>How do I use my Loyalty Rewards?</h4>
+            <p class="muted">Once you accumulate enough points, visit the <strong>Loyalty Rewards</strong> page to redeem them for perks like Lounge Access, Priority Boarding, Free Checked Bags, or Flight Upgrades. Redeemed rewards are automatically tied to your account and a confirmation is sent to your email.</p>
+        </div>
+    </section>
+
+    <section class="col-12" style="margin-top: 24px;">
+        <h3 style="margin-top: 0;">Report a Bug / Submit a Complaint</h3>
+        <div class="card">
+            <p class="muted">Having trouble with our system? Let our support team know by filling out the form below.</p>
+
+            <form id="support-form" method="post" action="/api/chat" hx-post="/api/chat" hx-target="#support-response" hx-swap="innerHTML">
+                <label class="auth-label" for="supportEmail">Email Address</label>
+                <input class="general-input" id="supportEmail" name="email" type="email" placeholder="Your email address" required>
+
+                <label class="auth-label" for="supportMessage">Message</label>
+                <textarea class="general-input" id="supportMessage" name="message" rows="5" placeholder="Please describe the issue in detail..." required style="resize: vertical;"></textarea>
+
+                <div style="margin-top: 14px;"></div>
+                <button class="wf-btn" type="submit">Submit Request</button>
+            </form>
+
+            <div id="support-response" style="margin-top: 15px; font-weight: bold; color: var(--aa-blue);"></div>
+        </div>
+    </section>
 </div>
 
 {% endblock %}

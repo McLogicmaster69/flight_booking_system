@@ -6,13 +6,52 @@
 {% block content %}
 
 <br>
-<div style="text-align:center; margin-bottom: 18px;">
+<div style="text-align:center; margin-bottom: 24px;">
   <div style="color: var(--muted);"><strong>Your Current Balance</strong></div>
-  <h1>{{ user.loyalityPoints }}</h1>
+  <h1 style="margin: 5px 0; font-size: 3rem; color: var(--aa-blue);">{{ user.loyalityPoints }} pts</h1>
 </div>
 
-<h3>Redeemable Now</h3>
+<div id="rewards-status" aria-live="polite"></div>
 
-<h3>Almost There (Within 1000 pts)</h3>
+<div class="grid">
+    <section class="col-6">
+        <h3>Redeemable Now</h3>
+        
+        {% for reward in availableRewards %}
+            <div class="card" style="margin-bottom: 14px;">
+                <h4 style="margin-top: 0; margin-bottom: 6px;">{{ reward.name }}</h4>
+                <p style="margin-top: 0; color: var(--muted); font-weight: bold;">{{ reward.cost }} pts</p>
+                
+                <form hx-post="/rewards/redeem" hx-target="#rewards-status" hx-swap="innerHTML">
+                    <input type="hidden" name="cost" value="{{ reward.cost }}">
+                    <input type="hidden" name="name" value="{{ reward.name }}">
+                    <button type="submit" class="wf-btn" style="width: 100%;">Redeem Reward</button>
+                </form>
+            </div>
+        {% else %}
+            <div class="card">
+                <p style="margin: 0; color: var(--muted);">You don't have enough points for any rewards yet. Keep flying with us!</p>
+            </div>
+        {% endfor %}
+    </section>
+
+    <section class="col-6">
+        <h3>Almost There</h3>
+        
+        {% for reward in upcomingRewards %}
+            <div class="card" style="opacity: 0.65; margin-bottom: 14px; background: #f9fafb;">
+                <h4 style="margin-top: 0; margin-bottom: 6px;">{{ reward.name }}</h4>
+                <p style="margin-top: 0; color: var(--muted); font-weight: bold;">
+                    {{ reward.cost }} pts <span style="font-size: 12px; font-weight: normal;">(Need {{ reward.cost - user.loyalityPoints }} more)</span>
+                </p>
+                <button type="button" class="wf-btn btn-secondary" style="width: 100%; cursor: not-allowed;" disabled>Locked</button>
+            </div>
+        {% else %}
+            <div class="card">
+                <p style="margin: 0; color: var(--muted);">You have enough points to redeem any available reward tier!</p>
+            </div>
+        {% endfor %}
+    </section>
+</div>
 
 {% endblock %}

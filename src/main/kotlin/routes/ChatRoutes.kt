@@ -1,5 +1,6 @@
 package routes
 
+import data.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -18,10 +19,34 @@ fun Route.chatRoutes() {
             val requestBody = call.receiveText()
             val userMessage = Json.parseToJsonElement(requestBody).jsonObject["message"]?.jsonPrimitive?.content ?: ""
 
+            val upcomingFlights = FlightData.queryDatabase()
+                .map { it.dataClass }
+                .take(30)
+
+            val flightContext = upcomingFlights.joinToString("\n") { flight ->
+                val route = RouteData.queryDatabase(flight.routeId).firstOrNull()?.dataClass
+                val start = route?.startDestination?.let { DestinationData.getDestinationName(it) } ?: "Unknown"
+                val end = route?.endDestination?.let { DestinationData.getDestinationName(it) } ?: "Unknown"
+
+                val durationMins = route?.let { RouteData.getDurationMinutes(it.id) } ?: 0L
+                val price = "%.2f".format((durationMins * 50L) / 100.0)
+
+                "Flight from $start to $end on ${flight.date} at ${flight.time}. Estimated base price: £$price."
+            }
+
             val apiKey = "AIzaSyAXdJc6G5jfV1WKYJnh-2590sPqhnGHySQ"
             val url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey"
 
-            val promptText = "You are an official customer support agent for SkyBridge Airways. You help users book flights, check routes like Luton to Tokyo, manage trips, and understand the loyalty rewards program. Be polite, concise, and never break character. The user says: $userMessage"
+            val promptText = """
+                You are an official customer support agent for SkyBridge Airways. 
+                You help users book flights, manage trips, and understand the loyalty rewards program. 
+                Be polite, concise, and never break character. 
+                
+                Here is the current available flight data you must use to answer questions:
+                $flightContext
+                
+                The user says: $userMessage
+            """.trimIndent()
 
             val jsonPayload = buildJsonObject {
                 put("contents", buildJsonArray {
@@ -49,7 +74,7 @@ fun Route.chatRoutes() {
 
             while (attempts < maxAttempts && !success) {
                 response = client.send(request, HttpResponse.BodyHandlers.ofString())
-                
+
                 if (response.statusCode() == 200) {
                     success = true
                 } else if (response.statusCode() == 503) {

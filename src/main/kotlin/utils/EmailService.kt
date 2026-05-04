@@ -86,5 +86,28 @@ object EmailService {
 
         Transport.send(message)
     }
-    
+
+    fun sendRewardConfirmation(to: String, rewardName: String) {
+        val props = Properties().apply {
+            put("mail.smtp.auth", "true")
+            put("mail.smtp.starttls.enable", "true")
+            put("mail.smtp.host", "smtp.gmail.com")
+            put("mail.smtp.port", "587")
+        }
+
+        val session = Session.getInstance(props, object : Authenticator() {
+            override fun getPasswordAuthentication(): PasswordAuthentication {
+                return PasswordAuthentication(FROM_EMAIL, APP_PASSWORD)
+            }
+        })
+
+        val message = MimeMessage(session).apply {
+            setFrom(InternetAddress(FROM_EMAIL))
+            setRecipients(Message.RecipientType.TO, InternetAddress.parse(to))
+            subject = "Your Reward: $rewardName"
+            setText("Thank you for your loyalty!\n\nYou have successfully redeemed your points for: $rewardName.\nThis reward has been added to your account and is now available for use on your next journey.")
+        }
+
+        Transport.send(message)
+    }
 }

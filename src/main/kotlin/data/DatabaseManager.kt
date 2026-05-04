@@ -75,6 +75,7 @@ object DatabaseManager {
             PlaneData.EMPTY,
             PlaneModelData.EMPTY,
             PlaneSeatData.EMPTY,
+            RedeemedRewardData.EMPTY,
             RemainingSeatData.EMPTY,
             RouteData.EMPTY,
             SeatData.EMPTY,
