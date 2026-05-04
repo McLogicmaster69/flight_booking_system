@@ -52,6 +52,43 @@
         {% endfor %}
     {% endfor %}
 
+    {% if selectedRewards is not empty %}
+        <div class="card">
+            <h3>Selected Loyalty Rewards</h3>
+
+            {% for reward in selectedRewards %}
+                <p>
+                    {{ reward.name }}
+                    {% if reward.quantity > 1 %}
+                        × {{ reward.quantity }}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if upgradeCount > 0 %}
+        <div class="card">
+            <h3>Free Upgrade Assignment</h3>
+            <p>Select which passenger ticket should receive each free upgrade.</p>
+
+            {% for u in 1..upgradeCount %}
+                <select class="general-input" name="upgradePassenger{{ u }}" required>
+                    <option value="">Choose passenger for upgrade {{ u }}</option>
+                    {% for i in 1..tickets %}
+                        <option value="{{ i }}">Passenger {{ i }}</option>
+                    {% endfor %}
+                </select>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div style="display:none;">
+        {% for reward in selectedRewards %}
+            <input type="hidden" name="reward_{{ reward.key }}" value="{{ reward.quantity }}">
+        {% endfor %}
+    </div>
+
     <div id="checkout-error" style="color: red;"></div>
     <button type="submit">Proceed To Payment</button>
 
@@ -100,6 +137,45 @@ document.querySelectorAll(".class-select").forEach(classSelect => {
         seatSelect.value = "";
     });
 });
+</script>
+
+<script>
+const firstClassId = "1";
+
+function getUpgradePassengers() {
+    return Array.from(document.querySelectorAll('select[name^="upgradePassenger"]'))
+        .map(select => select.value)
+        .filter(value => value !== "");
+}
+
+function enforceUpgradeRules() {
+    const upgradePassengers = getUpgradePassengers();
+
+    document.querySelectorAll(".class-select").forEach(select => {
+        const passenger = select.getAttribute("data-passenger");
+        const firstClassOption = Array.from(select.options)
+            .find(option => option.value === firstClassId);
+
+        if (!firstClassOption) return;
+
+        if (upgradePassengers.includes(passenger)) {
+            firstClassOption.disabled = true;
+
+            if (select.value === firstClassId) {
+                select.value = "";
+                select.dispatchEvent(new Event("change"));
+            }
+        } else {
+            firstClassOption.disabled = false;
+        }
+    });
+}
+
+document.querySelectorAll('select[name^="upgradePassenger"]').forEach(select => {
+    select.addEventListener("change", enforceUpgradeRules);
+});
+
+enforceUpgradeRules();
 </script>
 
 {% endblock %}

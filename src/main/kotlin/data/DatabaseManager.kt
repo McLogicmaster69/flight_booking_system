@@ -287,7 +287,7 @@ object DatabaseManager {
             firstName = "Admin",
             lastName = "User",
             verifiedAccount = true,
-            loyalityPoints = 0,
+            loyaltyPoints = 0,
             loginId = loginId
         ).insertIntoDatabase()
 

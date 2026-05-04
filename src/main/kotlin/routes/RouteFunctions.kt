@@ -46,7 +46,7 @@ fun ApplicationCall.createUserState(logged_state : LoggedInState) : UserSession?
     return UserSession(
         user.firstName ?: "",
         user.lastName ?: "",
-        user.loyalityPoints ?: 0
+        user.loyaltyPoints ?: 0
     )
 }
 

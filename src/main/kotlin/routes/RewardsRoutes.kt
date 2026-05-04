@@ -13,19 +13,33 @@ import utils.timed
 import auth.*
 import utils.EmailService
 
-data class RewardTier(val name: String, val cost: Int)
+data class RewardTier(
+    val key: String,
+    val name: String,
+    val cost: Int,
+    val supportsQuantity: Boolean = false
+)
+
+data class SelectedReward(
+    val key: String,
+    val name: String,
+    val cost: Int,
+    val quantity: Int = 1
+)
 
 val REWARD_TIERS = listOf(
-    RewardTier("Lounge Access Voucher", 5000),
-    RewardTier("Priority Boarding", 10000),
-    RewardTier("Free Checked Bag", 15000),
-    RewardTier("Free Flight Upgrade", 50000)
+    RewardTier("lounge", "Lounge Access Voucher", 5000),
+    RewardTier("priority", "Priority Boarding", 10000),
+    RewardTier("bag", "Free Checked Bag", 15000, true),
+    RewardTier("upgrade", "Free Flight Upgrade", 30000, true),
+    RewardTier("discount15", "15% Off Next Purchase", 40000)
 )
+
+val SELECTED_REWARDS_BY_USER = mutableMapOf<String, List<SelectedReward>>()
 
 fun Route.rewardsRoutes() {
     get("/rewards") { call.handleRewardsLoad() }
-    post("/rewards/redeem") { call.handleRewardRedeem() }
-
+    post("/rewards/redeem") { call.handleRewardsRedeem() }
     get("/test/add-points") { call.handleTestAddPoints() }
 }
 
@@ -45,12 +59,13 @@ private suspend fun ApplicationCall.handleRewardsLoad() {
 
         val user = userQuery.first().dataClass
 
-        val availableRewards = REWARD_TIERS.filter { it.cost <= user.loyalityPoints }
-        val upcomingRewards = REWARD_TIERS.filter { it.cost > user.loyalityPoints }
+        val availableRewards = REWARD_TIERS.filter { it.cost <= user.loyaltyPoints }
+        val upcomingRewards = REWARD_TIERS.filter { it.cost > user.loyaltyPoints }
 
         val model = mapOf(
             "title" to "Loyalty Rewards",
             "inNav" to true,
+            "user" to user,
             "availableRewards" to availableRewards,
             "upcomingRewards" to upcomingRewards
         )
@@ -63,64 +78,63 @@ private suspend fun ApplicationCall.handleRewardsLoad() {
     }
 }
 
-private suspend fun ApplicationCall.handleRewardRedeem() {
+private suspend fun ApplicationCall.handleRewardsRedeem() {
     timed("T1_rewards_redeem", jsMode()) {
-        val logged_state : LoggedInState = loggedIn()
-        if (!logged_state.logged_in || logged_state.session == null) {
-            respondText("<div class='error'>Not logged in</div>", ContentType.Text.Html)
+        val loggedState = loggedIn()
+
+        if (!loggedState.logged_in || loggedState.session == null) {
+            respondRedirect("/login")
+            return@timed
+        }
+
+        val user = UserData.queryByToken(loggedState.session.token)
+            .firstOrNull()
+            ?.dataClass
+
+        if (user == null) {
+            respondRedirect("/login")
             return@timed
         }
 
         val params = receiveParameters()
-        val cost = params["cost"]?.toIntOrNull() ?: 0
-        val name = params["name"] ?: "Reward"
+        val selected = mutableListOf<SelectedReward>()
 
-        if (cost <= 0) {
-            respondText("<div class='error'>Invalid reward</div>", ContentType.Text.Html)
+        for (tier in REWARD_TIERS) {
+            if (params["reward_${tier.key}"] == "on") {
+                val quantity = if (tier.supportsQuantity) {
+                    params["quantity_${tier.key}"]?.toIntOrNull()?.coerceAtLeast(1) ?: 1
+                } else {
+                    1
+                }
+
+                selected.add(
+                    SelectedReward(
+                        key = tier.key,
+                        name = tier.name,
+                        cost = tier.cost,
+                        quantity = quantity
+                    )
+                )
+            }
+        }
+
+        val totalCost = selected.sumOf { it.cost * it.quantity }
+
+        if (selected.isEmpty()) {
+            respondText("Please select at least one reward.", status = HttpStatusCode.BadRequest)
             return@timed
         }
 
-        val userQuery = UserData.queryByToken(logged_state.session.token)
-        if (userQuery.isEmpty()) {
-            respondText("<div class='error'>User not found</div>", ContentType.Text.Html)
+        if (totalCost > user.loyaltyPoints) {
+            respondText("You do not have enough points for those rewards.", status = HttpStatusCode.BadRequest)
             return@timed
         }
 
-        val user = userQuery.first().dataClass
+        SELECTED_REWARDS_BY_USER[loggedState.session.token] = selected
 
-        if (user.loyalityPoints < cost) {
-            respondText("<div class='error'>Not enough points</div>", ContentType.Text.Html)
-            return@timed
-        }
-
-        user.awardPoints(-cost)
-
-        RedeemedRewardData(
-            userId = user.id,
-            rewardName = name,
-            redeemedAt = java.sql.Timestamp(System.currentTimeMillis())
-        ).insertIntoDatabase()
-
-
-        val loginQuery = LoginData.queryDatabase(
-            whereArgs = WhereArgs("id = ?", listOf(user.loginId))
-        )
-        if (loginQuery.isNotEmpty()) {
-            val userEmail = loginQuery.first().dataClass.email
-            EmailService.sendRewardConfirmation(userEmail, name)
-        }
-
-        val successMessage = """
-            <div class='success' style='color: var(--success); font-weight: bold; margin-bottom: 15px; padding: 10px; border: 1px solid var(--success); border-radius: 6px; background-color: #edf9f0;'>
-                Successfully redeemed $name! It has been added to your account and a confirmation email was sent.
-            </div>
-            <script>setTimeout(() => window.location.reload(), 2000);</script>
-        """.trimIndent()
-
-        respondText(successMessage, ContentType.Text.Html)
+        respondRedirect("/book")
     }
 }
-
 
 private suspend fun ApplicationCall.handleTestAddPoints() {
     timed("T2_test_add_points", jsMode()) {
@@ -132,7 +146,7 @@ private suspend fun ApplicationCall.handleTestAddPoints() {
                 val amount = request.queryParameters["amount"]?.toIntOrNull() ?: 5000
                 user.awardPoints(amount)
 
-                respondText("Success! Added $amount points. Your new balance is: ${user.loyalityPoints}", ContentType.Text.Plain)
+                respondText("Success! Added $amount points. Your new balance is: ${user.loyaltyPoints}", ContentType.Text.Plain)
                 return@timed
             }
         }

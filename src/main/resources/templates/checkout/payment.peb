@@ -133,6 +133,10 @@ form.addEventListener("submit", async (e) => {
                     typeId{{ selection.passenger }}_{{ selection.leg }}: "{{ selection.typeId }}",
                     {% endfor %}
 
+                    {% for u in 1..upgradeCount %}
+                    upgradePassenger{{ u }}: "{{ upgradePassengers[u - 1] }}",
+                    {% endfor %}
+
                 })
             });
 

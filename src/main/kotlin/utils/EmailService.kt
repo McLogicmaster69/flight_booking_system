@@ -40,7 +40,8 @@ object EmailService {
         startLocation: String,
         destination: String,
         dateTime: String,
-        passengers: List<String>
+        passengers: List<String>,
+        rewards: List<String> = emptyList()
     ) {
 
         val props = Properties().apply {
@@ -57,6 +58,7 @@ object EmailService {
         })
 
         val passengerList = passengers.joinToString("\n") { "    - $it" }
+        val rewardList = rewards.joinToString("\n") { "    - $it" }
 
         val body = buildString {
             appendLine("Booking Confirmation")
@@ -72,6 +74,13 @@ object EmailService {
             appendLine("Passengers:")
             appendLine(passengerList)
             appendLine()
+
+            if (rewards.isNotEmpty()) {
+                appendLine("Loyalty Rewards:")
+                appendLine(rewardList)
+                appendLine()
+            }
+
             appendLine("Please keep this reference for check-in.")
             appendLine()
             append("Thank you for booking with us.")
@@ -82,30 +91,6 @@ object EmailService {
             setRecipients(Message.RecipientType.TO, InternetAddress.parse(to))
             subject = "Booking Confirmation - Ref $reference"
             setText(body)
-        }
-
-        Transport.send(message)
-    }
-
-    fun sendRewardConfirmation(to: String, rewardName: String) {
-        val props = Properties().apply {
-            put("mail.smtp.auth", "true")
-            put("mail.smtp.starttls.enable", "true")
-            put("mail.smtp.host", "smtp.gmail.com")
-            put("mail.smtp.port", "587")
-        }
-
-        val session = Session.getInstance(props, object : Authenticator() {
-            override fun getPasswordAuthentication(): PasswordAuthentication {
-                return PasswordAuthentication(FROM_EMAIL, APP_PASSWORD)
-            }
-        })
-
-        val message = MimeMessage(session).apply {
-            setFrom(InternetAddress(FROM_EMAIL))
-            setRecipients(Message.RecipientType.TO, InternetAddress.parse(to))
-            subject = "Your Reward: $rewardName"
-            setText("Thank you for your loyalty!\n\nYou have successfully redeemed your points for: $rewardName.\nThis reward has been added to your account and is now available for use on your next journey.")
         }
 
         Transport.send(message)
