@@ -50,6 +50,17 @@ data class FlightData(
             FlightData(
                 routeId = RouteData.getRouteId(
                     DestinationArgs(
+                        DestinationData.getDestinationId("Tokyo"),
+                        DestinationData.getDestinationId("Luton")
+                    )
+                ),
+                planeId = PlaneData.getPlaneId("Boeing 737-800"),
+                date = LocalDate.parse("2026-05-20"),
+                time = LocalTime.parse("12:00")
+            ),
+            FlightData(
+                routeId = RouteData.getRouteId(
+                    DestinationArgs(
                         DestinationData.getDestinationId("Luton"),
                         DestinationData.getDestinationId("Berlin")
                     )

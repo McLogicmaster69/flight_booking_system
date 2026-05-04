@@ -38,7 +38,7 @@ fun getResultHTML(result : JourneyFlightTimePath, index : Int) : String {
             <div class="flight-result-info">
                 <p>Duration: ${representAsTime(result.totalMinutes)}</p>
                 <p>Price from: £${getJourneyPriceDisplay(result)}</p>
-                <p>${if (result.locationNames.size <= 2) "Direct" else "Layovers: ${result.locationNames.size - 2}"}</p>
+                <p>${result.flightIds.size} flight${if (result.flightIds.size == 1) "" else "s"}</p>
             </div>
         </a>
     </div>
@@ -101,12 +101,9 @@ private suspend fun ApplicationCall.handleSearchResults() {
         val end = parameters["to"].orEmpty().trim()
         val time = parameters["depart"].orEmpty().trim()
         val maxLayovers = parameters["maxLayovers"].orEmpty().trim()
-        val date = if (time.contains("/")) {
-            val parts = time.split("/")
-            LocalDate.of(parts[2].toInt(), parts[1].toInt(), parts[0].toInt())
-        } else {
-            LocalDate.parse(time)
-        }
+        val tripType = parameters["tripType"].orEmpty().trim()
+        val returnTime = parameters["returnDate"].orEmpty().trim()
+        val date = parseSearchDate(time)
         val layovers = when(maxLayovers) {
             "Direct Only" -> 0
             "1" -> 1
@@ -127,12 +124,30 @@ private suspend fun ApplicationCall.handleSearchResults() {
 
         val sortBy = parameters["sortBy"].orEmpty().trim()
 
-        var results: List<JourneyFlightTimePath> = FlightData.getJourneyFlight(
-            start,
-            end,
-            date,
-            layovers
-        )
+        var results: List<JourneyFlightTimePath> =
+            if (tripType == "roundTrip") {
+                if (returnTime.isBlank()) {
+                    respondText("<h4>Please choose a return date</h4>", ContentType.Text.Html)
+                    return@timed
+                }
+
+                val returnDate = parseSearchDate(returnTime)
+
+                val outbound = FlightData.getJourneyFlight(start, end, date, layovers)
+                val inbound = FlightData.getJourneyFlight(end, start, returnDate, layovers)
+
+                val combined = mutableListOf<JourneyFlightTimePath>()
+
+                for (out in outbound) {
+                    for (back in inbound) {
+                        combined.add(out.combineWith(back))
+                    }
+                }
+
+                combined
+            } else {
+                FlightData.getJourneyFlight(start, end, date, layovers)
+            }
 
         if (maxDurationMinutes != null) {
             results = results.filter { it.totalMinutes <= maxDurationMinutes }
@@ -204,4 +219,24 @@ fun getJourneyPrice(path: JourneyFlightTimePath): Long {
 
 fun getJourneyPriceDisplay(path: JourneyFlightTimePath): String {
     return "%.2f".format(getJourneyPrice(path) / 100.0)
+}
+
+fun parseSearchDate(value: String): LocalDate {
+    return if (value.contains("/")) {
+        val parts = value.split("/")
+        LocalDate.of(parts[2].toInt(), parts[1].toInt(), parts[0].toInt())
+    } else {
+        LocalDate.parse(value)
+    }
+}
+
+fun JourneyFlightTimePath.combineWith(other: JourneyFlightTimePath): JourneyFlightTimePath {
+    return JourneyFlightTimePath(
+        destinationIds = this.destinationIds + other.destinationIds.drop(1),
+        locationNames = this.locationNames + other.locationNames.drop(1),
+        flightIds = this.flightIds + other.flightIds,
+        localDateTimes = this.localDateTimes + other.localDateTimes,
+        timezones = this.timezones + other.timezones,
+        totalMinutes = this.totalMinutes + other.totalMinutes
+    )
 }
