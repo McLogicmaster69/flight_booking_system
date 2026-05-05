@@ -4,8 +4,8 @@ import java.time.LocalTime
 
 object RouteColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val START_DESTINATION = Column<Int>("start_destination", "INTEGER NOT NULL REFERENCES destinations(id)")
-    val END_DESTINATION = Column<Int>("end_destination", "INTEGER NOT NULL REFERENCES destinations(id)")
+    val START_DESTINATION = Column<Int>("start_destination", "INTEGER NOT NULL REFERENCES ${DestinationData.EMPTY.tableName}(id)")
+    val END_DESTINATION = Column<Int>("end_destination", "INTEGER NOT NULL REFERENCES ${DestinationData.EMPTY.tableName}(id)")
     val DURATION = Column<String>("duration", "STRING NOT NULL")
 
     val ALL = listOf(ID, START_DESTINATION, END_DESTINATION, DURATION)
@@ -23,7 +23,13 @@ data class RouteData(
 
     override val tableName = "routes"
     override val tableColumns = RouteColumns.ALL
-    override val tableAdditionalSQL = "UNIQUE (start_destination, end_destination)"
+    override val tableAdditionalSQL = "UNIQUE (${RouteColumns.START_DESTINATION.name}, ${RouteColumns.END_DESTINATION.name})"
+
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_routes_start_destination", RouteColumns.START_DESTINATION.name),
+        IndexArgs("inx_routes_end_destination", RouteColumns.END_DESTINATION.name),
+        IndexArgs("inx_routes_start_destination_end_destination", "${RouteColumns.START_DESTINATION.name}, ${RouteColumns.END_DESTINATION.name}")
+    )
 
     override val initialRows : List<RouteData>
         get() = listOf(
@@ -45,6 +51,16 @@ data class RouteData(
             RouteData(
                 startDestination = DestinationData.getDestinationId("Berlin"),
                 endDestination = DestinationData.getDestinationId("Tokyo"),
+                duration = LocalTime.parse("06:00")
+            ),
+            RouteData(
+                startDestination = DestinationData.getDestinationId("Berlin"),
+                endDestination = DestinationData.getDestinationId("Luton"),
+                duration = LocalTime.parse("02:00")
+            ),
+            RouteData(
+                startDestination = DestinationData.getDestinationId("Tokyo"),
+                endDestination = DestinationData.getDestinationId("Berlin"),
                 duration = LocalTime.parse("06:00")
             )
         )
@@ -80,9 +96,11 @@ data class RouteData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null        
         ) : List<QueryResult<RouteData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs)
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
         }
 
         fun updateTable (
@@ -159,6 +177,8 @@ data class RouteData(
                 joinArgs
             )
         }
+
+        fun queryDatabase(id : Int) : List<QueryResult<RouteData>> = queryDatabase(whereArgs = WhereArgs("${RouteColumns.ID.name} = ?", listOf(id)))
 
         fun getPathByLayovers (
             destinationArgs : DestinationArgs,
@@ -324,8 +344,6 @@ data class RouteData(
                 layovers
             )
         }
-
-        fun queryDatabase(id : Int) : List<QueryResult<RouteData>> = queryDatabase(whereArgs = WhereArgs("${RouteColumns.ID.name} = ?", listOf(id)))
 
         fun getDuration(id : Int) : LocalTime {
             val query = queryDatabase(id)

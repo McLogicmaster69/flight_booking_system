@@ -4,8 +4,8 @@ import java.time.LocalTime
 
 object PlaneSeatColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val PLANE_MODEL_ID = Column<Int>("plane_model_id", "INTEGER NOT NULL REFERENCES plane_models(id)")
-    val CLASS_ID = Column<Int>("class_id", "INTEGER NOT NULL REFERENCES classes(id)")
+    val PLANE_MODEL_ID = Column<Int>("plane_model_id", "INTEGER NOT NULL REFERENCES ${PlaneModelData.EMPTY.tableName}(id)")
+    val CLASS_ID = Column<Int>("class_id", "INTEGER NOT NULL REFERENCES ${ClassData.EMPTY.tableName}(id)")
     val ROW = Column<Int>("amount", "INTEGER NOT NULL")
     val LETTER = Column<String>("letter", "STRING NOT NULL")
 
@@ -25,7 +25,11 @@ data class PlaneSeatData(
 
     override val tableName = "plane_seats"
     override val tableColumns = PlaneSeatColumns.ALL
-    override val tableAdditionalSQL = "UNIQUE (plane_model_id, class_id)"
+    override val tableAdditionalSQL = "UNIQUE (${PlaneSeatColumns.PLANE_MODEL_ID.name}, ${PlaneSeatColumns.CLASS_ID.name})"
+
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_plane_seats_plane_model_id", PlaneSeatColumns.PLANE_MODEL_ID.name)
+    )
 
     override val initialRows : List<PlaneSeatData>
         get() = listOf(
@@ -64,9 +68,11 @@ data class PlaneSeatData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null        
         ) : List<QueryResult<PlaneSeatData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs)
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
         }
 
         fun updateTable (

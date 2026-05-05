@@ -20,6 +20,10 @@ data class LoginData(
     override val tableName = "login_info"
     override val tableColumns = LoginColumns.ALL
 
+    override val initialRows: List<LoginData>
+        get() = listOf(
+        )
+
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
             LoginColumns.EMAIL to email,
@@ -43,8 +47,21 @@ data class LoginData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null) : List<QueryResult<LoginData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs)
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null
+        ) : List<QueryResult<LoginData>> {
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
+        }
+
+        fun getLoginData (email : String) : Int {
+            val query : List<QueryResult<LoginData>> = queryDatabase(whereArgs = WhereArgs("${LoginColumns.EMAIL.name} = ?", listOf(email)))
+            if (query.isEmpty()) {
+                println("Could not find log in for $email")
+                return -1
+            }
+
+            return query.first().dataClass.id
         }
 
         fun updateTable (

@@ -2,9 +2,9 @@ package data
 
 object DestinationColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val COUNTRY_ID = Column<Int>("country_id", "INTEGER NOT NULL REFERENCES countries(id)")
+    val COUNTRY_ID = Column<Int>("country_id", "INTEGER NOT NULL REFERENCES ${CountryData.EMPTY.tableName}(id)")
     val CITY_NAME = Column<String>("city_name", "STRING NOT NULL")
-    val TIMEZONE_ID = Column<Int>("timezone_id", "INTEGER NOT NULL REFERENCES timezones(id)")
+    val TIMEZONE_ID = Column<Int>("timezone_id", "INTEGER NOT NULL REFERENCES ${TimezoneData.EMPTY.tableName}(id)")
 
     val ALL = listOf(ID, COUNTRY_ID, CITY_NAME, TIMEZONE_ID)
     val COLUMN_NAMES = ALL.map { it.name }
@@ -21,7 +21,12 @@ data class DestinationData(
 
     override val tableName = "destinations"
     override val tableColumns = DestinationColumns.ALL
-    override val tableAdditionalSQL = "UNIQUE (country_id, city_name)"
+    override val tableAdditionalSQL = "UNIQUE (${DestinationColumns.COUNTRY_ID.name}, ${DestinationColumns.CITY_NAME.name})"
+
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_destinations_country_id", DestinationColumns.COUNTRY_ID.name),
+        IndexArgs("inx_destinations_timezone_id", DestinationColumns.TIMEZONE_ID.name)
+    )
 
     override val initialRows : List<DestinationData>
         get() = listOf(
@@ -71,8 +76,12 @@ data class DestinationData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null
-        ) : List<QueryResult<DestinationData>> = EMPTY.queryDatabase(joinArgs, whereArgs)
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null        
+        ) : List<QueryResult<DestinationData>> {
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
+        }
 
         fun updateTable (
             values : Map<Column<*>, Any?>,

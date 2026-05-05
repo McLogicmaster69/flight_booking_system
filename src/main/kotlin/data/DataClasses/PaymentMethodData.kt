@@ -2,7 +2,7 @@ package data
 
 object PaymentMethodColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val USER_ID = Column<Int>("user_id", "INTEGER NOT NULL REFERENCES users(id)")
+    val USER_ID = Column<Int>("user_id", "INTEGER NOT NULL REFERENCES ${UserData.EMPTY.tableName}(id)")
     val PAYMENT_TOKEN = Column<String?>("payment_token", "VARCHAR")
     val LAST_FOUR = Column<String?>("last_ four", "VARCHAR")
     val BRAND = Column<String?>("brand", "VARCHAR")
@@ -27,6 +27,10 @@ data class PaymentMethodData(
 
     override val tableName = "payment_methods"
     override val tableColumns = PaymentMethodColumns.ALL
+
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_payment_methods_user_id", PaymentMethodColumns.USER_ID.name)
+    )
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
@@ -59,8 +63,11 @@ data class PaymentMethodData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null) : List<QueryResult<PaymentMethodData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs)
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null
+        ) : List<QueryResult<PaymentMethodData>> {
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
         }
 
         fun updateTable (

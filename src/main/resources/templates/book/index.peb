@@ -5,12 +5,16 @@
 
 {% block content %}
 
-<form id="homepageSearchForm" hx-post="/book-search" hx-target="#flight-results" hx-swap="innerHTML" hx-trigger="submit">
+<div style="margin-bottom: 24px;">
+  <h2 class="page-title" style="margin-bottom: 8px;">Book a Flight</h2>
+  <p class="page-subtitle">Search for available routes, choose dates, and filter your preferences.</p>
+</div>
 
-  <!-- Filters column -->
-  <aside style="flex: 0 0 320px;">
-    <div>
-      <h2>Filters</h2>
+<form id="homepageSearchForm" hx-post="/book-search" hx-target="#flight-results" hx-swap="innerHTML" hx-trigger="submit" style="display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start;">
+
+  <aside style="flex: 1 1 250px; min-width: 250px;">
+    <div class="card">
+      <h3>Filters</h3>
 
       <label for="tripType">Trip Type</label>
       <select class="general-input" id="tripType" name="tripType">
@@ -27,40 +31,57 @@
       </select>
 
       <label for="maxDuration">Max Duration (Hours)</label>
-      <input class="general-input" id="maxDuration" name="maxDuration" type="text" placeholder="e.g. 15">
+      <input class="general-input" id="maxDuration" name="maxDuration" type="number" placeholder="e.g. 15">
 
       <label for="priceRange">Max Price</label>
       <input class="general-input" id="priceRange" name="priceRange" type="range" min="0" max="100" value="100">
-      <small>0 = £0, 100 = no limit</small>
+      <small class="muted" style="display: block; margin-bottom: 12px;">0 = £0, 100 = no limit</small>
 
       <label for="sortBy">Sort By</label>
-      <select class="general-input" id="sortBy" name="sortBy">
+      <select class="general-input" id="sortBy" name="sortBy" style="margin-bottom: 0;">
         <option>Fastest to Slowest</option>
         <option>Cheapest to Most Expensive</option>
       </select>
     </div>
   </aside>
 
-  <!-- Results column -->
-  <section>
-    <div>
-      <h2 class="homepage-search-title">Find Your Flight</h2>
-      <p class="homepage-search-subtitle">Search for available routes and choose a valid departure date.</p>
+  <section style="flex: 3 1 500px; min-width: 300px;">
+    <div class="card">
+      <h3>Search Details</h3>
 
-      <div class="homepage-field">
-        <label for="from">From</label>
-        <input class="general-input-input" id="from" name="from" type="text" list="destinationsList"
-          value="{{ fromValue | default('') }}" placeholder="From (Origin)" aria-label="From (Origin)"
-          aria-describedby="fromError" required>
-        <small id="fromError" class="homepage-field-error" aria-live="polite"></small>
-      </div>
+      <div class="grid">
+        <div class="col-6">
+          <label for="from">From</label>
+          <input class="general-input" id="from" name="from" type="text" list="destinationsList"
+            value="{{ fromValue | default('') }}" placeholder="From (Origin)" aria-label="From (Origin)"
+            aria-describedby="fromError" required>
+          <small id="fromError" class="error" aria-live="polite"></small>
+        </div>
 
-      <div class="homepage-field">
-        <label for="to">To</label>
-        <input class="general-input-input" id="to" name="to" type="text" list="destinationsList"
-          value="{{ toValue | default('') }}" placeholder="To (Destination)" aria-label="To (Destination)"
-          aria-describedby="toError" required>
-        <small id="toError" class="homepage-field-error" aria-live="polite"></small>
+        <div class="col-6">
+          <label for="to">To</label>
+          <input class="general-input" id="to" name="to" type="text" list="destinationsList"
+            value="{{ toValue | default('') }}" placeholder="To (Destination)" aria-label="To (Destination)"
+            aria-describedby="toError" required>
+          <small id="toError" class="error" aria-live="polite"></small>
+        </div>
+
+        <div class="col-6">
+          <label for="depart">Departure date</label>
+          <input class="general-input" id="depart" name="depart" type="date" value="{{ departValue | default('') }}"
+            aria-label="Depart date" aria-describedby="departError" required>
+          <small id="departError" class="error" aria-live="polite"></small>
+        </div>
+
+        <div class="col-6" id="returnDateField">
+          <label for="returnDate">Return date</label>
+          <input class="general-input"
+                id="returnDate"
+                name="returnDate"
+                type="date"
+                aria-describedby="returnDateError">
+          <small id="returnDateError" class="error" aria-live="polite"></small>
+        </div>
       </div>
 
       <div class="homepage-field">
@@ -90,6 +111,13 @@
         <option value="{{ d }}"></option>
         {% endfor %}
       </datalist>
+    </div>
+
+    <h3 style="margin-top: 32px;">Available Flights</h3>
+    <div id="flight-results">
+      <div class="card" style="text-align: center; padding: 40px 20px;">
+        <p class="muted" style="margin: 0;">Search above to get results</p>
+      </div>
     </div>
   </section>
 
@@ -239,11 +267,5 @@
 
 })();
 </script>
-
-<h3>Available Flights</h3>
-<br>
-<div id="flight-results">
-  <p>Search above to get results</p>
-</div>
 
 {% endblock %}

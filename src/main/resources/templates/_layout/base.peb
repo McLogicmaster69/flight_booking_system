@@ -82,8 +82,8 @@
 
         {% if (user.verifiedAccount == false) and logged_in %}
         <form method="post" action="/send-verification" style="display:inline;">
-          <button type="submit" {% if activePage=='verify' %}is-active{% endif %}>
-            Verify
+          <button type="submit" class="btn btn-secondary" style="height:32px; min-height:32px; padding: 0 12px; font-size:12px;">
+            Verify Email
           </button>
         </form>
         {% endif %}
@@ -94,7 +94,7 @@
         <a href="/login" class="{% if activePage == 'auth' %}is-active{% endif %}">Login</a>
         {% endif %}
 
-        <span>{{ language | upper }}</span>
+        <span style="font-weight: 700; color: #9ca3af;">{{ language | upper }}</span>
 
       </nav>
 
@@ -131,7 +131,7 @@
         </div>
       </div>
 
-      <div class="header-right">
+      <div class="header-right" style="font-weight: 700; color: var(--aa-blue);">
         {{ headerRightText }}
       </div>
 

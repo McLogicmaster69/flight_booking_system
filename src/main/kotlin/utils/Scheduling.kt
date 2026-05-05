@@ -1,15 +1,25 @@
 package utils
 
 import data.FlightSearchData
+import data.ScheduleData
 import java.time.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-fun initialCleanup() {
+fun cleanup () {
     FlightSearchData.deleteOld()
 }
 
-fun scheduleDailyCleanup() {
+fun scheduleFlights() {
+    ScheduleData.updateAllFlights()
+}
+
+fun initialTasks() {
+    cleanup()
+    scheduleFlights()
+}
+
+fun scheduleDailyTasks() {
     val scheduler = Executors.newSingleThreadScheduledExecutor()
 
     val now = ZonedDateTime.now()
@@ -29,11 +39,19 @@ fun scheduleDailyCleanup() {
         {
             println("Cleaning database")
             try {
-                FlightSearchData.deleteOld()
+                cleanup()
             } catch (e: Exception) {
                 e.printStackTrace()
             }
             println("Cleaning complete")
+
+            println("Scheduling flights")
+            try {
+                scheduleFlights()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            println("Scheduling complete")
         },
         initialDelay,
         period,

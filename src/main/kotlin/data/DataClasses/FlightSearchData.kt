@@ -7,8 +7,8 @@ import java.time.Instant
 object FlightSearchColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY")
     val TOKEN = Column<String>("token", "VARCHAR NOT NULL UNIQUE")
-    val START_DESTINATION = Column<Int>("start_destination", "INTEGER NOT NULL REFERENCES destinations(id)")
-    val END_DESTINATION = Column<Int>("end_destination", "INTEGER NOT NULL REFERENCES destinations(id)")
+    val START_DESTINATION = Column<Int>("start_destination", "INTEGER NOT NULL REFERENCES ${DestinationData.EMPTY.tableName}(id)")
+    val END_DESTINATION = Column<Int>("end_destination", "INTEGER NOT NULL REFERENCES ${DestinationData.EMPTY.tableName}(id)")
     val DATE = Column<String>("date", "STRING NOT NULL")
     val CREATED_AT = Column<Timestamp>("created_at", "TIMESTAMP NOT NULL")
 
@@ -29,6 +29,11 @@ data class FlightSearchData(
 
     override val tableName = "flight_searches"
     override val tableColumns = FlightSearchColumns.ALL
+
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_flight_searches_start_destination", FlightSearchColumns.START_DESTINATION.name),
+        IndexArgs("inx_flight_searches_end_destination", FlightSearchColumns.END_DESTINATION.name)
+    )
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
@@ -68,9 +73,11 @@ data class FlightSearchData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null        
         ) : List<QueryResult<FlightSearchData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs)
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
         }
 
         fun queryDatabase (

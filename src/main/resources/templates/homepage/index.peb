@@ -1,80 +1,109 @@
-{% extends "_layout/base.peb" %}
+    {% extends "_layout/base.peb" %}
 
-{% set activePage = 'home' %}
-{% set inNav = true %}
+        {% set activePage = 'home' %}
+        {% set inNav = true %}
 
-{% block content %}
+    {% block content %}
 
 <section aria-label="Flight search" class="homepage-hero">
-    <div class="homepage-hero-inner">
-        <div class="homepage-search-card">
-            <h2 class="homepage-search-title">Where to next?</h2>
-            <p class="homepage-search-subtitle">Search for available routes and choose a valid departure date.</p>
+    <div class="homepage-search-card">
+        <h2 class="homepage-search-title">Where to next?</h2>
+        <p class="homepage-search-subtitle">Search for available routes and choose a valid departure date.</p>
 
-            <form id="homepageSearchForm" method="get" action="/book" aria-label="Search flights" class="homepage-search-form" novalidate>
-                <div class="homepage-field">
-                    <label for="from">From</label>
-                    <input
-                        class="general-input-input"
-                        id="from"
-                        name="from"
-                        type="text"
-                        list="destinationsList"
-                        placeholder="From (Origin)"
-                        aria-label="From (Origin)"
-                        aria-describedby="fromError"
-                        required
-                    >
-                    <small id="fromError" class="homepage-field-error" aria-live="polite"></small>
-                </div>
+        <form id="homepageSearchForm" method="get" action="/book" aria-label="Search flights" class="homepage-search-form" novalidate>
+            <div class="homepage-field">
+                <label for="from">From</label>
+                <input
+                    class="general-input-input"
+                    id="from"
+                    name="from"
+                    type="text"
+                    list="destinationsList"
+                    placeholder="From (Origin)"
+                    aria-label="From (Origin)"
+                    aria-describedby="fromError"
+                    required
+                >
+                <small id="fromError" class="homepage-field-error" aria-live="polite"></small>
+            </div>
 
-                <div class="homepage-field">
-                    <label for="to">To</label>
-                    <input
-                        class="general-input-input"
-                        id="to"
-                        name="to"
-                        type="text"
-                        list="destinationsList"
-                        placeholder="To (Destination)"
-                        aria-label="To (Destination)"
-                        aria-describedby="toError"
-                        required
-                    >
-                    <small id="toError" class="homepage-field-error" aria-live="polite"></small>
-                </div>
+            <div class="homepage-field">
+                <label for="to">To</label>
+                <input
+                    class="general-input-input"
+                    id="to"
+                    name="to"
+                    type="text"
+                    list="destinationsList"
+                    placeholder="To (Destination)"
+                    aria-label="To (Destination)"
+                    aria-describedby="toError"
+                    required
+                >
+                <small id="toError" class="homepage-field-error" aria-live="polite"></small>
+            </div>
 
-                <div class="homepage-field">
-                    <label for="depart">Departure date</label>
-                    <input
-                        class="general-input-input"
-                        id="depart"
-                        name="depart"
-                        type="date"
-                        aria-label="Depart date"
-                        aria-describedby="departError"
-                        required
-                    >
-                    <small id="departError" class="homepage-field-error" aria-live="polite"></small>
-                </div>
+            <div class="homepage-field">
+                <label for="depart">Departure date</label>
+                <input
+                    class="general-input-input"
+                    id="depart"
+                    name="depart"
+                    type="date"
+                    aria-label="Depart date"
+                    aria-describedby="departError"
+                    required
+                >
+                <small id="departError" class="homepage-field-error" aria-live="polite"></small>
+            </div>
 
-                <div class="homepage-search-actions">
-                    <button type="submit">SEARCH FLIGHTS</button>
-                </div>
+            <div class="homepage-search-actions">
+                <!-- Invisible dummy label guarantees the button aligns exactly with the inputs regardless of flexbox quirks -->
+                <label aria-hidden="true" style="visibility: hidden; user-select: none;">&nbsp;</label>
+                <button type="submit">SEARCH FLIGHTS</button>
+            </div>
 
-                <div id="homepageFormStatus" class="homepage-form-status" aria-live="polite"></div>
-            </form>
+            <div id="homepageFormStatus" class="homepage-form-status" aria-live="polite" style="width: 100%; color: var(--danger); font-weight: 700; margin-top: 8px;"></div>
+        </form>
 
-            <datalist id="destinationsList">
-                {% for d in destinations %}
-                    <option value="{{ d }}"></option>
-                {% endfor %}
-            </datalist>
-        </div>
+        <datalist id="destinationsList">
+            {% for d in destinations %}
+                <option value="{{ d }}"></option>
+            {% endfor %}
+        </datalist>
     </div>
 </section>
 
-<section aria-label="Recommended Deals & Loyalty Rewards" style="margin-top: 34px;">
+<section aria-label="Recommended Deals & Loyalty Rewards" style="margin-top: 40px;">
+    <div class="grid">
+        <div class="col-4">
+            <div class="card" style="height: 100%; display: flex; flex-direction: column;">
+                <h3>Join SkyBridge Loyalty</h3>
+                <p class="muted">Earn points on every flight. Redeem your points for free checked bags, priority boarding, and exclusive lounge access.</p>
+                <div style="margin-top: auto;">
+                    <a href="/signup" class="btn" style="width: 100%;">Create Account</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="card" style="height: 100%; display: flex; flex-direction: column;">
+                <h3>Manage Your Journey</h3>
+                <p class="muted">Need to check your itinerary or review your selected seats? Access your bookings securely using your reference code.</p>
+                <div style="margin-top: auto;">
+                    <a href="/manage" class="btn btn-secondary" style="width: 100%;">Manage Booking</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="card" style="height: 100%; display: flex; flex-direction: column;">
+                <h3>Need Assistance?</h3>
+                <p class="muted">Have questions about baggage allowances or traveling with pets? Chat with our interactive assistant at the bottom right.</p>
+                <div style="margin-top: auto;">
+                    <a href="/help" class="btn btn-secondary" style="width: 100%;">Help Center</a>
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
 
 <script>
@@ -109,9 +138,11 @@
         if (message) {
             input.setAttribute("aria-invalid", "true");
             errorNode.textContent = message;
+            input.style.borderColor = "var(--danger)";
         } else {
             input.removeAttribute("aria-invalid");
             errorNode.textContent = "";
+            input.style.borderColor = "";
         }
     }
 

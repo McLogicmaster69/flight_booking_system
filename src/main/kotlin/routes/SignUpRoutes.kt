@@ -41,7 +41,6 @@ private suspend fun ApplicationCall.handleSignUpLoad() {
 
 private suspend fun ApplicationCall.handleSignUpPost() {
     timed("T1_sign_up_post", jsMode()) {
-        val pebble = getEngine()
         val params = receiveParameters()
 
         val firstname = params["signupFirstName"]

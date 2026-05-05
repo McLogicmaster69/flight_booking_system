@@ -11,21 +11,24 @@ import io.pebbletemplates.pebble.PebbleEngine
 import routes.*
 import auth.*
 import data.*
-import utils.scheduleDailyCleanup
-import utils.initialCleanup
+import results.*
+import utils.scheduleDailyTasks
+import utils.initialTasks
 import utils.SessionData
 import java.io.StringWriter
 import io.ktor.util.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
+import java.time.LocalDate
+import java.time.LocalTime
 
 fun main() {
     val port = System.getenv("PORT")?.toIntOrNull() ?: 8080
     val host = "0.0.0.0"
 
     DatabaseManager.createTables()
-    initialCleanup()
-    scheduleDailyCleanup()
+    initialTasks()
+    scheduleDailyTasks()
 
     embeddedServer(Netty, port = port, host = host) {
         configureLogging()
