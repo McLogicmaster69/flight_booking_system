@@ -6,13 +6,130 @@
 {% block content %}
 
 <br>
-<div style="text-align:center; margin-bottom: 18px;">
+<div style="text-align:center; margin-bottom: 24px;">
   <div style="color: var(--muted);"><strong>Your Current Balance</strong></div>
-  <h1>{{ user.loyalityPoints }}</h1>
+  <h1 style="margin: 5px 0; font-size: 3rem; color: var(--aa-blue);">{{ user.loyaltyPoints }} pts</h1>
 </div>
 
-<h3>Redeemable Now</h3>
+<div id="rewards-status" aria-live="polite"></div>
 
-<h3>Almost There (Within 1000 pts)</h3>
+<div class="grid">
+    <section class="col-6">
+        <h3>Redeemable Now</h3>
+        
+        <form action="/rewards/redeem" method="post" onsubmit="return validateRewardSelection()">
+
+            {% for reward in availableRewards %}
+                <div class="card" style="margin-bottom: 14px;">
+                    <label>
+                        <input
+                            type="checkbox"
+                            class="reward-checkbox"
+                            name="reward_{{ reward.key }}"
+                            data-cost="{{ reward.cost }}"
+                        >
+                        <strong>{{ reward.name }}</strong>
+                    </label>
+
+                    <p style="margin-top: 6px; color: var(--muted); font-weight: bold;">
+                        {{ reward.cost }} pts
+                    </p>
+
+                    {% if reward.supportsQuantity %}
+                        <label>
+                            Quantity
+                            <input
+                                class="general-input reward-quantity"
+                                type="number"
+                                min="1"
+                                value="1"
+                                name="quantity_{{ reward.key }}"
+                                data-cost="{{ reward.cost }}"
+                            >
+                        </label>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="card">
+                    <p style="margin: 0; color: var(--muted);">
+                        You don't have enough points for any rewards yet. Keep flying with us!
+                    </p>
+                </div>
+            {% endfor %}
+
+            <div class="card">
+                <p><strong>Total selected:</strong> <span id="selectedRewardTotal">0</span> pts</p>
+                <p><strong>Your balance:</strong> {{ user.loyaltyPoints }} pts</p>
+                <div id="reward-error" style="color:red;"></div>
+                <button type="submit" class="wf-btn" style="width:100%;">Redeem Selected Rewards</button>
+            </div>
+        </form>
+
+    </section>
+
+    <section class="col-6">
+        <h3>Almost There</h3>
+        
+        {% for reward in upcomingRewards %}
+            <div class="card" style="opacity: 0.65; margin-bottom: 14px; background: #f9fafb;">
+                <h4 style="margin-top: 0; margin-bottom: 6px;">{{ reward.name }}</h4>
+                <p style="margin-top: 0; color: var(--muted); font-weight: bold;">
+                    {{ reward.cost }} pts <span style="font-size: 12px; font-weight: normal;">(Need {{ reward.cost - user.loyaltyPoints }} more)</span>
+                </p>
+                <button type="button" class="wf-btn btn-secondary" style="width: 100%; cursor: not-allowed;" disabled>Locked</button>
+            </div>
+        {% else %}
+            <div class="card">
+                <p style="margin: 0; color: var(--muted);">You have enough points to redeem any available reward tier!</p>
+            </div>
+        {% endfor %}
+    </section>
+</div>
+
+<script>
+const balance = {{ user.loyaltyPoints }};
+
+function calculateRewardTotal() {
+    let total = 0;
+
+    document.querySelectorAll(".reward-checkbox").forEach(box => {
+        if (!box.checked) return;
+
+        const key = box.name.replace("reward_", "");
+        const quantityInput = document.querySelector(`[name="quantity_${key}"]`);
+        const quantity = quantityInput ? Math.max(1, parseInt(quantityInput.value || "1")) : 1;
+
+        total += parseInt(box.dataset.cost) * quantity;
+    });
+
+    document.getElementById("selectedRewardTotal").textContent = total;
+    return total;
+}
+
+function validateRewardSelection() {
+    const total = calculateRewardTotal();
+    const error = document.getElementById("reward-error");
+    error.textContent = "";
+
+    const anyChecked = document.querySelectorAll(".reward-checkbox:checked").length > 0;
+
+    if (!anyChecked) {
+        error.textContent = "Please select at least one reward.";
+        return false;
+    }
+
+    if (total > balance) {
+        error.textContent = "Selected rewards cost more than your points balance.";
+        return false;
+    }
+
+    return true;
+}
+
+document.querySelectorAll(".reward-checkbox, .reward-quantity").forEach(input => {
+    input.addEventListener("change", calculateRewardTotal);
+    input.addEventListener("input", calculateRewardTotal);
+});
+</script>
 
 {% endblock %}

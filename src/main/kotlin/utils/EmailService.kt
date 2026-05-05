@@ -40,7 +40,8 @@ object EmailService {
         startLocation: String,
         destination: String,
         dateTime: String,
-        passengers: List<String>
+        passengers: List<String>,
+        rewards: List<String> = emptyList()
     ) {
 
         val props = Properties().apply {
@@ -57,6 +58,7 @@ object EmailService {
         })
 
         val passengerList = passengers.joinToString("\n") { "    - $it" }
+        val rewardList = rewards.joinToString("\n") { "    - $it" }
 
         val body = buildString {
             appendLine("Booking Confirmation")
@@ -72,6 +74,13 @@ object EmailService {
             appendLine("Passengers:")
             appendLine(passengerList)
             appendLine()
+
+            if (rewards.isNotEmpty()) {
+                appendLine("Loyalty Rewards:")
+                appendLine(rewardList)
+                appendLine()
+            }
+
             appendLine("Please keep this reference for check-in.")
             appendLine()
             append("Thank you for booking with us.")
@@ -86,5 +95,4 @@ object EmailService {
 
         Transport.send(message)
     }
-    
 }

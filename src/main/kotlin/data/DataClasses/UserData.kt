@@ -5,10 +5,10 @@ object UserColumns {
     val FIRSTNAME = Column<String?>("firstname", "VARCHAR")
     val LASTNAME = Column<String?>("lastname", "VARCHAR")
     val VERIFIED = Column<Boolean?>("verified_account", "BOOL")
-    val LOYALITY_POINTS = Column<Int>("loyality_points", "INT NOT NULL")
+    val LOYALTY_POINTS = Column<Int>("loyalty_points", "INT NOT NULL")
     val LOGIN_ID = Column<Int>("login_id", "INTEGER NOT NULL REFERENCES ${LoginData.EMPTY.tableName}(id)")
 
-    val ALL = listOf(ID, FIRSTNAME, LASTNAME, VERIFIED, LOYALITY_POINTS, LOGIN_ID)
+    val ALL = listOf(ID, FIRSTNAME, LASTNAME, VERIFIED, LOYALTY_POINTS, LOGIN_ID)
     val COLUMN_NAMES = ALL.map { it.name }
 }
 
@@ -18,7 +18,7 @@ data class UserData(
     var firstName: String? = null,
     var lastName: String? = null,
     var verifiedAccount: Boolean? = null,
-    var loyalityPoints: Int = 0,
+    var loyaltyPoints: Int = 0,
     var loginId: Int = 0
 
 ) : DataClass<UserData>(id) {
@@ -35,7 +35,7 @@ data class UserData(
             UserColumns.FIRSTNAME to firstName,
             UserColumns.LASTNAME to lastName,
             UserColumns.VERIFIED to verifiedAccount,
-            UserColumns.LOYALITY_POINTS to loyalityPoints,
+            UserColumns.LOYALTY_POINTS to loyaltyPoints,
             UserColumns.LOGIN_ID to loginId
         )
 
@@ -45,21 +45,21 @@ data class UserData(
             firstName = castRowElement(row, UserColumns.FIRSTNAME),
             lastName = castRowElement(row, UserColumns.LASTNAME),
             verifiedAccount = anyToBool(castRowElement(row, UserColumns.VERIFIED)),
-            loyalityPoints = castRowElement(row, UserColumns.LOYALITY_POINTS),
+            loyaltyPoints = castRowElement(row, UserColumns.LOYALTY_POINTS),
             loginId = castRowElement(row, UserColumns.LOGIN_ID)
         )
 
     override fun debugData() {
-        println("User data: (\"$id\", \"$firstName\", \"$lastName\", \"$verifiedAccount\", \"$loyalityPoints\", \"$loginId\")")
+        println("User data: (\"$id\", \"$firstName\", \"$lastName\", \"$verifiedAccount\", \"$loyaltyPoints\", \"$loginId\")")
     }
 
     fun awardPoints(points : Int) : Int {
-        loyalityPoints += points
+        loyaltyPoints += points
         return update()
     }
 
     fun usePoints(points : Int) : Int {
-        loyalityPoints += points
+        loyaltyPoints -= points
         return update()
     }
 

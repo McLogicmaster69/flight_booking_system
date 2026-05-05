@@ -47,8 +47,6 @@ data class CheckoutFlightView(
     val leg: Int
 )
 
-
-
 private suspend fun ApplicationCall.handleCheckoutPost() {
     timed("T0_checkout", jsMode()) { 
         val pebble = getEngine()
@@ -92,6 +90,14 @@ private suspend fun ApplicationCall.handleCheckoutPost() {
             )
         }
 
+        val selectedRewards = loggedIn().session?.token
+            ?.let { SELECTED_REWARDS_BY_USER[it] }
+            ?: emptyList()
+
+        val upgradeCount = selectedRewards
+            .filter { it.key == "upgrade" }
+            .sumOf { it.quantity }
+
         val model = mapOf(
             "title" to "Checkout",
             "inNav" to true,
@@ -101,6 +107,8 @@ private suspend fun ApplicationCall.handleCheckoutPost() {
             "ticketTypes" to ticketTypes,
             "flightInfo" to flightInfo,
             "checkoutFlights" to checkoutFlights,
+            "selectedRewards" to selectedRewards,
+            "upgradeCount" to upgradeCount,
             "token" to token
         )
 
@@ -143,6 +151,18 @@ private suspend fun ApplicationCall.handlePaymentPost() {
             }
         }
 
+        val selectedRewards = loggedIn().session?.token
+            ?.let { SELECTED_REWARDS_BY_USER[it] }
+            ?: emptyList()
+
+        val upgradeCount = selectedRewards
+            .filter { it.key == "upgrade" }
+            .sumOf { it.quantity }
+
+        val upgradedPassengerSet = (1..upgradeCount).mapNotNull { u ->
+            paymentparams["upgradePassenger$u"]?.toIntOrNull()
+        }.toSet()
+
         val classIds = mutableListOf<Int>()
         val seatIds = mutableListOf<Int?>()
         var totalAmount = 0L
@@ -153,7 +173,7 @@ private suspend fun ApplicationCall.handlePaymentPost() {
 
                 val classId = paymentparams["classId${i}_${leg}"]?.toIntOrNull()
                 val seatRaw = paymentparams["seatId${i}_${leg}"]
-                val seatId = if (seatRaw.isNullOrBlank()) null else seatRaw.toIntOrNull()
+                val seatId = if (seatRaw.isNullOrBlank() || upgradedPassengerSet.contains(i)) null else seatRaw.toIntOrNull()
                 val typeId = paymentparams["typeId${i}_${leg}"]?.toIntOrNull()
 
                 if (classId == null) {
@@ -205,6 +225,12 @@ private suspend fun ApplicationCall.handlePaymentPost() {
             }
         }
 
+        val hasDiscount = selectedRewards.any { it.key == "discount15" }
+
+        if (hasDiscount) {
+            totalAmount = (totalAmount * 85L) / 100L
+        }
+
         val lastNames = mutableListOf<String>()
         val passports = mutableListOf<String>()
 
@@ -230,6 +256,10 @@ private suspend fun ApplicationCall.handlePaymentPost() {
             }
         }
 
+        val upgradePassengers = (1..upgradeCount).map { u ->
+            paymentparams["upgradePassenger$u"].orEmpty()
+        }
+
         val model = mapOf(
             "title" to "Payment",
             "inNav" to true,
@@ -247,7 +277,11 @@ private suspend fun ApplicationCall.handlePaymentPost() {
             "displayTotal" to "%.2f".format(totalAmount / 100.0),
             "legCount" to legCount,
             "selections" to selections,
-            "typeIds" to typeIds
+            "typeIds" to typeIds,
+            "selectedRewards" to selectedRewards,
+            "hasDiscount" to hasDiscount,
+            "upgradeCount" to upgradeCount,
+            "upgradePassengers" to upgradePassengers
         )
 
         val template = pebble.getTemplate("checkout/payment.peb")
@@ -309,6 +343,10 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
 
         val loggedState = loggedIn()
 
+        val selectedRewards = loggedState.session?.token
+            ?.let { SELECTED_REWARDS_BY_USER[it] }
+            ?: emptyList()
+
         val booker = if (loggedState.logged_in && loggedState.session != null) {
             val token = loggedState.session.token
             val user = UserData.queryByToken(token).firstOrNull()?.dataClass
@@ -348,6 +386,17 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
         val bookingRef = generateSecureBookingReference()
         val passengerNames = mutableListOf<String>()
 
+        val upgradePassengers = selectedRewards
+            .filter { it.key == "upgrade" }
+            .sumOf { it.quantity }
+            .let { count ->
+                (1..count).mapNotNull { u ->
+                    confirmparams["upgradePassenger$u"]?.toIntOrNull()
+                }
+            }
+
+        val upgradedPassengerSet = upgradePassengers.toSet()
+
         for (i in 1..tickets) {
             val lastName = confirmparams["lastName$i"]
             val passport = confirmparams["passport$i"]
@@ -364,7 +413,7 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
 
                 val classId = confirmparams["classId${i}_${leg}"]?.toIntOrNull()
                 val chosenSeatRaw = confirmparams["seatId${i}_${leg}"]
-                val chosenSeatId = if (chosenSeatRaw.isNullOrBlank()) null else chosenSeatRaw.toIntOrNull()
+                val chosenSeatId = if (chosenSeatRaw.isNullOrBlank() || upgradedPassengerSet.contains(i)) null else chosenSeatRaw.toIntOrNull()
                 val typeId = confirmparams["typeId${i}_${leg}"]?.toIntOrNull()
 
                 if (classId == null) {
@@ -377,6 +426,19 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
                     return@timed
                 }
 
+                val finalClassId = if (upgradedPassengerSet.contains(i)) {
+                    when (classId) {
+                        3 -> 2 // Economy to Business
+                        2 -> 1 // Business to First Class
+                        else -> {
+                            respondText("Cannot upgrade First Class", status = HttpStatusCode.BadRequest)
+                            return@timed
+                        }
+                    }
+                } else {
+                    classId
+                }
+
                 val finalSeat = if (chosenSeatId != null) {
                     if (!SeatData.isSeatAvailable(chosenSeatId)) {
                         respondText("Selected seat is no longer available", status = HttpStatusCode.BadRequest)
@@ -387,7 +449,7 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
                         whereArgs = WhereArgs("id = ?", listOf(chosenSeatId))
                     ).firstOrNull()?.dataClass
                 } else {
-                    SeatData.getRandomAvailableSeat(flightId, classId)
+                    SeatData.getRandomAvailableSeat(flightId, finalClassId)
                 }
 
                 if (finalSeat == null) {
@@ -395,7 +457,7 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
                     return@timed
                 }
 
-                if (finalSeat.flightId != flightId || finalSeat.classId != classId) {
+                if (finalSeat.flightId != flightId || finalSeat.classId != finalClassId) {
                     respondText("Selected seat does not match selected class or flight", status = HttpStatusCode.BadRequest)
                     return@timed
                 }
@@ -417,8 +479,36 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
         }
 
         signedInUser?.let { user ->
+            val rewardCost = selectedRewards.sumOf { it.cost * it.quantity }
+
+            if (rewardCost > user.loyaltyPoints) {
+                respondText("You no longer have enough points for these rewards.", status = HttpStatusCode.BadRequest)
+                return@timed
+            }
+
+            user.usePoints(rewardCost)
+
             val pointsEarned = (totalAmount / 100L * 10L).toInt()
             user.awardPoints(pointsEarned)
+        }
+
+        val rewardEmailLines = selectedRewards.flatMap { reward ->
+            when (reward.key) {
+                "lounge" -> listOf("Lounge access included at your departure airport(s).")
+                "priority" -> listOf("Priority boarding included. You also have lounge access in the departure airport(s).")
+                "bag" -> listOf("Free checked bag included × ${reward.quantity}.")
+                "upgrade" -> {
+                    if (upgradePassengers.isEmpty()) {
+                        listOf("Free flight upgrade included × ${reward.quantity}.")
+                    } else {
+                        upgradePassengers.map { passengerNumber ->
+                            "Free flight upgrade assigned to Passenger $passengerNumber."
+                        }
+                    }
+                }
+                "discount15" -> listOf("15% loyalty discount applied to this booking.")
+                else -> listOf("${reward.name} included.")
+            }
         }
 
         EmailService.sendBookingConfirmation(
@@ -427,8 +517,13 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
             startLocation = search.getStartDestinationName(),
             destination = search.getEndDestinationName(),
             dateTime = search.getDate(),
-            passengers = passengerNames
+            passengers = passengerNames,
+            rewards = rewardEmailLines
         )
+
+        loggedState.session?.token?.let {
+            SELECTED_REWARDS_BY_USER.remove(it)
+        }
 
         respond(
             mapOf(
