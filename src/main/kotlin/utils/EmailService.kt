@@ -95,4 +95,50 @@ object EmailService {
 
         Transport.send(message)
     }
+
+    fun sendRefundConfirmation(
+        to: String,
+        reference: String,
+        refundAmount: Long,
+        refundId: String
+    ) {
+        val props = Properties().apply {
+            put("mail.smtp.auth", "true")
+            put("mail.smtp.starttls.enable", "true")
+            put("mail.smtp.host", "smtp.gmail.com")
+            put("mail.smtp.port", "587")
+        }
+
+        val session = Session.getInstance(props, object : Authenticator() {
+            override fun getPasswordAuthentication(): PasswordAuthentication {
+                return PasswordAuthentication(FROM_EMAIL, APP_PASSWORD)
+            }
+        })
+
+        val formattedAmount = "£%.2f".format(refundAmount / 100.0)
+
+        val body = """
+            Refund Confirmation
+
+            Reference: $reference
+
+            Your booking has been cancelled.
+            A full refund of $formattedAmount has been requested.
+
+            Refund ID: $refundId
+
+            Your booked seats have now been released.
+
+            Thank you.
+        """.trimIndent()
+
+        val message = MimeMessage(session).apply {
+            setFrom(InternetAddress(FROM_EMAIL))
+            setRecipients(Message.RecipientType.TO, InternetAddress.parse(to))
+            subject = "Refund Confirmation - Ref $reference"
+            setText(body)
+        }
+
+        Transport.send(message)
+    }
 }

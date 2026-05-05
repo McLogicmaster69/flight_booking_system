@@ -11,10 +11,15 @@ import java.io.StringWriter
 import utils.jsMode
 import utils.timed
 import auth.*
+import com.stripe.Stripe
+import com.stripe.model.Refund
+import com.stripe.param.RefundCreateParams
+import utils.EmailService
 
 fun Route.manageRoutes() {
     get("/manage") { call.handleManageLoad() }
     post("/handleBookingSearch") { call.handleBookingSearch() }
+    post("/manage/refund") { call.handleRefundBooking() }
 }
 
 private suspend fun ApplicationCall.handleManageLoad() {
@@ -114,6 +119,83 @@ private suspend fun ApplicationCall.handleBookingSearch() {
     }
 }
 
+private suspend fun ApplicationCall.handleRefundBooking() {
+    timed("T2_manageRefund", jsMode()) {
+        val params = receiveParameters()
+        val ref = params["bookingRef"]?.trim()
+        val last = params["last"]?.trim()
+
+        if (ref.isNullOrBlank() || last.isNullOrBlank()) {
+            respondRedirect("/manage")
+            return@timed
+        }
+
+        val bookingRows = DatabaseManager.queryTable(
+            table = BookingData.EMPTY.tableName,
+            columns = BookingColumns.COLUMN_NAMES,
+            whereArgs = WhereArgs(
+                "LOWER(${BookingColumns.BOOKING_REFERENCE.name}) = LOWER(?) AND LOWER(${BookingColumns.LASTNAME.name}) = LOWER(?)",
+                listOf(ref, last)
+            )
+        )
+
+        if (bookingRows.isEmpty()) {
+            respondText("Booking not found", status = HttpStatusCode.NotFound)
+            return@timed
+        }
+
+        val bookingIds = bookingRows.map { it[0] as Int }
+        val bookerId = bookingRows.first()[1] as Int
+        val paymentIntentId = bookingRows.first()[5]?.toString()
+        val amountPaid = bookingRows.sumOf { (it[6] as? Number)?.toLong() ?: 0L }
+        val alreadyRefunded = bookingRows.any { it[7] != null }
+
+        if (alreadyRefunded) {
+            respondText("This booking has already been refunded", status = HttpStatusCode.BadRequest)
+            return@timed
+        }
+
+        if (paymentIntentId.isNullOrBlank() || amountPaid <= 0L) {
+            respondText("Missing payment details for this booking", status = HttpStatusCode.BadRequest)
+            return@timed
+        }
+
+        val refundAmount = amountPaid
+
+        Stripe.apiKey = "sk_test_51TCfFDDPNfjFe9Utry1rCfJEQJ0YIASnPd7O0SkI3Ewo7COIifnBpfEsP7xPhx5c1WJ8ndpJKxi1IrWqJEJfoyEL00engmejFe"
+
+        val refundParams = RefundCreateParams.builder()
+            .setPaymentIntent(paymentIntentId)
+            .setAmount(refundAmount)
+            .setReason(RefundCreateParams.Reason.REQUESTED_BY_CUSTOMER)
+            .putMetadata("booking_reference", ref)
+            .build()
+
+        val refund = Refund.create(refundParams)
+
+        releaseBookedSeatsForBookingIds(bookingIds)
+
+        markBookingsRefunded(
+            bookingIds = bookingIds,
+            refundId = refund.id,
+            refundAmount = refundAmount
+        )
+
+        val email = getBookerEmail(bookerId)
+
+        if (!email.isNullOrBlank()) {
+            EmailService.sendRefundConfirmation(
+                to = email,
+                reference = ref,
+                refundAmount = refundAmount,
+                refundId = refund.id
+            )
+        }
+
+        respondRedirect("/manage")
+    }
+}
+
 private fun getEnrichedBookingsForBooker(bookerId: Int): List<Array<Any?>> {
     val bookingRows = DatabaseManager.queryTable(
         table = BookingData.EMPTY.tableName,
@@ -143,7 +225,9 @@ private fun enrichBookingRowsFromSeats(bookingRows: List<Array<Any?>>): List<Arr
         }
 
         val flight = seat?.flightId?.let { seatFlightId ->
-            FlightData.queryDatabase(seatFlightId).firstOrNull()?.dataClass
+            FlightData.queryDatabase(
+                whereArgs = WhereArgs("id = ?", listOf(seatFlightId))
+            ).firstOrNull()?.dataClass
         }
 
         val seatClass = seat?.classId?.let { classId ->
@@ -159,15 +243,21 @@ private fun enrichBookingRowsFromSeats(bookingRows: List<Array<Any?>>): List<Arr
         }
 
         val route = flight?.routeId?.let { routeId ->
-            RouteData.queryDatabase(routeId).firstOrNull()?.dataClass
+            RouteData.queryDatabase(
+                whereArgs = WhereArgs("id = ?", listOf(routeId))
+            ).firstOrNull()?.dataClass
         }
 
         val startDestination = route?.startDestination?.let { destinationId ->
-            DestinationData.queryDatabase(destinationId).firstOrNull()?.dataClass
+            DestinationData.queryDatabase(
+                whereArgs = WhereArgs("id = ?", listOf(destinationId))
+            ).firstOrNull()?.dataClass
         }
 
         val endDestination = route?.endDestination?.let { destinationId ->
-            DestinationData.queryDatabase(destinationId).firstOrNull()?.dataClass
+            DestinationData.queryDatabase(
+                whereArgs = WhereArgs("id = ?", listOf(destinationId))
+            ).firstOrNull()?.dataClass
         }
 
         results.add(
@@ -186,4 +276,67 @@ private fun enrichBookingRowsFromSeats(bookingRows: List<Array<Any?>>): List<Arr
     }
 
     return results
+}
+
+private fun releaseBookedSeatsForBookingIds(bookingIds: List<Int>) {
+    for (bookingId in bookingIds) {
+        val bookedSeats = BookedSeatData.queryDatabase(
+            whereArgs = WhereArgs(
+                "${BookedSeatColumns.BOOKING_ID.name} = ?",
+                listOf(bookingId)
+            )
+        )
+
+        for (bookedSeat in bookedSeats) {
+            BookedSeatData.delete(bookedSeat.dataClass.id)
+        }
+    }
+}
+
+private fun markBookingsRefunded(
+    bookingIds: List<Int>,
+    refundId: String,
+    refundAmount: Long
+) {
+    for (bookingId in bookingIds) {
+        BookingData.updateTable(
+            values = mapOf(
+                BookingColumns.REFUND_STATUS to "REFUNDED_FULL",
+                BookingColumns.STRIPE_REFUND_ID to refundId,
+                BookingColumns.REFUND_AMOUNT to refundAmount.toInt()
+            ),
+            whereArgs = WhereArgs(
+                "${BookingColumns.ID.name} = ?",
+                listOf(bookingId)
+            )
+        )
+    }
+}
+
+private fun getBookerEmail(bookerId: Int): String? {
+    val booker = BookerData.queryDatabase(
+        whereArgs = WhereArgs("${BookerColumns.ID.name} = ?", listOf(bookerId))
+    ).firstOrNull()?.dataClass ?: return null
+
+    booker.userId?.let { userId ->
+        val user = UserData.queryDatabase(
+            whereArgs = WhereArgs("${UserColumns.ID.name} = ?", listOf(userId))
+        ).firstOrNull()?.dataClass ?: return null
+
+        val login = LoginData.queryDatabase(
+            whereArgs = WhereArgs("${LoginColumns.ID.name} = ?", listOf(user.loginId))
+        ).firstOrNull()?.dataClass
+
+        return login?.email
+    }
+
+    booker.guestId?.let { guestId ->
+        val guest = GuestData.queryDatabase(
+            whereArgs = WhereArgs("${GuestColumns.ID.name} = ?", listOf(guestId))
+        ).firstOrNull()?.dataClass
+
+        return guest?.email
+    }
+
+    return null
 }
