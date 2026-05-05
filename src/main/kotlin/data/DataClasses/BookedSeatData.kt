@@ -2,8 +2,8 @@ package data
 
 object BookedSeatColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val SEAT_ID = Column<Int>("seat_id", "INTEGER NOT NULL REFERENCES seats(id)")
-    val BOOKING_ID = Column<Int>("booking_id", "INTEGER NOT NULL REFERENCES bookings(id)")
+    val SEAT_ID = Column<Int>("seat_id", "INTEGER NOT NULL REFERENCES ${SeatData.EMPTY.tableName}(id)")
+    val BOOKING_ID = Column<Int>("booking_id", "INTEGER NOT NULL REFERENCES ${BookingData.EMPTY.tableName}(id)")
 
     val ALL = listOf(ID, SEAT_ID, BOOKING_ID)
     val COLUMN_NAMES = ALL.map { it.name }
@@ -19,6 +19,11 @@ data class BookedSeatData(
 
     override val tableName = "booked_seats"
     override val tableColumns = BookedSeatColumns.ALL
+
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_booked_seats_seat_id", BookedSeatColumns.SEAT_ID.name),
+        IndexArgs("inx_booked_seats_booking_id", BookedSeatColumns.BOOKING_ID.name)
+    )
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
@@ -43,8 +48,11 @@ data class BookedSeatData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null) : List<QueryResult<BookedSeatData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs)
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null
+        ) : List<QueryResult<BookedSeatData>> {
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
         }
 
         fun updateTable (

@@ -4,7 +4,7 @@ import java.sql.Timestamp
 
 object TwoFAColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY")
-    val USER_ID = Column<Int>("user_id", "INTEGER REFERENCES users(id)")
+    val USER_ID = Column<Int>("user_id", "INTEGER REFERENCES ${UserData.EMPTY.tableName}(id)")
     val TTL = Column<Timestamp>("ttl", "TIMESTAMP NOT NULL")
     val CODE_HASH = Column<String>("code_hash", "VARCHAR NOT NULL")
     val ATTEMPTS = Column<Int>("attempts", "INTEGER NOT NULL DEFAULT 0")
@@ -25,8 +25,12 @@ data class TwoFAData(
 
 ) : DataClass<TwoFAData>(id) {
 
-    override val tableName = "TwoFAData"
+    override val tableName = "two_fa_data"
     override val tableColumns = TwoFAColumns.ALL
+
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_two_fa_data_sessions_staff_id", TwoFAColumns.USER_ID.name)
+    )
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
@@ -67,8 +71,11 @@ data class TwoFAData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null) : List<QueryResult<TwoFAData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs)
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null
+        ) : List<QueryResult<TwoFAData>> {
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
         }
 
         fun updateTable (

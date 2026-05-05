@@ -4,7 +4,7 @@ import auth.*
 
 object StaffSessionColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val STAFF_ID = Column<Int>("staff_id", "INTEGER NOT NULL REFERENCES users(id)")
+    val STAFF_ID = Column<Int>("staff_id", "INTEGER NOT NULL REFERENCES ${StaffData.EMPTY.tableName}(id)")
     val SESSION_TOKEN = Column<String>("session_token", "STRING NOT NULL")
 
     val ALL = listOf(ID, STAFF_ID, SESSION_TOKEN)
@@ -21,6 +21,11 @@ data class StaffSessionData(
 
     override val tableName = "staff_sessions"
     override val tableColumns = StaffSessionColumns.ALL
+
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_staff_sessions_staff_id", StaffSessionColumns.STAFF_ID.name),
+        IndexArgs("inx_staff_sessions_session_token", StaffSessionColumns.SESSION_TOKEN.name)
+    )
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
@@ -49,9 +54,11 @@ data class StaffSessionData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null        
         ) : List<QueryResult<StaffSessionData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs)
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
         }
 
         fun updateTable (

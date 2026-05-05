@@ -4,10 +4,12 @@ object StaffColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
     val FIRSTNAME = Column<String?>("firstname", "VARCHAR")
     val LASTNAME = Column<String?>("lastname", "VARCHAR")
-    val POSITION_ID = Column<Int>("position_id", "INTEGER NOT NULL REFERENCES staff_positions(id)")
-    val LOGIN_ID = Column<Int>("login_id", "INTEGER NOT NULL REFERENCES login_info(id)")
+    val POSITION_ID = Column<Int>("position_id", "INTEGER NOT NULL REFERENCES ${StaffPositionData.EMPTY.tableName}(id)")
+    val LOGIN_ID = Column<Int>("login_id", "INTEGER NOT NULL REFERENCES ${LoginData.EMPTY.tableName}(id)")
+    val CURRENT_LOCATION = Column<Int>("current_location", "INTEGER NOT NULL REFERENCES ${DestinationData.EMPTY.tableName}(id)")
+    val HOME_ID = Column<Int>("home_id", "INTEGER NOT NULL REFERENCES ${CountryData.EMPTY.tableName}(id)")
 
-    val ALL = listOf(ID, FIRSTNAME, LASTNAME, POSITION_ID, LOGIN_ID)
+    val ALL = listOf(ID, FIRSTNAME, LASTNAME, POSITION_ID, LOGIN_ID, CURRENT_LOCATION, HOME_ID)
     val COLUMN_NAMES = ALL.map { it.name }
 }
 
@@ -17,19 +19,41 @@ data class StaffData(
     var firstName: String? = null,
     var lastName: String? = null,
     var positionId: Int = 0,
-    var loginId: Int = 0
+    var loginId: Int = 0,
+    var currentLocation: Int = 0,
+    var homeId: Int = 0
 
 ) : DataClass<StaffData>(id) {
 
     override val tableName = "staff"
     override val tableColumns = StaffColumns.ALL
 
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_staff_login_id", StaffColumns.LOGIN_ID.name),
+        IndexArgs("inx_staff_current_location", StaffColumns.CURRENT_LOCATION.name),
+        IndexArgs("inx_staff_home_id", StaffColumns.HOME_ID.name)
+    )
+
+    override val requiredTables : List<DataClass<*>>
+        get() = listOf(
+            StaffPositionData.EMPTY,
+            LoginData.EMPTY,
+            DestinationData.EMPTY,
+            CountryData.EMPTY
+        )
+    
+    override val initialRows: List<StaffData>
+        get() = listOf(
+        )
+
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
             StaffColumns.FIRSTNAME to firstName,
             StaffColumns.LASTNAME to lastName,
             StaffColumns.POSITION_ID to positionId,
-            StaffColumns.LOGIN_ID to loginId
+            StaffColumns.LOGIN_ID to loginId,
+            StaffColumns.CURRENT_LOCATION to currentLocation,
+            StaffColumns.HOME_ID to homeId
         )
 
     override fun mapRowToData(row : Array<Any?>) : StaffData =
@@ -38,11 +62,18 @@ data class StaffData(
             firstName = castRowElement(row, StaffColumns.FIRSTNAME),
             lastName = castRowElement(row, StaffColumns.LASTNAME),
             positionId = castRowElement(row, StaffColumns.POSITION_ID),
-            loginId = castRowElement(row, StaffColumns.LOGIN_ID)
+            loginId = castRowElement(row, StaffColumns.LOGIN_ID),
+            currentLocation = castRowElement(row, StaffColumns.CURRENT_LOCATION),
+            homeId = castRowElement(row, StaffColumns.HOME_ID)
         )
 
     override fun debugData() {
-        println("Staff data: (\"$id\", \"$firstName\", \"$lastName\", \"$positionId\", \"$loginId\")")
+        println("Staff data: (\"$id\", \"$firstName\", \"$lastName\", \"$positionId\", \"$loginId\", \"$currentLocation\", \"$homeId\")")
+    }
+
+    fun updateLocation(location : Int) {
+        currentLocation = location
+        update()
     }
 
     companion object {
@@ -51,8 +82,11 @@ data class StaffData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null) : List<QueryResult<StaffData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs)
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null        
+        ) : List<QueryResult<StaffData>> {
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
         }
 
         fun updateTable (

@@ -2,8 +2,8 @@ package data
 
 object BookerColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val USER_ID = Column<Int?>("user_id", "INTEGER REFERENCES users(id)")
-    val GUEST_ID = Column<Int?>("guest_id", "INTEGER REFERENCES guests(id)")
+    val USER_ID = Column<Int?>("user_id", "INTEGER REFERENCES ${UserData.EMPTY.tableName}(id)")
+    val GUEST_ID = Column<Int?>("guest_id", "INTEGER REFERENCES ${GuestData.EMPTY.tableName}(id)")
 
     val ALL = listOf(ID, USER_ID, GUEST_ID)
     val COLUMN_NAMES = ALL.map { it.name }
@@ -19,6 +19,11 @@ data class BookerData(
 
     override val tableName = "bookers"
     override val tableColumns = BookerColumns.ALL
+
+    override val indexes : List<IndexArgs> = listOf(
+        IndexArgs("inx_bookers_user_id", BookerColumns.USER_ID.name),
+        IndexArgs("inx_bookers_guest_id", BookerColumns.GUEST_ID.name)
+    )
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
@@ -43,8 +48,11 @@ data class BookerData(
 
         fun queryDatabase (
             joinArgs : JoinArgs? = null,
-            whereArgs : WhereArgs? = null) : List<QueryResult<BookerData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs)
+            whereArgs : WhereArgs? = null,
+            orderByArgs : OrderByArgs? = null,
+            limitArgs : LimitArgs? = null
+        ) : List<QueryResult<BookerData>> {
+            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
         }
 
         fun updateTable (

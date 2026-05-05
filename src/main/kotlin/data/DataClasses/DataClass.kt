@@ -12,6 +12,7 @@ abstract class DataClass<T : DataClass<T>> ( open val id : Int = 0 ) {
     open val tableAdditionalSQL : String = ""
     open val initialRows : List<T> = emptyList<T>()
     open val requiredTables : List<DataClass<*>> = emptyList<DataClass<*>>()
+    open val indexes : List<IndexArgs> = emptyList()
 
     private val random = SecureRandom()
 
@@ -51,6 +52,9 @@ abstract class DataClass<T : DataClass<T>> ( open val id : Int = 0 ) {
             ?: LocalTime.parse("00:00")
     }
 
+    open fun initTable() {
+    }
+
     fun mapRawRows(
         tables : List<String>,
         columns : List<String>,
@@ -75,7 +79,9 @@ abstract class DataClass<T : DataClass<T>> ( open val id : Int = 0 ) {
 
     fun queryDatabase (
         joinArgs : JoinArgs? = null,
-        whereArgs : WhereArgs? = null
+        whereArgs : WhereArgs? = null,
+        orderByArgs : OrderByArgs? = null,
+        limitArgs : LimitArgs? = null        
     ) : List<QueryResult<T>> {
 
         val columnNames = tableColumns.map { it.name }
@@ -83,7 +89,10 @@ abstract class DataClass<T : DataClass<T>> ( open val id : Int = 0 ) {
             tableName,
             columnNames,
             joinArgs,
-            whereArgs)
+            whereArgs,
+            orderByArgs,
+            limitArgs
+        )
 
         val columns : MutableList<String> = columnNames.toMutableList()
         val tables : MutableList<String> = MutableList(columns.size) { tableName }
@@ -94,6 +103,12 @@ abstract class DataClass<T : DataClass<T>> ( open val id : Int = 0 ) {
         }
 
         return rows.map { QueryResult<T>(mapRowToData(it), mapRawRows(tables.toList(), columns.toList(), it)) }
+    }
+
+    fun debugTable () {
+        println("Printing ${tableName}")
+        println(tableColumns.joinToString(", ") { it.name })
+        queryDatabase().forEach { it.dataClass.debugData() }
     }
 
     fun insertIntoDatabase(ignore : Boolean = false) : Int {
