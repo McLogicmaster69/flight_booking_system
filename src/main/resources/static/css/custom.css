@@ -1,3 +1,4 @@
+/* src/main/resources/static/css/custom.css */
 :root {
   --aa-blue: #0d5ca6;
   --aa-blue-dark: #083b6b;
@@ -22,6 +23,9 @@
 html, body {
   margin: 0;
   padding: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
 }
 
@@ -48,11 +52,6 @@ a:hover {
 *:focus-visible {
   outline: 3px solid #ff8f00;
   outline-offset: 2px;
-}
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 .site-shell {
@@ -91,7 +90,7 @@ a:hover {
 .header-top {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 14px 16px 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -100,8 +99,8 @@ a:hover {
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-weight: 800;
+  gap: 10px;
+  font-weight: 700;
   color: #111827;
   font-size: 18px;
 }
@@ -109,7 +108,7 @@ a:hover {
 .brand-mark {
   width: 34px;
   height: 22px;
-  border-radius: 4px;
+  border-radius: 2px;
   background: linear-gradient(
     135deg,
     #1a73bf 0 55%,
@@ -235,9 +234,8 @@ a:hover {
   border: 1px solid var(--line);
   border-radius: 16px;
   box-shadow: var(--shadow);
-  padding: 24px;
-  margin-bottom: 24px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  padding: 16px;
+  margin-bottom: 18px;
 }
 
 .card h3 {
@@ -257,43 +255,22 @@ a:hover {
 .col-6  { grid-column: span 6; }
 .col-12 { grid-column: span 12; }
 
-@media (max-width: 768px) {
-  .grid { display: flex; flex-direction: column; }
-  .col-3, .col-4, .col-6, .col-12 { width: 100%; }
-  .homepage-search-form { flex-direction: column; align-items: stretch; padding-bottom: 0; }
-  .homepage-field { padding-bottom: 20px; }
-  .homepage-search-actions button { width: 100%; }
-}
-
 label {
   display: block;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   margin-bottom: 6px;
-  color: #4b5563;
+  text-transform: uppercase;
 }
 
 input,
 select,
 textarea {
   width: 100%;
-  height: 44px;
+  height: 38px;
   border: 1px solid #c8d5e2;
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-family: inherit;
-  font-size: 15px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-textarea {
-  height: auto;
-}
-
-input:focus, select:focus, textarea:focus {
-  border-color: var(--aa-blue);
-  box-shadow: 0 0 0 3px rgba(13, 92, 166, 0.15);
-  outline: none;
+  border-radius: 6px;
+  padding: 8px 10px;
 }
 
 input::placeholder, textarea::placeholder {
@@ -305,11 +282,11 @@ button,
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
-  padding: 0 20px;
-  border-radius: 8px;
-  border: none;
-  background: var(--aa-blue);
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 6px;
+  border: 1px solid #0c5aa1;
+  background: linear-gradient(#28a0f0,#0a74c9);
   color: white;
   font-weight: 700;
   cursor: pointer;
@@ -341,6 +318,24 @@ button:hover, .btn:hover {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.table th,
+.table td {
+  padding: 10px;
+  border-bottom: 1px solid #e6edf4;
+}
+
+.table th {
+  font-size: 12px;
+  text-transform: uppercase;
+  background: #f8fbfe;
 }
 
 .badge {
@@ -382,8 +377,8 @@ button:hover, .btn:hover {
   margin-bottom: 12px;
 }
 
-.general-input-input {
-  margin-bottom: 0;
+.general-input{
+  margin-bottom: 8px;
 }
 
 .submit-button button {
@@ -429,17 +424,53 @@ footer {
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 20px;
-  box-shadow: var(--shadow);
-  color: inherit;
+}
+
+.flight-result-button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 2rem 1rem;
+  background-color: #fafafa;
+  border: 3px solid #0c5aa1;
+  border-radius: 0px;
   text-decoration: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  color: black;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.flight-result-button h2,
+.flight-result-button p {
+  margin: 0;
 }
 
 .flight-result-button:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-hover);
-  border-color: #b8cce0;
-  text-decoration: none;
+  background-color: #f5f5f5;
+}
+
+.flight-result-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.homepage-hero {
+  padding: 48px 0;
+}
+
+.homepage-hero-inner {
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.homepage-search-card {
+  background: rgba(255,255,255,.92);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 20px;
 }
 
 .flight-result-button h2 {
@@ -456,11 +487,220 @@ footer {
   font-size: 14px;
 }
 
-.flight-result-info p {
-  margin: 0;
+.payment-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 50px;
 }
 
-/* Chatbot Styles */
+.payment-card {
+    width: 400px;
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.payment-card h2 {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.form-group input {
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.stripe-card {
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: #fafafa;
+}
+
+.pay-btn {
+    width: 100%;
+    padding: 12px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.pay-btn:hover {
+    background: #0056b3;
+}
+
+.payment-result {
+    margin-top: 15px;
+    color: red;
+    text-align: center;
+}
+
+.email-display {
+    margin-bottom: 15px;
+    font-size: 14px;
+    color: #555;
+}
+
+.booking-results {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.booking-card {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 1rem;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.booking-header {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.booking-body p {
+    margin: 0.25rem 0;
+    color: #555;
+}
+
+@media (max-width: 980px) {
+  .grid {
+    grid-template-columns: repeat(6,1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .header-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .table {
+    font-size: 14px;
+  }
+}
+
+/* Accessibility Modifications */
+
+body.text-size-large {
+  font-size: 1.25rem;
+}
+
+body.text-size-large h1 { font-size: 2.75rem; }
+body.text-size-large h2 { font-size: 2.25rem; }
+body.text-size-large h3 { font-size: 1.75rem; }
+body.text-size-large input, body.text-size-large select, body.text-size-large button {
+  font-size: 1.1rem;
+}
+
+body.high-contrast {
+  --aa-blue: #ffff00;
+  --aa-blue-dark: #ccff00;
+  --aa-sky: #00ffff;
+  --ink: #ffffff;
+  --muted: #eeeeee;
+  --line: #ffffff;
+  --panel: #000000;
+  --bg: #000000;
+  --success: #00ff00;
+  --danger: #ff0000;
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+body.high-contrast * {
+  border-color: #ffffff !important;
+}
+
+body.high-contrast a, body.high-contrast .brand-mark + div {
+  color: #ffff00 !important;
+  text-decoration: underline;
+}
+
+body.high-contrast .card,
+body.high-contrast .site-header,
+body.high-contrast .flight-search-card,
+body.high-contrast .homepage-search-card,
+body.high-contrast .payment-card,
+body.high-contrast .booking-card {
+  background: #000000 !important;
+  border: 2px solid #ffffff !important;
+  color: #ffffff !important;
+}
+
+body.high-contrast button,
+body.high-contrast .btn,
+body.high-contrast .flight-result-button,
+body.high-contrast .pay-btn {
+  background: #000000 !important;
+  color: #ffff00 !important;
+  border: 2px solid #ffff00 !important;
+}
+
+body.high-contrast input,
+body.high-contrast select {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+}
+
+body.high-contrast .primary-nav a:hover,
+body.high-contrast .primary-nav a.is-active {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+body.palette-colorblind {
+  --success: #009E73;
+  --danger: #D55E00;
+  --aa-blue: #0072B2;
+  --aa-blue-dark: #005f9e;
+  --aa-sky: #56B4E9;
+}
+
+body.palette-colorblind .brand-mark {
+  background: linear-gradient(135deg, #0072B2 0 55%, #D55E00 55% 74%, #fff 74% 82%, #0072B2 82%);
+}
+
+body.palette-colorblind button,
+body.palette-colorblind .btn,
+body.palette-colorblind .pay-btn {
+  background: linear-gradient(#56B4E9, #0072B2);
+  border-color: #005f9e;
+}
+
+body.reduce-motion * {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+
+body.enhanced-focus *:focus,
+body.enhanced-focus *:focus-visible {
+  outline: 4px solid #ff00ff !important;
+  outline-offset: 4px !important;
+  background-color: rgba(255, 0, 255, 0.1) !important;
+}
 #chat-widget {
   position: fixed;
   bottom: 24px;
@@ -472,16 +712,12 @@ footer {
 }
 
 #chat-toggle {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: var(--aa-blue);
+  background: var(--aa-blue, #0d5ca6);
   color: white;
   border: none;
   font-size: 28px;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(13, 92, 166, 0.4);
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+  box-shadow: 0 10px 26px rgba(16,42,67,.12);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -502,25 +738,21 @@ footer {
   width: 360px;
   height: 520px;
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 10px 26px rgba(16,42,67,.12);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
-  transform-origin: bottom right;
-  margin-bottom: 16px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line, #d9e1ea);
+  margin-bottom: 10px;
 }
 
-#chat-window.hidden {
-  opacity: 0;
-  pointer-events: none;
-  transform: scale(0.95) translateY(20px);
+#chat-window.hidden,
+#chat-toggle.hidden {
+  display: none !important;
 }
 
 #chat-header {
-  background: var(--aa-blue);
+  background: var(--aa-blue, #0d5ca6);
   color: white;
   padding: 16px 20px;
   font-weight: 700;
@@ -564,36 +796,15 @@ footer {
 
 #chat-input-area {
   display: flex;
-  padding: 16px;
-  background: white;
-  border-top: 1px solid var(--line);
-  gap: 8px;
+  padding: 10px;
+  border-top: 1px solid var(--line, #d9e1ea);
+  gap: 10px;
 }
 
 #chat-input {
   flex: 1;
-  height: 40px;
-  padding: 0 16px;
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  outline: none;
-  font-size: 14px;
-}
-
-#chat-input:focus {
-  border-color: var(--aa-blue);
-  box-shadow: none;
-}
-
-#chat-send {
-  height: 40px;
-  background: var(--aa-blue);
-  color: white;
-  border: none;
-  padding: 0 20px;
-  border-radius: 20px;
-  cursor: pointer;
-  font-weight: 700;
-  font-size: 14px;
-  box-shadow: none;
+  margin-bottom: 0;
+  padding: 8px;
+  border: 1px solid #c8d5e2;
+  border-radius: 6px;
 }

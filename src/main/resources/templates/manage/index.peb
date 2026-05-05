@@ -37,6 +37,14 @@
               <p><strong>Ticket Type :</strong> {{ row[6] }}</p>
           </div>
 
+          <form method="post" action="/manage/refund">
+            <input type="hidden" name="bookingRef" value="{{ row[0] }}">
+            <input type="hidden" name="last" value="{{ row[1] }}">
+            <button type="submit" onclick="return confirm('Cancel this booking and issue a full refund?');">
+              Cancel booking and refund
+            </button>
+          </form>
+
         </div>
     {% endfor %}
 </div>
@@ -61,6 +69,14 @@
             <p><strong>Class :</strong> {{ booking[5] }}</p>
             <p><strong>Ticket Type :</strong> {{ booking[6] }}</p>
         </div>
+
+        <form method="post" action="/manage/refund">
+            <input type="hidden" name="bookingRef" value="{{ row[0] }}">
+            <input type="hidden" name="last" value="{{ row[1] }}">
+            <button type="submit" onclick="return confirm('Cancel this booking and issue a full refund?');">
+              Cancel booking and refund
+            </button>
+        </form>
       </div>
     {% endfor %}
   </div>

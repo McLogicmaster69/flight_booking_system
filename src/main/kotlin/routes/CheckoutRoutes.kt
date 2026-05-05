@@ -334,9 +334,10 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
         val email = confirmparams["email"]
         val tickets = (confirmparams["tickets"]?.toIntOrNull() ?: 1).coerceAtLeast(1)
         val totalAmount = confirmparams["totalAmount"]?.toLongOrNull()
+        val paymentIntentId = confirmparams["paymentIntentId"]
         var signedInUser: UserData? = null
 
-        if (flightIds.isEmpty() || email.isNullOrBlank() || totalAmount == null || totalAmount <= 0) {
+        if (flightIds.isEmpty() || email.isNullOrBlank() || totalAmount == null || totalAmount <= 0 || paymentIntentId.isNullOrBlank()) {
             respondText("Invalid booking data", status = HttpStatusCode.BadRequest)
             return@timed
         }
@@ -396,6 +397,8 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
             }
 
         val upgradedPassengerSet = upgradePassengers.toSet()
+        val bookingCount = tickets * flightIds.size
+        val bookingAmount = (totalAmount / bookingCount).toInt()
 
         for (i in 1..tickets) {
             val lastName = confirmparams["lastName$i"]
@@ -466,7 +469,9 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
                     bookerId = booker.id,
                     passportNumber = passport,
                     lastname = lastName,
-                    bookingReference = bookingRef
+                    bookingReference = bookingRef,
+                    paymentIntentId = paymentIntentId,
+                    amountPaid = bookingAmount
                 )
 
                 val bookingId = booking.insertIntoDatabase()

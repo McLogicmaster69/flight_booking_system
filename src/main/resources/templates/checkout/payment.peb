@@ -121,6 +121,7 @@ form.addEventListener("submit", async (e) => {
                     token: "{{ token }}",
                     tickets: "{{ tickets }}",
                     totalAmount: "{{ totalAmount }}",
+                    paymentIntentId: result.paymentIntent.id,
 
                     {% for i in 1..tickets %}
                     lastName{{ i }}: "{{ lastNames[i-1] }}",
