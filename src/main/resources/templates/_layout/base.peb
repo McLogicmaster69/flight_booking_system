@@ -82,8 +82,8 @@
 
         {% if (user.verifiedAccount == false) and logged_in %}
         <form method="post" action="/send-verification" style="display:inline;">
-          <button type="submit" {% if activePage=='verify' %}is-active{% endif %}>
-            Verify
+          <button type="submit" class="btn btn-secondary" style="height:32px; min-height:32px; padding: 0 12px; font-size:12px;">
+            Verify Email
           </button>
         </form>
         {% endif %}
@@ -94,7 +94,7 @@
         <a href="/login" class="{% if activePage == 'auth' %}is-active{% endif %}">Login</a>
         {% endif %}
 
-        <span>{{ language | upper }}</span>
+        <span style="font-weight: 700; color: #9ca3af;">{{ language | upper }}</span>
 
       </nav>
 
@@ -131,7 +131,7 @@
         </div>
       </div>
 
-      <div class="header-right">
+      <div class="header-right" style="font-weight: 700; color: var(--aa-blue);">
         {{ headerRightText }}
       </div>
 
@@ -151,7 +151,14 @@
   </div>
 
   <footer>
-    <small>© 2026 SkyBridge Airways.</small>
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+      <div style="font-weight: 700; color: white; font-size: 16px;">
+        SkyBridge Airways
+      </div>
+      <div>
+        <small>© 2026 SkyBridge Airways. All rights reserved.</small>
+      </div>
+    </div>
   </footer>
 
   <!-- Chatbot Widget -->
@@ -159,7 +166,7 @@
     <div id="chat-window" class="hidden">
       <div id="chat-header">
         SkyBridge Assistant
-        <button id="chat-close">X</button>
+        <button id="chat-close">✕</button>
       </div>
       <div id="chat-messages"></div>
       <div id="chat-input-area">
@@ -197,7 +204,7 @@
       const text = chatInput.value.trim();
       if (!text) return;
 
-      appendMessage('You', text);
+      appendMessage('You', text, '#1e293b');
       chatInput.value = '';
 
       try {
@@ -207,15 +214,19 @@
           body: JSON.stringify({ message: text })
         });
         const data = await response.json();
-        appendMessage('SkyBridge', data.reply);
+        appendMessage('SkyBridge', data.reply, 'var(--aa-blue)');
       } catch (err) {
-        appendMessage('System', 'Connection error.');
+        appendMessage('System', 'Connection error.', 'var(--danger)');
       }
     }
 
-    function appendMessage(sender, message) {
+    function appendMessage(sender, message, color) {
       const msgDiv = document.createElement('div');
-      msgDiv.innerHTML = `<strong>${sender}:</strong> ${message}`;
+      msgDiv.style.background = sender === 'You' ? '#e2e8f0' : 'white';
+      msgDiv.style.padding = '12px';
+      msgDiv.style.borderRadius = '8px';
+      msgDiv.style.boxShadow = sender === 'You' ? 'none' : '0 2px 4px rgba(0,0,0,0.05)';
+      msgDiv.innerHTML = `<strong style="color: ${color}; display: block; margin-bottom: 4px;">${sender}</strong> ${message}`;
       chatMessages.appendChild(msgDiv);
       chatMessages.scrollTop = chatMessages.scrollHeight;
     }
