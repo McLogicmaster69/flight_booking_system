@@ -201,14 +201,16 @@ data class AssignedFlightStaffData(
                 AssignedFlightStaffData(
                     flightId = flight.id,
                     staffId = pilot.dataClass.id
-                ).insertIntoDatabase() 
+                ).insertIntoDatabase()
+                pilot.dataClass.updateLocation(route.endDestination)
             }
 
             selectedAttendants.forEach { attendant ->
                 AssignedFlightStaffData(
                     flightId = flight.id,
                     staffId = attendant.dataClass.id
-                ).insertIntoDatabase() 
+                ).insertIntoDatabase()
+                attendant.dataClass.updateLocation(route.endDestination)
             }
 
             return StaffAssignmentResults(

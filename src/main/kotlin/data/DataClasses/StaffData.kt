@@ -71,6 +71,11 @@ data class StaffData(
         println("Staff data: (\"$id\", \"$firstName\", \"$lastName\", \"$positionId\", \"$loginId\", \"$currentLocation\", \"$homeId\")")
     }
 
+    fun updateLocation(location : Int) {
+        currentLocation = location
+        update()
+    }
+
     companion object {
         val EMPTY : StaffData
             get() = StaffData()

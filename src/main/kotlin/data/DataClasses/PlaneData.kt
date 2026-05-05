@@ -66,6 +66,13 @@ data class PlaneData(
         println("Plane data: (\"$id\", \"$modelId\", \"$currentLocation\", \"$currentLocationDate\", \"$currentLocationTime\")")
     }
 
+    fun updateLocation(location : Int, date : LocalDate, time : LocalTime) {
+        currentLocation = location
+        currentLocationDate = date
+        currentLocationTime = time
+        update()
+    }
+
     companion object {
         val EMPTY : PlaneData
             get() = PlaneData()
