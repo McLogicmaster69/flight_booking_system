@@ -7,7 +7,7 @@ import java.sql.SQLException
 import org.mindrot.jbcrypt.BCrypt
 import org.json.JSONObject
 
-fun anyToBool(i : Any?) : Boolean? = (i as? Int)?.let { it != 0}
+fun anyToBool(i : Any?) : Boolean? = (i as? Int)?.let { it != 0 }
 
 object DatabaseManager {
     private val dbFilePath : String = "data/database.db"
@@ -38,6 +38,7 @@ object DatabaseManager {
         PlaneSeatData.EMPTY,
         RemainingSeatData.EMPTY,
         RouteData.EMPTY,
+        ScheduleData.EMPTY,
         SeatData.EMPTY,
         SessionData.EMPTY,
         StaffData.EMPTY,

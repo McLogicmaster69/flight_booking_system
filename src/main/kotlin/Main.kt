@@ -12,8 +12,8 @@ import routes.*
 import auth.*
 import data.*
 import results.*
-import utils.scheduleDailyCleanup
-import utils.initialCleanup
+import utils.scheduleDailyTasks
+import utils.initialTasks
 import utils.SessionData
 import java.io.StringWriter
 import io.ktor.util.*
@@ -27,8 +27,8 @@ fun main() {
     val host = "0.0.0.0"
 
     DatabaseManager.createTables()
-    initialCleanup()
-    scheduleDailyCleanup()
+    initialTasks()
+    scheduleDailyTasks()
 
     embeddedServer(Netty, port = port, host = host) {
         configureLogging()
