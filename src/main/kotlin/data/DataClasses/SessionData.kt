@@ -1,13 +1,15 @@
 package data
 
 import auth.*
+import java.time.LocalDate
 
 object SessionColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
     val USER_ID = Column<Int>("user_id", "INTEGER NOT NULL REFERENCES ${UserData.EMPTY.tableName}(id)")
     val SESSION_TOKEN = Column<String>("session_token", "STRING NOT NULL")
+    val EXPIRY_DATE = Column<String>("expiry_date", "STRING NOT NULL")
 
-    val ALL = listOf(ID, USER_ID, SESSION_TOKEN)
+    val ALL = listOf(ID, USER_ID, SESSION_TOKEN, EXPIRY_DATE)
     val COLUMN_NAMES = ALL.map { it.name }
 }
 
@@ -15,7 +17,8 @@ data class SessionData(
 
     override val id: Int = 0,
     var userId : Int = 0,
-    var sessionToken : String = ""
+    var sessionToken : String = "",
+    var expiryDate : LocalDate = LocalDate.now().plusWeeks(1L)
 
 ) : DataClass<SessionData>(id) {
 
@@ -24,24 +27,27 @@ data class SessionData(
 
     override val indexes : List<IndexArgs> = listOf(
         IndexArgs("inx_sessions_user_id", SessionColumns.USER_ID.name),
-        IndexArgs("inx_sessions_session_token", SessionColumns.SESSION_TOKEN.name)
+        IndexArgs("inx_sessions_session_token", SessionColumns.SESSION_TOKEN.name),
+        IndexArgs("inx_sessions_expiry_date", SessionColumns.EXPIRY_DATE.name)
     )
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
             SessionColumns.USER_ID to userId,
-            SessionColumns.SESSION_TOKEN to sessionToken.toString()
+            SessionColumns.SESSION_TOKEN to sessionToken.toString(),
+            SessionColumns.EXPIRY_DATE to expiryDate
         )
 
     override fun mapRowToData(row : Array<Any?>) : SessionData =
         SessionData(
             id = castRowElement(row, SessionColumns.ID),
             userId = castRowElement(row, SessionColumns.USER_ID),
-            sessionToken = castRowElement(row, SessionColumns.SESSION_TOKEN)
+            sessionToken = castRowElement(row, SessionColumns.SESSION_TOKEN),
+            expiryDate = castDateRowElement(row, SessionColumns.EXPIRY_DATE)
         )
 
     override fun debugData() {
-        println("Session data: (\"$id\", \"$userId\", \"$sessionToken\")")
+        println("Session data: (\"$id\", \"$userId\", \"$sessionToken\", \"$expiryDate\")")
     }
 
     fun toTokenSession() : SessionToken {
@@ -110,6 +116,19 @@ data class SessionData(
                 joinArgs = joinArgs,
                 whereArgs = whereArgs
             )
+        }
+
+        fun deleteOld() {
+            val whereArgs = WhereArgs(
+                whereClause = "${SessionColumns.EXPIRY_DATE.name} < ?",
+                whereArgs = listOf(LocalDate.now())
+            )
+
+            val query : List<QueryResult<SessionData>> = queryDatabase(whereArgs = whereArgs)
+
+            query.forEach { session ->
+                session.dataClass.delete()
+            }
         }
     }
 }

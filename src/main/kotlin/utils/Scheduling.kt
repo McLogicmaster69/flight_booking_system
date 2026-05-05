@@ -1,13 +1,21 @@
 package utils
 
 import data.FlightSearchData
+import data.FlightData
 import data.ScheduleData
+import data.SessionData
+import data.StaffSessionData
+import data.AdminSessionData
 import java.time.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 fun cleanup () {
     FlightSearchData.deleteOld()
+    FlightData.deleteOld()
+    SessionData.deleteOld()
+    StaffSessionData.deleteOld()
+    AdminSessionData.deleteOld()
 }
 
 fun scheduleFlights() {
@@ -15,6 +23,7 @@ fun scheduleFlights() {
 }
 
 fun initialTasks() {
+    println("Initial tasks being ran")
     cleanup()
     scheduleFlights()
 }

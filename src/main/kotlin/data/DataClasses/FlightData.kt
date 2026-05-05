@@ -43,6 +43,7 @@ data class FlightData(
         IndexArgs("inx_flights_schedule_id", FlightColumns.SCHEDULE_ID.name),
         IndexArgs("inx_flights_route_id", FlightColumns.ROUTE_ID.name),
         IndexArgs("inx_flights_plane_id", FlightColumns.PLANE_ID.name),
+        IndexArgs("inx_flights_date", FlightColumns.DATE.name),
         IndexArgs("inx_flights_date_time", "${FlightColumns.DATE.name}, ${FlightColumns.TIME.name}")
     )
 
@@ -376,6 +377,19 @@ data class FlightData(
                 flightId = flightId,
                 staffResults = staffResults
             )
+        }
+
+        fun deleteOld() {
+            val whereArgs = WhereArgs(
+                whereClause = "${FlightColumns.DATE.name} < ?",
+                whereArgs = listOf(LocalDate.now().minusYears(1L))
+            )
+
+            val query : List<QueryResult<FlightData>> = queryDatabase(whereArgs = whereArgs)
+
+            query.forEach { flight ->
+                flight.dataClass.delete()
+            }
         }
     }
 }

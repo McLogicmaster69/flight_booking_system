@@ -1,13 +1,15 @@
 package data
 
 import auth.*
+import java.time.LocalDate
 
 object StaffSessionColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
     val STAFF_ID = Column<Int>("staff_id", "INTEGER NOT NULL REFERENCES ${StaffData.EMPTY.tableName}(id)")
     val SESSION_TOKEN = Column<String>("session_token", "STRING NOT NULL")
+    val EXPIRY_DATE = Column<String>("expiry_date", "STRING NOT NULL")
 
-    val ALL = listOf(ID, STAFF_ID, SESSION_TOKEN)
+    val ALL = listOf(ID, STAFF_ID, SESSION_TOKEN, EXPIRY_DATE)
     val COLUMN_NAMES = ALL.map { it.name }
 }
 
@@ -15,7 +17,8 @@ data class StaffSessionData(
 
     override val id: Int = 0,
     var staffId : Int = 0,
-    var sessionToken : String = ""
+    var sessionToken : String = "",
+    var expiryDate : LocalDate = LocalDate.now().plusWeeks(1L)
 
 ) : DataClass<StaffSessionData>(id) {
 
@@ -24,24 +27,27 @@ data class StaffSessionData(
 
     override val indexes : List<IndexArgs> = listOf(
         IndexArgs("inx_staff_sessions_staff_id", StaffSessionColumns.STAFF_ID.name),
-        IndexArgs("inx_staff_sessions_session_token", StaffSessionColumns.SESSION_TOKEN.name)
+        IndexArgs("inx_staff_sessions_session_token", StaffSessionColumns.SESSION_TOKEN.name),
+        IndexArgs("inx_staff_sessions_expiry_date", StaffSessionColumns.EXPIRY_DATE.name)
     )
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
             StaffSessionColumns.STAFF_ID to staffId,
-            StaffSessionColumns.SESSION_TOKEN to sessionToken.toString()
+            StaffSessionColumns.SESSION_TOKEN to sessionToken.toString(),
+            StaffSessionColumns.EXPIRY_DATE to expiryDate
         )
 
     override fun mapRowToData(row : Array<Any?>) : StaffSessionData =
         StaffSessionData(
             id = castRowElement(row, StaffSessionColumns.ID),
             staffId = castRowElement(row, StaffSessionColumns.STAFF_ID),
-            sessionToken = castRowElement(row, StaffSessionColumns.SESSION_TOKEN)
+            sessionToken = castRowElement(row, StaffSessionColumns.SESSION_TOKEN),
+            expiryDate = castDateRowElement(row, StaffSessionColumns.EXPIRY_DATE)
         )
 
     override fun debugData() {
-        println("Staff session data: (\"$id\", \"$staffId\", \"$sessionToken\")")
+        println("Staff session data: (\"$id\", \"$staffId\", \"$sessionToken\", \"$expiryDate\")")
     }
 
     fun toTokenSession() : StaffSessionToken {
@@ -110,6 +116,19 @@ data class StaffSessionData(
                 joinArgs = joinArgs,
                 whereArgs = whereArgs
             )
+        }
+
+        fun deleteOld() {
+            val whereArgs = WhereArgs(
+                whereClause = "${StaffSessionColumns.EXPIRY_DATE.name} < ?",
+                whereArgs = listOf(LocalDate.now())
+            )
+
+            val query : List<QueryResult<StaffSessionData>> = queryDatabase(whereArgs = whereArgs)
+
+            query.forEach { session ->
+                session.dataClass.delete()
+            }
         }
     }
 }

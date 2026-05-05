@@ -32,7 +32,8 @@ data class FlightSearchData(
 
     override val indexes : List<IndexArgs> = listOf(
         IndexArgs("inx_flight_searches_start_destination", FlightSearchColumns.START_DESTINATION.name),
-        IndexArgs("inx_flight_searches_end_destination", FlightSearchColumns.END_DESTINATION.name)
+        IndexArgs("inx_flight_searches_end_destination", FlightSearchColumns.END_DESTINATION.name),
+        IndexArgs("inx_flight_searches_created_at", FlightSearchColumns.CREATED_AT.name)
     )
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
@@ -168,14 +169,7 @@ data class FlightSearchData(
             path : JourneyFlightTimePath,
             data : FlightSearchData
         ) : Boolean {
-            val whereArgs : WhereArgs = WhereArgs (
-                whereClause = "${FlightSearchFlightColumns.FLIGHT_SEARCH_ID.name} = ?",
-                whereArgs = listOf(data.id)
-            )
-
-            val query : List<QueryResult<FlightSearchFlightData>> = FlightSearchFlightData.queryByFlightSearch(
-                data.id
-            )
+            val query : List<QueryResult<FlightSearchFlightData>> = FlightSearchFlightData.queryByFlightSearch(data.id)
 
             if (query.size != path.flightIds.size)
                 return false
@@ -219,7 +213,7 @@ data class FlightSearchData(
             if (possibleSearch != null) {
                 possibleSearch.createdAt = Timestamp.from(Instant.now())
                 possibleSearch.update()
-                return possibleSearch!!
+                return possibleSearch
             }
 
             val search : FlightSearchData = createSearch(
