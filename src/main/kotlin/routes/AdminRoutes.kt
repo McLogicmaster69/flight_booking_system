@@ -83,6 +83,8 @@ private suspend fun ApplicationCall.handleManageStaffLoad() {
     }
 
     val positions = StaffPositionData.queryDatabase().map { it.dataClass }
+    val countries = CountryData.queryDatabase().map { it.dataClass }
+    val destinations = DestinationData.queryDatabase().map { it.dataClass }
 
     val model = mapOf(
         "title" to "Manage Staff",
@@ -91,7 +93,9 @@ private suspend fun ApplicationCall.handleManageStaffLoad() {
         "inNav" to true,
         "isAdmin" to true,
         "staff" to staff,
-        "positions" to positions
+        "positions" to positions,
+        "countries" to countries,
+        "destinations" to destinations
     )
 
         val template = pebble.getTemplate("admin/manageStaff.peb")
@@ -112,11 +116,15 @@ private suspend fun ApplicationCall.handleCreateStaffPost() {
         val positionId = params["positionId"]?.toIntOrNull()
         val email = params["email"]
         val password = params["password"]
+        val homeId = params["homeId"]?.toIntOrNull()
+        val currentLocation = params["currentLocation"]?.toIntOrNull()
 
         if (
             firstName.isNullOrBlank() ||
             lastName.isNullOrBlank() ||
             positionId == null ||
+            homeId == null ||
+            currentLocation == null ||
             email.isNullOrBlank() ||
             password.isNullOrBlank()
         ) {
@@ -143,7 +151,9 @@ private suspend fun ApplicationCall.handleCreateStaffPost() {
             firstName = firstName,
             lastName = lastName,
             positionId = positionId,
-            loginId = loginId
+            loginId = loginId,
+            homeId = homeId,
+            currentLocation = currentLocation
         ).insertIntoDatabase()
 
         response.headers.append("HX-Redirect", "/manageStaff")

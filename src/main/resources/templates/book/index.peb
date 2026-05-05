@@ -84,23 +84,6 @@
         </div>
       </div>
 
-      <div class="homepage-field">
-        <label for="depart">Departure date</label>
-        <input class="general-input-input" id="depart" name="depart" type="date" value="{{ departValue | default('') }}"
-          aria-label="Depart date" aria-describedby="departError" required>
-        <small id="departError" class="homepage-field-error" aria-live="polite"></small>
-      </div>
-
-      <div class="homepage-field" id="returnDateField">
-        <label for="returnDate">Return date</label>
-        <input class="general-input-input"
-              id="returnDate"
-              name="returnDate"
-              type="date"
-              aria-describedby="returnDateError">
-        <small id="returnDateError" class="homepage-field-error" aria-live="polite"></small>
-      </div>
-
       <div class="homepage-search-actions">
         <button type="submit">SEARCH FLIGHTS</button>
         <div id="homepageFormStatus" class="homepage-form-status" aria-live="polite"></div>

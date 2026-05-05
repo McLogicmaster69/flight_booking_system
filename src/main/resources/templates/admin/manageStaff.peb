@@ -75,6 +75,20 @@
                 {% endfor %}
             </select>
 
+            <label class="auth-label">Home Country</label>
+            <select class="auth-input" name="homeId">
+                {% for country in countries %}
+                    <option value="{{ country.id }}">{{ country.name }}</option>
+                {% endfor %}
+            </select>
+
+            <label class="auth-label">Current Location</label>
+            <select class="auth-input" name="currentLocation">
+                {% for destination in destinations %}
+                    <option value="{{ destination.id }}">{{ destination.cityName }}</option>
+                {% endfor %}
+            </select>
+
             <label class="auth-label">Email</label>
             <input class="auth-input" name="email" type="email" placeholder="Email">
 
