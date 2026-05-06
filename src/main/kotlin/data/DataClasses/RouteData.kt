@@ -1,6 +1,7 @@
 package data
 
 import java.time.LocalTime
+import java.time.LocalDate
 
 object RouteColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
@@ -88,6 +89,50 @@ data class RouteData(
 
     override fun debugData() {
         println("Route data: (\"$id\", \"$startDestination\", \"$endDestination\", \"$duration\")")
+    }
+
+    fun getRoutePopularity(startDate : LocalDate, endDate : LocalDate) : Int {
+        val joinArgs : MultipleJoinArgs = MultipleJoinArgs(
+            listOf(
+                JoinArgs(
+                    "INNER",
+                    FlightData.EMPTY.tableName,
+                    RouteColumns.ID.name,
+                    FlightColumns.ROUTE_ID.name,
+                    FlightColumns.COLUMN_NAMES
+                ),
+                JoinArgs(
+                    "INNER",
+                    SeatData.EMPTY.tableName,
+                    FlightColumns.ID.name,
+                    SeatColumns.FLIGHT_ID.name,
+                    SeatColumns.COLUMN_NAMES,
+                    FlightData.EMPTY.tableName
+                ),
+                JoinArgs(
+                    "INNER",
+                    BookedSeatData.EMPTY.tableName,
+                    SeatColumns.ID.name,
+                    BookedSeatColumns.SEAT_ID.name,
+                    BookedSeatColumns.COLUMN_NAMES,
+                    SeatData.EMPTY.tableName
+                )
+            )
+        )
+
+        val whereArgs : WhereArgs = WhereArgs (
+            whereClause = """
+            ${RouteData.EMPTY.tableName}.${RouteColumns.ID.name} = ?
+            AND ${FlightData.EMPTY.tableName}.${FlightColumns.DATE.name} >= ?
+            AND ${FlightData.EMPTY.tableName}.${FlightColumns.DATE.name} < ?
+            """,
+            listOf(id, startDate, endDate)
+        )
+
+        return queryDatabase(
+            multipleJoinArgs = joinArgs,
+            whereArgs = whereArgs
+        ).size
     }
 
     companion object {
@@ -368,6 +413,17 @@ data class RouteData(
             }
 
             return query.first().dataClass.id
+        }
+
+        fun getPopularRoutes (
+            amount : Int,
+            daysPrior : Long
+        ) : List<QueryResult<RouteData>> {
+            val startDate : LocalDate = LocalDate.now().minusDays(daysPrior)
+
+            return queryDatabase().sortedByDescending { route ->
+                route.dataClass.getRoutePopularity(startDate, LocalDate.now())
+            }.take(amount)
         }
     }
 }
