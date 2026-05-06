@@ -1,0 +1,112 @@
+{% extends "_layout/base.peb" %}
+
+{% set layout = 'admin' %}
+{% set activePage = 'managePlanes' %}
+{% set inNav = true %}
+
+{% block content %}
+
+<h2 class="wf-title">Manage Planes</h2>
+<div class="wf-rule"></div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start;">
+
+    <section>
+        <h3>Registered Planes</h3>
+
+        {% for plane in planes %}
+            <form
+                class="auth-form"
+                method="post"
+                action="/managePlanes/update"
+                hx-post="/managePlanes/update">
+
+                <input type="hidden" name="planeId" value="{{ plane.id }}">
+
+                <label class="auth-label">Registration Code</label>
+                <input class="auth-input" name="registrationCode" type="text" value="{{ plane.registrationCode }}">
+
+                <label class="auth-label">Model</label>
+                <select class="auth-input" name="modelId">
+                    {% for model in models %}
+                        <option value="{{ model.id }}" {% if model.id == plane.modelId %}selected{% endif %}>
+                            {{ model.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <label class="auth-label">Current Location</label>
+                <select class="auth-input" name="currentLocation">
+                    {% for destination in destinations %}
+                        <option value="{{ destination.id }}" {% if destination.id == plane.currentLocation %}selected{% endif %}>
+                            {{ destination.cityName }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <label class="auth-label">Current Location Date</label>
+                <input class="auth-input" name="currentLocationDate" type="date" value="{{ plane.currentLocationDate }}">
+
+                <label class="auth-label">Current Location Time</label>
+                <input class="auth-input" name="currentLocationTime" type="time" value="{{ plane.currentLocationTime }}">
+
+                <div style="margin-top: 14px;"></div>
+                <button class="wf-btn wide" type="submit">Save Changes</button>
+            </form>
+
+            <form
+                class="auth-form"
+                method="post"
+                action="/managePlanes/delete"
+                hx-post="/managePlanes/delete">
+
+                <input type="hidden" name="planeId" value="{{ plane.id }}">
+                <button class="wf-btn wide" type="submit">Delete Plane</button>
+            </form>
+
+            <div class="wf-rule"></div>
+        {% else %}
+            <p>No planes found.</p>
+        {% endfor %}
+    </section>
+
+    <section>
+        <h3>Register Plane Into Database</h3>
+
+        <form
+            class="auth-form"
+            method="post"
+            action="/managePlanes/create"
+            hx-post="/managePlanes/create">
+
+            <label class="auth-label">Registration Code</label>
+            <input class="auth-input" name="registrationCode" type="text" placeholder="Registration Code">
+
+            <label class="auth-label">Model</label>
+            <select class="auth-input" name="modelId">
+                {% for model in models %}
+                    <option value="{{ model.id }}">{{ model.name }}</option>
+                {% endfor %}
+            </select>
+
+            <label class="auth-label">Current Location</label>
+            <select class="auth-input" name="currentLocation">
+                {% for destination in destinations %}
+                    <option value="{{ destination.id }}">{{ destination.cityName }}</option>
+                {% endfor %}
+            </select>
+
+            <label class="auth-label">Current Location Date</label>
+            <input class="auth-input" name="currentLocationDate" type="date" value="1970-01-01">
+
+            <label class="auth-label">Current Location Time</label>
+            <input class="auth-input" name="currentLocationTime" type="time" value="00:00">
+
+            <div style="margin-top: 14px;"></div>
+            <button class="wf-btn wide" type="submit">Register Plane</button>
+        </form>
+    </section>
+
+</div>
+
+{% endblock %}

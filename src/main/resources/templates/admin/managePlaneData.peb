@@ -1,0 +1,174 @@
+{% extends "_layout/base.peb" %}
+
+{% set layout = 'admin' %}
+{% set activePage = 'managePlaneData' %}
+{% set inNav = true %}
+
+{% block content %}
+
+<h2 class="wf-title">Manage Planes</h2>
+<div class="wf-rule"></div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start;">
+
+    <section>
+        <h3>Registered Models</h3>
+
+        {% for model in models %}
+            <form
+                class="auth-form"
+                method="post"
+                action="/managePlaneData/model/update"
+                hx-post="/managePlaneData/model/update">
+
+                <input type="hidden" name="modelId" value="{{ model.id }}">
+
+                <label class="auth-label">Model Name</label>
+                <input class="auth-input" name="name" type="text" value="{{ model.name }}">
+
+                <label class="auth-label">Manufacturer</label>
+                <select class="auth-input" name="manufacturerId">
+                    {% for manufacturer in manufacturers %}
+                        <option value="{{ manufacturer.id }}" {% if manufacturer.id == model.manufacturerId %}selected{% endif %}>
+                            {{ manufacturer.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <label class="auth-label">Capacity</label>
+                <input class="auth-input" name="capacity" type="number" min="1" value="{{ model.capacity }}">
+
+                <label class="auth-label">Pilots</label>
+                <input class="auth-input" name="pilots" type="number" min="1" value="{{ model.pilots }}">
+
+                <label class="auth-label">Attendants</label>
+                <input class="auth-input" name="attendants" type="number" min="0" value="{{ model.attendants }}">
+
+                <div style="margin-top: 14px;"></div>
+                <button class="wf-btn wide" type="submit">Save Changes</button>
+            </form>
+
+            <form
+                class="auth-form"
+                method="post"
+                action="/managePlaneData/model/delete"
+                hx-post="/managePlaneData/model/delete"
+                hx-target="#model-status-{{ model.id }}"
+                hx-swap="innerHTML">
+
+                <input type="hidden" name="modelId" value="{{ model.id }}">
+                <button class="wf-btn wide" type="submit">Delete Model</button>
+                <div id="model-status-{{ model.id }}" role="status" aria-live="polite"></div>
+            </form>
+
+            <div class="wf-rule"></div>
+        {% else %}
+            <p>No plane models found.</p>
+        {% endfor %}
+    </section>
+
+    <section>
+        <h3>Register Model</h3>
+
+        <form
+            class="auth-form"
+            method="post"
+            action="/managePlaneData/model/create"
+            hx-post="/managePlaneData/model/create"
+            hx-target="#create-model-status"
+            hx-swap="innerHTML">
+
+            <label class="auth-label">Model Name</label>
+            <input class="auth-input" name="name" type="text" placeholder="Model Name">
+
+            <label class="auth-label">Manufacturer</label>
+            <select class="auth-input" name="manufacturerId">
+                {% for manufacturer in manufacturers %}
+                    <option value="{{ manufacturer.id }}">{{ manufacturer.name }}</option>
+                {% endfor %}
+            </select>
+
+            <label class="auth-label">Capacity</label>
+            <input class="auth-input" name="capacity" type="number" min="1" placeholder="Capacity">
+
+            <label class="auth-label">Pilots</label>
+            <input class="auth-input" name="pilots" type="number" min="1" placeholder="Pilots">
+
+            <label class="auth-label">Attendants</label>
+            <input class="auth-input" name="attendants" type="number" min="0" placeholder="Attendants">
+
+            <div style="margin-top: 14px;"></div>
+            <button class="wf-btn wide" type="submit">Register Model</button>
+
+            <div id="create-model-status" role="status" aria-live="polite"></div>
+        </form>
+    </section>
+
+</div>
+
+<div class="wf-rule"></div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start;">
+
+    <section>
+        <h3>Registered Manufacturers</h3>
+
+        {% for manufacturer in manufacturers %}
+            <form
+                class="auth-form"
+                method="post"
+                action="/managePlaneData/manufacturer/update"
+                hx-post="/managePlaneData/manufacturer/update">
+
+                <input type="hidden" name="manufacturerId" value="{{ manufacturer.id }}">
+
+                <label class="auth-label">Manufacturer Name</label>
+                <input class="auth-input" name="name" type="text" value="{{ manufacturer.name }}">
+
+                <div style="margin-top: 14px;"></div>
+                <button class="wf-btn wide" type="submit">Save Changes</button>
+            </form>
+
+            <form
+                class="auth-form"
+                method="post"
+                action="/managePlaneData/manufacturer/delete"
+                hx-post="/managePlaneData/manufacturer/delete"
+                hx-target="#manufacturer-status-{{ manufacturer.id }}"
+                hx-swap="innerHTML">
+
+                <input type="hidden" name="manufacturerId" value="{{ manufacturer.id }}">
+                <button class="wf-btn wide" type="submit">Delete Manufacturer</button>
+                <div id="manufacturer-status-{{ manufacturer.id }}" role="status" aria-live="polite"></div>
+            </form>
+
+            <div class="wf-rule"></div>
+        {% else %}
+            <p>No manufacturers found.</p>
+        {% endfor %}
+    </section>
+
+    <section>
+        <h3>Register Manufacturer</h3>
+
+        <form
+            class="auth-form"
+            method="post"
+            action="/managePlaneData/manufacturer/create"
+            hx-post="/managePlaneData/manufacturer/create"
+            hx-target="#create-manufacturer-status"
+            hx-swap="innerHTML">
+
+            <label class="auth-label">Manufacturer Name</label>
+            <input class="auth-input" name="name" type="text" placeholder="Manufacturer Name">
+
+            <div style="margin-top: 14px;"></div>
+            <button class="wf-btn wide" type="submit">Register Manufacturer</button>
+
+            <div id="create-manufacturer-status" role="status" aria-live="polite"></div>
+        </form>
+    </section>
+
+</div>
+
+{% endblock %}

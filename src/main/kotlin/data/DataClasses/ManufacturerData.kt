@@ -2,7 +2,7 @@ package data
 
 object ManufacturerColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
-    val NAME = Column<String?>("name", "VARCHAR")
+    val NAME = Column<String?>("name", "VARCHAR UNIQUE")
 
     val ALL = listOf(ID, NAME)
     val COLUMN_NAMES = ALL.map { it.name }

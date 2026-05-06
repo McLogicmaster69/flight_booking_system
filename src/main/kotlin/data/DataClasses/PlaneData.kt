@@ -6,12 +6,13 @@ import java.time.LocalDateTime
 
 object PlaneColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
+    val REGISTRATION_CODE = Column<String>("registration_code", "STRING NOT NULL UNIQUE")
     val MODEL_ID = Column<Int>("model_id", "INTEGER NOT NULL REFERENCES ${PlaneModelData.EMPTY.tableName}(id)")
     val CURRENT_LOCATION = Column<Int>("current_location", "INTEGER NOT NULL REFERENCES ${DestinationData.EMPTY.tableName}(id)")
     val CURRENT_LOCATION_DATE = Column<String>("current_location_date", "STRING NOT NULL")
     val CURRENT_LOCATION_TIME = Column<String>("current_location_time", "STRING NOT NULL")
 
-    val ALL = listOf(ID, MODEL_ID, CURRENT_LOCATION, CURRENT_LOCATION_DATE, CURRENT_LOCATION_TIME)
+    val ALL = listOf(ID, REGISTRATION_CODE, MODEL_ID, CURRENT_LOCATION, CURRENT_LOCATION_DATE, CURRENT_LOCATION_TIME)
     val COLUMN_NAMES = ALL.map { it.name }
 }
 
@@ -19,6 +20,7 @@ data class PlaneData(
 
     override val id: Int = 0,
     var modelId : Int = 0,
+    var registrationCode: String = "",
     var currentLocation : Int = 0,
     var currentLocationDate : LocalDate = LocalDate.parse("1970-01-01"),
     var currentLocationTime : LocalTime = LocalTime.parse("00:00")
@@ -35,8 +37,8 @@ data class PlaneData(
 
     override val initialRows: List<PlaneData>
         get() = listOf(
-            PlaneData(modelId = PlaneModelData.getPlaneModelId("Boeing 737-800"), currentLocation = DestinationData.getDestinationId("Luton")),
-            PlaneData(modelId = PlaneModelData.getPlaneModelId("Airbus A321"), currentLocation = DestinationData.getDestinationId("Luton"))
+            PlaneData(registrationCode = "G-BOE738", modelId = PlaneModelData.getPlaneModelId("Boeing 737-800"), currentLocation = DestinationData.getDestinationId("Luton")),
+            PlaneData(registrationCode = "G-AIRA321", modelId = PlaneModelData.getPlaneModelId("Airbus A321"), currentLocation = DestinationData.getDestinationId("Luton"))
         )
 
     override val requiredTables: List<DataClass<*>>
@@ -47,6 +49,7 @@ data class PlaneData(
 
     override fun mapDataToColumns () : Map<Column<*>, Any?> =
         mapOf(
+            PlaneColumns.REGISTRATION_CODE to registrationCode,
             PlaneColumns.MODEL_ID to modelId,
             PlaneColumns.CURRENT_LOCATION to currentLocation,
             PlaneColumns.CURRENT_LOCATION_DATE to currentLocationDate,
@@ -56,6 +59,7 @@ data class PlaneData(
     override fun mapRowToData(row : Array<Any?>) : PlaneData =
         PlaneData(
             id = castRowElement(row, PlaneColumns.ID),
+            registrationCode = castRowElement(row, PlaneColumns.REGISTRATION_CODE),
             modelId = castRowElement(row, PlaneColumns.MODEL_ID),
             currentLocation = castRowElement(row, PlaneColumns.CURRENT_LOCATION),
             currentLocationDate = castDateRowElement(row, PlaneColumns.CURRENT_LOCATION_DATE),
@@ -63,7 +67,7 @@ data class PlaneData(
         )
 
     override fun debugData() {
-        println("Plane data: (\"$id\", \"$modelId\", \"$currentLocation\", \"$currentLocationDate\", \"$currentLocationTime\")")
+        println("Plane data: (\"$id\", \"$registrationCode\", \"$modelId\", \"$currentLocation\", \"$currentLocationDate\", \"$currentLocationTime\")")
     }
 
     fun updateLocation(location : Int, date : LocalDate, time : LocalTime) {
@@ -92,7 +96,7 @@ data class PlaneData(
         fun getPlaneId(modelName: String): Int {
             val modelId = PlaneModelData.getPlaneModelId(modelName)
             return queryDatabase(
-                whereArgs = WhereArgs("${PlaneColumns.MODEL_ID} = ?", listOf(modelId))
+                whereArgs = WhereArgs("${PlaneColumns.MODEL_ID.name} = ?", listOf(modelId))
             ).firstOrNull()?.dataClass?.id ?: -1
         }
 
@@ -113,7 +117,7 @@ data class PlaneData(
         ) : PlaneData? {
             val availablePlanes : List<QueryResult<PlaneData>> = PlaneData.queryDatabase(
                 whereArgs = WhereArgs(
-                    whereClause = "${PlaneColumns.MODEL_ID} = ?",
+                    whereClause = "${PlaneColumns.MODEL_ID.name} = ?",
                     whereArgs = listOf(modelId)
                 )
             )
