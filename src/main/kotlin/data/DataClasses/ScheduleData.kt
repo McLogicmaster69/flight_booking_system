@@ -236,7 +236,7 @@ data class ScheduleData(
         }
 
         fun updateAllFlights() {
-            println("Updating all flights")
+            println("Creating flights from schedules")
             val schedules : List<QueryResult<ScheduleData>> = queryDatabase(
                 whereArgs = WhereArgs(
                     "${ScheduleColumns.ACTIVE.name} = ?",

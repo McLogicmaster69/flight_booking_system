@@ -104,6 +104,7 @@ data class FlightSearchData(
         }
 
         fun deleteOld() {
+            println("Cleaning ${EMPTY.tableName}")
             val whereArgs = WhereArgs(
                 whereClause = "${FlightSearchColumns.CREATED_AT.name} > datetime('now', '-1 month')",
                 whereArgs = emptyList()

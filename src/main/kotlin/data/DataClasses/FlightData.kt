@@ -7,7 +7,6 @@ import java.time.Duration
 import kotlin.math.roundToInt
 import results.CreateFlightResults
 import results.StaffAssignmentResults
-import data.FlightColumns
 
 const val TRANSFER_TIME : Int = 120
 const val MAX_TIME : Int = 2880
@@ -80,6 +79,25 @@ data class FlightData(
 
     override fun debugData() {
         println("Flight data: (\"$id\", \"$scheduleId\", \"$routeId\", \"$planeId\", \"$date\", \"$time\")")
+    }
+
+    fun assignRemainingStaff() {
+        val pilotId : Int = StaffPositionData.queryDatabase(StaffPositions.PILOT).first().dataClass.id
+        val attendantId : Int = StaffPositionData.queryDatabase(StaffPositions.FLIGHT_ATTENDANT).first().dataClass.id
+        val staffAssignments : List<QueryResult<AssignedFlightStaffData>> = AssignedFlightStaffData.queryByFlightID(id)
+        val plane : PlaneData = PlaneData.queryDatabase(planeId).firstOrNull()?.dataClass ?: return
+        val model : PlaneModelData = PlaneModelData.queryDatabase(plane.modelId).firstOrNull()?.dataClass ?: return
+
+        val pilots = model.pilots - staffAssignments.filter { StaffData.queryDatabase(it.dataClass.id).first().dataClass.positionId == pilotId }.size
+        val attendants = model.attendants - staffAssignments.filter { StaffData.queryDatabase(it.dataClass.id).first().dataClass.positionId == attendantId }.size
+
+        println("Assigning ${pilots} pilots and ${attendants} attendants to flight ID $id")
+        
+        AssignedFlightStaffData.assignStaffToFlight(
+            id,
+            pilots,
+            attendants
+        )
     }
 
     companion object {
@@ -381,6 +399,7 @@ data class FlightData(
         }
 
         fun deleteOld() {
+            println("Cleaning ${EMPTY.tableName}")
             val whereArgs = WhereArgs(
                 whereClause = "${FlightColumns.DATE.name} < ?",
                 whereArgs = listOf(LocalDate.now().minusYears(1L))
@@ -390,6 +409,72 @@ data class FlightData(
 
             query.forEach { flight ->
                 flight.dataClass.delete()
+            }
+        }
+
+        fun getIncompleteFlights() : List<QueryResult<FlightData>> {
+            val pilotId : Int = StaffPositionData.queryDatabase(StaffPositions.PILOT).first().dataClass.id
+            val attendantId : Int = StaffPositionData.queryDatabase(StaffPositions.FLIGHT_ATTENDANT).first().dataClass.id
+
+            val joinArgs : MultipleJoinArgs = MultipleJoinArgs(
+                listOf(
+                    JoinArgs(
+                        "INNER",
+                        PlaneData.EMPTY.tableName,
+                        FlightColumns.PLANE_ID.name,
+                        PlaneColumns.ID.name,
+                        PlaneColumns.COLUMN_NAMES
+                    ),
+                    JoinArgs(
+                        "INNER",
+                        PlaneModelData.EMPTY.tableName,
+                        PlaneColumns.MODEL_ID.name,
+                        PlaneModelColumns.ID.name,
+                        PlaneModelColumns.COLUMN_NAMES,
+                        PlaneData.EMPTY.tableName
+                    ),
+                    JoinArgs(
+                        "LEFT",
+                        AssignedFlightStaffData.EMPTY.tableName,
+                        FlightColumns.ID.name,
+                        AssignedFlightStaffColumns.FLIGHT_ID.name,
+                        AssignedFlightStaffColumns.COLUMN_NAMES
+                    ),
+                    JoinArgs(
+                        "LEFT",
+                        StaffData.EMPTY.tableName,
+                        AssignedFlightStaffColumns.STAFF_ID.name,
+                        StaffColumns.ID.name,
+                        StaffColumns.COLUMN_NAMES,
+                        AssignedFlightStaffData.EMPTY.tableName
+                    )
+                )
+            )
+
+            val groupByArgs : GroupByArgs = GroupByArgs(
+                "${FlightData.EMPTY.tableName}.${FlightColumns.ID.name}, ${PlaneModelData.EMPTY.tableName}.${PlaneModelColumns.PILOTS.name}, ${PlaneModelData.EMPTY.tableName}.${PlaneModelColumns.ATTENDANTS.name}",
+                HavingArgs(
+                    """
+                    SUM(CASE WHEN ${StaffData.EMPTY.tableName}.${StaffColumns.POSITION_ID.name} = ? THEN 1 ELSE 0 END) < ${PlaneModelData.EMPTY.tableName}.${PlaneModelColumns.PILOTS.name}
+                    OR
+                    SUM(CASE WHEN ${StaffData.EMPTY.tableName}.${StaffColumns.POSITION_ID.name} = ? THEN 1 ELSE 0 END) < ${PlaneModelData.EMPTY.tableName}.${PlaneModelColumns.ATTENDANTS.name}
+                    """,
+                    listOf(pilotId, attendantId)
+                )
+            )
+
+            return queryDatabase(
+                multipleJoinArgs = joinArgs,
+                groupByArgs = groupByArgs
+            )
+        }
+
+        fun assignStaffToIncompleteFlights() {
+            println("Assigning staff to incomplete flights")
+            val incompleteFlights : List<QueryResult<FlightData>> = getIncompleteFlights()
+            println("Found ${incompleteFlights.size} incomplete flights")
+            incompleteFlights.forEach { flight ->
+                flight.dataClass.assignRemainingStaff()
             }
         }
     }

@@ -6,4 +6,5 @@ data class JoinArgs (
     val leftTableJoinColumn : String,
     val rightTableJoinColumn : String,
     val joinSelectColumns : List<String> = emptyList(),
+    val leftTableJoin : String? = null
 )

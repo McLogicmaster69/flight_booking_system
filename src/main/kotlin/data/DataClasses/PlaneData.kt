@@ -87,6 +87,8 @@ data class PlaneData(
             return EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
         }
 
+        fun queryDatabase(id : Int) : List<QueryResult<PlaneData>> = queryDatabase(whereArgs = WhereArgs("${PlaneColumns.ID.name} = ?", listOf(id)))
+
         fun getPlaneId(modelName: String): Int {
             val modelId = PlaneModelData.getPlaneModelId(modelName)
             return queryDatabase(

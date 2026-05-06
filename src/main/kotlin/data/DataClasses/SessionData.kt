@@ -124,6 +124,7 @@ data class SessionData(
         }
 
         fun deleteOld() {
+            println("Cleaning ${EMPTY.tableName}")
             val whereArgs = WhereArgs(
                 whereClause = "${SessionColumns.EXPIRY_DATE.name} < ?",
                 whereArgs = listOf(LocalDate.now())

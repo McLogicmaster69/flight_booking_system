@@ -90,6 +90,8 @@ data class StaffData(
             return EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
         }
 
+        fun queryDatabase(id : Int) : List<QueryResult<StaffData>> = queryDatabase(whereArgs = WhereArgs("${StaffColumns.ID.name} = ?", listOf(id)))
+
         fun updateTable (
             values : Map<Column<*>, Any?>,
             whereArgs : WhereArgs

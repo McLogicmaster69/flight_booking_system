@@ -237,7 +237,7 @@ object DatabaseManager {
 
             if (multipleJoinArgs != null) {
                 multipleJoinArgs.joinArgs.forEach { joinArgs ->
-                    append(" ${joinArgs.joinType} JOIN ${joinArgs.rightTableJoin} ON $table.${joinArgs.leftTableJoinColumn} = ${joinArgs.rightTableJoin}.${joinArgs.rightTableJoinColumn}")
+                    append(" ${joinArgs.joinType} JOIN ${joinArgs.rightTableJoin} ON ${if (joinArgs.leftTableJoin == null) table else joinArgs.leftTableJoin}.${joinArgs.leftTableJoinColumn} = ${joinArgs.rightTableJoin}.${joinArgs.rightTableJoinColumn}")
                 }
             }
             if (whereArgs != null) append(" WHERE (${whereArgs.whereClause})")
