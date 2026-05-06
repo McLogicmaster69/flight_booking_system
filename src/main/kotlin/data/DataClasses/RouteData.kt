@@ -95,12 +95,13 @@ data class RouteData(
             get() = RouteData()
 
         fun queryDatabase (
-            joinArgs : JoinArgs? = null,
+            multipleJoinArgs : MultipleJoinArgs? = null,
             whereArgs : WhereArgs? = null,
             orderByArgs : OrderByArgs? = null,
-            limitArgs : LimitArgs? = null        
+            limitArgs : LimitArgs? = null,
+            groupByArgs : GroupByArgs? = null   
         ) : List<QueryResult<RouteData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
+            return EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
         }
 
         fun updateTable (
@@ -114,11 +115,11 @@ data class RouteData(
 
         fun queryDatabase (
             destinationArgs : DestinationArgs,
-            joinArgs : JoinArgs? = null
+            multipleJoinArgs : MultipleJoinArgs? = null
         ) : List<QueryResult<RouteData>> {
             val whereClause = "${RouteColumns.START_DESTINATION.name} = ? AND ${RouteColumns.END_DESTINATION.name} = ?"
             val whereArgs = listOf(destinationArgs.startDestination, destinationArgs.endDestination)
-            return EMPTY.queryDatabase(joinArgs, WhereArgs(whereClause, whereArgs))
+            return EMPTY.queryDatabase(multipleJoinArgs, WhereArgs(whereClause, whereArgs))
         }
 
         fun queryDatabase (
@@ -126,7 +127,7 @@ data class RouteData(
             startCountry : String,
             endCity : String,
             endCountry : String,            
-            joinArgs : JoinArgs? = null
+            multipleJoinArgs : MultipleJoinArgs? = null
         ) : List<QueryResult<RouteData>> {
             val startDestinationResults : List<QueryResult<DestinationData>> = DestinationData.queryDatabase(startCity, startCountry)
             if (startDestinationResults.isEmpty())
@@ -141,14 +142,14 @@ data class RouteData(
                     startDestinationResults.first().dataClass.id,
                     endDestinationResults.first().dataClass.id
                 ),
-                joinArgs
+                multipleJoinArgs
             )
         }
 
         fun queryDatabase (
             start : String,
             end : String,
-            joinArgs : JoinArgs? = null
+            multipleJoinArgs : MultipleJoinArgs? = null
         ) : List<QueryResult<RouteData>> {
             val startElements = start.split(" - ")
             if (startElements.size != 2)
@@ -163,7 +164,7 @@ data class RouteData(
                 startElements[1],
                 endElements[0],
                 endElements[1],
-                joinArgs
+                multipleJoinArgs
             )
 
             if (query.isNotEmpty())
@@ -174,7 +175,7 @@ data class RouteData(
                 startElements[0],
                 endElements[1],
                 endElements[0],
-                joinArgs
+                multipleJoinArgs
             )
         }
 

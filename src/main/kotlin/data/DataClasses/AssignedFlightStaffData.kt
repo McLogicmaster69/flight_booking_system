@@ -55,12 +55,13 @@ data class AssignedFlightStaffData(
             get() = AssignedFlightStaffData()
 
         fun queryDatabase (
-            joinArgs : JoinArgs? = null,
+            multipleJoinArgs : MultipleJoinArgs? = null,
             whereArgs : WhereArgs? = null,
             orderByArgs : OrderByArgs? = null,
-            limitArgs : LimitArgs? = null
+            limitArgs : LimitArgs? = null,
+            groupByArgs : GroupByArgs? = null   
         ) : List<QueryResult<AssignedFlightStaffData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
+            return EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
         }
 
         fun updateTable (
@@ -91,12 +92,16 @@ data class AssignedFlightStaffData(
 
             val endCountry = DestinationData.queryDatabase(route.endDestination).firstOrNull()?.dataClass?.id ?: -2
             val pastAssignments : List<QueryResult<AssignedFlightStaffData>> = queryDatabase(
-                joinArgs = JoinArgs(
-                    joinType = "INNER",
-                    joinTable = FlightData.EMPTY.tableName,
-                    joinTable1Column = AssignedFlightStaffColumns.FLIGHT_ID.name,
-                    joinTable2Column = FlightColumns.ID.name,
-                    joinSelectColumns = FlightColumns.COLUMN_NAMES
+                multipleJoinArgs = MultipleJoinArgs(
+                    listOf(
+                        JoinArgs(
+                            joinType = "INNER",
+                            rightTableJoin = FlightData.EMPTY.tableName,
+                            leftTableJoinColumn = AssignedFlightStaffColumns.FLIGHT_ID.name,
+                            rightTableJoinColumn = FlightColumns.ID.name,
+                            joinSelectColumns = FlightColumns.COLUMN_NAMES
+                        )
+                    )
                 ),
                 whereArgs = WhereArgs (
                     whereClause = """

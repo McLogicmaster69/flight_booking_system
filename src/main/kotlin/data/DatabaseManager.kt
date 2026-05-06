@@ -218,32 +218,59 @@ object DatabaseManager {
     fun queryTable(
         table : String,
         columns : List<String>,
-        joinArgs : JoinArgs? = null,
+        multipleJoinArgs : MultipleJoinArgs? = null,
         whereArgs : WhereArgs? = null,
         orderByArgs : OrderByArgs? = null,
-        limitArgs : LimitArgs? = null
+        limitArgs : LimitArgs? = null,
+        groupByArgs : GroupByArgs? = null
     ): List<Array<Any?>> {
 
         var columnStr = columns.joinToString(", ") { "$table.$it" }
-        if (joinArgs != null) columnStr += ", " + joinArgs.joinSelectColumns.joinToString(", ") { "${joinArgs.joinTable}.$it" }
+        if (multipleJoinArgs != null) {
+            multipleJoinArgs.joinArgs.forEach { joinArgs ->
+                columnStr += ", " + joinArgs.joinSelectColumns.joinToString(", ") { "${joinArgs.rightTableJoin}.$it" }
+            }            
+        }
 
         val sql = buildString {
             append("SELECT $columnStr FROM $table")
 
-            if (joinArgs != null) append(" ${joinArgs.joinType} JOIN ${joinArgs.joinTable} ON $table.${joinArgs.joinTable1Column} = ${joinArgs.joinTable}.${joinArgs.joinTable2Column}")
+            if (multipleJoinArgs != null) {
+                multipleJoinArgs.joinArgs.forEach { joinArgs ->
+                    append(" ${joinArgs.joinType} JOIN ${joinArgs.rightTableJoin} ON $table.${joinArgs.leftTableJoinColumn} = ${joinArgs.rightTableJoin}.${joinArgs.rightTableJoinColumn}")
+                }
+            }
             if (whereArgs != null) append(" WHERE (${whereArgs.whereClause})")
+            if (groupByArgs != null) {
+                append (" GROUP BY ${groupByArgs.groupClause}")
+                if (groupByArgs.havingArgs != null) append(" HAVING ${groupByArgs.havingArgs.havingClause}")
+            }
             if (orderByArgs != null) append(" ORDER BY ${orderByArgs.orderArgs.joinToString(", ") { "${it.orderColumn} ${if (it.ascending) "ASC" else "DESC"}" }}")
             if (limitArgs != null) append(" LIMIT ${limitArgs.limitAmount}")
         }
 
         var totalSize = columns.size
-        if (joinArgs != null)
-            totalSize += joinArgs.joinSelectColumns.size
+        if (multipleJoinArgs != null) {
+            multipleJoinArgs.joinArgs.forEach { joinArgs ->
+                totalSize += joinArgs.joinSelectColumns.size
+            }
+        }            
 
         connection.prepareStatement(sql).use { stmt ->
+            var objectIndex = 1
             if (whereArgs != null) {
-                whereArgs.whereArgs.forEachIndexed { i, value ->
-                    stmt.setObject(i + 1, value)
+                whereArgs.whereArgs.forEach { value ->
+                    stmt.setObject(objectIndex, value)
+                    objectIndex += 1
+                }
+            }
+
+            if (groupByArgs != null) {
+                if (groupByArgs.havingArgs != null) {
+                    groupByArgs.havingArgs.havingArgs.forEach { value ->
+                        stmt.setObject(objectIndex, value)
+                        objectIndex += 1
+                    }
                 }
             }
 

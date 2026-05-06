@@ -42,12 +42,13 @@ data class AdminData(
             get() = AdminData()
 
         fun queryDatabase (
-            joinArgs : JoinArgs? = null,
+            multipleJoinArgs : MultipleJoinArgs? = null,
             whereArgs : WhereArgs? = null,
             orderByArgs : OrderByArgs? = null,
-            limitArgs : LimitArgs? = null
+            limitArgs : LimitArgs? = null,
+            groupByArgs : GroupByArgs? = null   
         ) : List<QueryResult<AdminData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
+            return EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
         }
 
         fun updateTable (
@@ -62,12 +63,16 @@ data class AdminData(
         fun queryByLogIn(
             email : String
         ) : List<QueryResult<AdminData>> {
-            val joinArgs : JoinArgs = JoinArgs(
-                joinType = "INNER",
-                joinTable = LoginData.EMPTY.tableName,
-                joinTable1Column = AdminColumns.LOGIN_ID.name,
-                joinTable2Column = LoginColumns.ID.name,
-                joinSelectColumns = LoginColumns.ALL.map { it.name }
+            val joinArgs : MultipleJoinArgs = MultipleJoinArgs(
+                listOf(
+                    JoinArgs(
+                        joinType = "INNER",
+                        rightTableJoin = LoginData.EMPTY.tableName,
+                        leftTableJoinColumn = AdminColumns.LOGIN_ID.name,
+                        rightTableJoinColumn = LoginColumns.ID.name,
+                        joinSelectColumns = LoginColumns.ALL.map { it.name }
+                    )
+                )
             )
 
             val whereArgs : WhereArgs = WhereArgs(
@@ -76,7 +81,7 @@ data class AdminData(
             )
 
             return queryDatabase(
-                joinArgs = joinArgs,
+                multipleJoinArgs = joinArgs,
                 whereArgs = whereArgs
             )
         }

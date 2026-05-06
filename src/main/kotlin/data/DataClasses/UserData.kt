@@ -68,12 +68,13 @@ data class UserData(
             get() = UserData()
 
         fun queryDatabase (
-            joinArgs : JoinArgs? = null,
+            multipleJoinArgs : MultipleJoinArgs? = null,
             whereArgs : WhereArgs? = null,
             orderByArgs : OrderByArgs? = null,
-            limitArgs : LimitArgs? = null        
+            limitArgs : LimitArgs? = null,
+            groupByArgs : GroupByArgs? = null   
         ) : List<QueryResult<UserData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
+            return EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
         }
 
         fun updateTable (
@@ -109,12 +110,16 @@ data class UserData(
         fun queryByLogIn(
             email : String
         ) : List<QueryResult<UserData>> {
-            val joinArgs : JoinArgs = JoinArgs(
-                joinType = "INNER",
-                joinTable = LoginData.EMPTY.tableName,
-                joinTable1Column = UserColumns.LOGIN_ID.name,
-                joinTable2Column = LoginColumns.ID.name,
-                joinSelectColumns = LoginColumns.COLUMN_NAMES
+            val joinArgs : MultipleJoinArgs = MultipleJoinArgs(
+                listOf(
+                    JoinArgs(
+                        joinType = "INNER",
+                        rightTableJoin = LoginData.EMPTY.tableName,
+                        leftTableJoinColumn = UserColumns.LOGIN_ID.name,
+                        rightTableJoinColumn = LoginColumns.ID.name,
+                        joinSelectColumns = LoginColumns.COLUMN_NAMES
+                    )
+                )
             )
 
             val whereArgs : WhereArgs = WhereArgs(
@@ -123,7 +128,7 @@ data class UserData(
             )
 
             return queryDatabase(
-                joinArgs = joinArgs,
+                multipleJoinArgs = joinArgs,
                 whereArgs = whereArgs
             )
         }
@@ -131,13 +136,16 @@ data class UserData(
         fun queryByToken(
             token: String
         ): List<QueryResult<UserData>> {
-
-            val joinArgs = JoinArgs(
-                joinType = "INNER",
-                joinTable = SessionData.EMPTY.tableName,
-                joinTable1Column = UserColumns.ID.name,
-                joinTable2Column = SessionColumns.USER_ID.name,
-                joinSelectColumns = SessionColumns.COLUMN_NAMES
+            val joinArgs : MultipleJoinArgs = MultipleJoinArgs(
+                listOf(
+                    JoinArgs(
+                        joinType = "INNER",
+                        rightTableJoin = SessionData.EMPTY.tableName,
+                        leftTableJoinColumn = UserColumns.ID.name,
+                        rightTableJoinColumn = SessionColumns.USER_ID.name,
+                        joinSelectColumns = SessionColumns.COLUMN_NAMES
+                    )
+                )
             )
 
             val whereArgs = WhereArgs(
@@ -146,7 +154,7 @@ data class UserData(
             )
 
             return queryDatabase(
-                joinArgs = joinArgs,
+                multipleJoinArgs = joinArgs,
                 whereArgs = whereArgs
             )
         }

@@ -57,14 +57,15 @@ data class AdminSessionData(
     companion object {
         val EMPTY : AdminSessionData
             get() = AdminSessionData()
-
+       
         fun queryDatabase (
-            joinArgs : JoinArgs? = null,
+            multipleJoinArgs : MultipleJoinArgs? = null,
             whereArgs : WhereArgs? = null,
             orderByArgs : OrderByArgs? = null,
-            limitArgs : LimitArgs? = null
+            limitArgs : LimitArgs? = null,
+            groupByArgs : GroupByArgs? = null   
         ) : List<QueryResult<AdminSessionData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
+            return EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
         }
 
         fun updateTable (
@@ -99,12 +100,16 @@ data class AdminSessionData(
         fun queryDatabase(
             token : String
         ) : List<QueryResult<AdminSessionData>> {
-            val joinArgs : JoinArgs = JoinArgs(
-                joinType = "INNER",
-                joinTable = UserData.EMPTY.tableName,
-                joinTable1Column = AdminSessionColumns.ADMIN_ID.name,
-                joinTable2Column = UserColumns.ID.name,
-                joinSelectColumns = UserColumns.ALL.map { it.name }
+            val joinArgs : MultipleJoinArgs = MultipleJoinArgs(
+                listOf(
+                    JoinArgs(
+                        joinType = "INNER",
+                        rightTableJoin = UserData.EMPTY.tableName,
+                        leftTableJoinColumn = AdminSessionColumns.ADMIN_ID.name,
+                        rightTableJoinColumn = UserColumns.ID.name,
+                        joinSelectColumns = UserColumns.ALL.map { it.name }
+                    )
+                )
             )
 
             val whereArgs : WhereArgs = WhereArgs(
@@ -113,7 +118,7 @@ data class AdminSessionData(
             )
 
             return queryDatabase(
-                joinArgs = joinArgs,
+                multipleJoinArgs = joinArgs,
                 whereArgs = whereArgs
             )
         }
