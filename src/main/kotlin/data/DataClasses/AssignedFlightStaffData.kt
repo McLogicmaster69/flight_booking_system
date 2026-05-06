@@ -83,6 +83,31 @@ data class AssignedFlightStaffData(
         ) : List<QueryResult<AssignedFlightStaffData>> 
             = queryDatabase(whereArgs = WhereArgs("${AssignedFlightStaffColumns.STAFF_ID.name} = ?", listOf(id)))
 
+        fun getFlightsAssignedToStaff(id : Int) : List<QueryResult<FlightData>> {
+            val joinArgs : MultipleJoinArgs = MultipleJoinArgs (
+                listOf(
+                    JoinArgs(
+                        "INNER",
+                        AssignedFlightStaffData.EMPTY.tableName,
+                        FlightColumns.ID.name,
+                        AssignedFlightStaffColumns.FLIGHT_ID.name,
+                        AssignedFlightStaffColumns.COLUMN_NAMES,
+                        FlightData.EMPTY.tableName
+                    )
+                )
+            )
+
+            val whereArgs : WhereArgs = WhereArgs (
+                whereClause = "${AssignedFlightStaffData.EMPTY.tableName}.${AssignedFlightStaffColumns.STAFF_ID.name} = ?",
+                listOf(id)
+            )
+
+            return FlightData.queryDatabase(
+                multipleJoinArgs = joinArgs,
+                whereArgs = whereArgs
+            )
+        }
+
         fun scoreStaffMember (
             staff : StaffData,
             flight : FlightData,
