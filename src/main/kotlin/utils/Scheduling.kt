@@ -11,6 +11,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 fun cleanup () {
+    println("Cleaning database")
     FlightSearchData.deleteOld()
     FlightData.deleteOld()
     SessionData.deleteOld()
@@ -19,6 +20,7 @@ fun cleanup () {
 }
 
 fun scheduleFlights() {
+    FlightData.assignStaffToIncompleteFlights()
     ScheduleData.updateAllFlights()
 }
 

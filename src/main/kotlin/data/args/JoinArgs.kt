@@ -2,8 +2,9 @@ package data
 
 data class JoinArgs (
     val joinType : String,
-    val joinTable : String,
-    val joinTable1Column : String,
-    val joinTable2Column : String,
+    val rightTableJoin : String,
+    val leftTableJoinColumn : String,
+    val rightTableJoinColumn : String,
     val joinSelectColumns : List<String> = emptyList(),
+    val leftTableJoin : String? = null
 )

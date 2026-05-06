@@ -59,12 +59,13 @@ data class StaffSessionData(
             get() = StaffSessionData()
 
         fun queryDatabase (
-            joinArgs : JoinArgs? = null,
+            multipleJoinArgs : MultipleJoinArgs? = null,
             whereArgs : WhereArgs? = null,
             orderByArgs : OrderByArgs? = null,
-            limitArgs : LimitArgs? = null        
+            limitArgs : LimitArgs? = null,
+            groupByArgs : GroupByArgs? = null   
         ) : List<QueryResult<StaffSessionData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
+            return EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
         }
 
         fun updateTable (
@@ -99,12 +100,16 @@ data class StaffSessionData(
         fun queryDatabase(
             token : String
         ) : List<QueryResult<StaffSessionData>> {
-            val joinArgs : JoinArgs = JoinArgs(
-                joinType = "INNER",
-                joinTable = UserData.EMPTY.tableName,
-                joinTable1Column = StaffSessionColumns.STAFF_ID.name,
-                joinTable2Column = UserColumns.ID.name,
-                joinSelectColumns = UserColumns.ALL.map { it.name }
+            val joinArgs : MultipleJoinArgs = MultipleJoinArgs(
+                listOf(
+                    JoinArgs(
+                        joinType = "INNER",
+                        rightTableJoin = UserData.EMPTY.tableName,
+                        leftTableJoinColumn = StaffSessionColumns.STAFF_ID.name,
+                        rightTableJoinColumn = UserColumns.ID.name,
+                        joinSelectColumns = UserColumns.ALL.map { it.name }
+                    )
+                )
             )
 
             val whereArgs : WhereArgs = WhereArgs(
@@ -113,12 +118,13 @@ data class StaffSessionData(
             )
 
             return queryDatabase(
-                joinArgs = joinArgs,
+                multipleJoinArgs = joinArgs,
                 whereArgs = whereArgs
             )
         }
 
         fun deleteOld() {
+            println("Cleaning ${EMPTY.tableName}")
             val whereArgs = WhereArgs(
                 whereClause = "${StaffSessionColumns.EXPIRY_DATE.name} < ?",
                 whereArgs = listOf(LocalDate.now())

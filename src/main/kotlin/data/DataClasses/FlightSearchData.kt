@@ -73,24 +73,25 @@ data class FlightSearchData(
             get() = FlightSearchData()
 
         fun queryDatabase (
-            joinArgs : JoinArgs? = null,
+            multipleJoinArgs : MultipleJoinArgs? = null,
             whereArgs : WhereArgs? = null,
             orderByArgs : OrderByArgs? = null,
-            limitArgs : LimitArgs? = null        
+            limitArgs : LimitArgs? = null,
+            groupByArgs : GroupByArgs? = null   
         ) : List<QueryResult<FlightSearchData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
+            return EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
         }
 
         fun queryDatabase (
             token : String,
-            joinArgs : JoinArgs? = null
+            multipleJoinArgs : MultipleJoinArgs? = null
         ) : List<QueryResult<FlightSearchData>> {
             val whereArgs : WhereArgs = WhereArgs(
                 whereClause = "${FlightSearchColumns.TOKEN.name} = ?",
                 whereArgs = listOf(token)
             )
 
-            return queryDatabase(joinArgs, whereArgs)
+            return queryDatabase(multipleJoinArgs, whereArgs)
         }
 
         fun updateTable (
@@ -103,6 +104,7 @@ data class FlightSearchData(
         }
 
         fun deleteOld() {
+            println("Cleaning ${EMPTY.tableName}")
             val whereArgs = WhereArgs(
                 whereClause = "${FlightSearchColumns.CREATED_AT.name} > datetime('now', '-1 month')",
                 whereArgs = emptyList()

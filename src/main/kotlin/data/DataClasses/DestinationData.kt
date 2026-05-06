@@ -75,12 +75,13 @@ data class DestinationData(
             get() = DestinationData()
 
         fun queryDatabase (
-            joinArgs : JoinArgs? = null,
+            multipleJoinArgs : MultipleJoinArgs? = null,
             whereArgs : WhereArgs? = null,
             orderByArgs : OrderByArgs? = null,
-            limitArgs : LimitArgs? = null        
+            limitArgs : LimitArgs? = null,
+            groupByArgs : GroupByArgs? = null   
         ) : List<QueryResult<DestinationData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
+            return EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
         }
 
         fun updateTable (
@@ -96,12 +97,16 @@ data class DestinationData(
             city : String,
             country : String
         ) : List<QueryResult<DestinationData>> {
-            val joinArgs : JoinArgs = JoinArgs(
-                joinType = "INNER",
-                joinTable = CountryData.EMPTY.tableName,
-                joinTable1Column = DestinationColumns.COUNTRY_ID.name,
-                joinTable2Column = CountryColumns.ID.name,
-                joinSelectColumns = CountryColumns.COLUMN_NAMES
+            val joinArgs : MultipleJoinArgs = MultipleJoinArgs(
+                listOf(
+                    JoinArgs(
+                        joinType = "INNER",
+                        rightTableJoin = CountryData.EMPTY.tableName,
+                        leftTableJoinColumn = DestinationColumns.COUNTRY_ID.name,
+                        rightTableJoinColumn = CountryColumns.ID.name,
+                        joinSelectColumns = CountryColumns.COLUMN_NAMES
+                    )
+                )
             )
 
             val whereArgs : WhereArgs = WhereArgs(
@@ -130,12 +135,16 @@ data class DestinationData(
         }
 
         fun getDestinationName(id : Int) : String {
-            val joinArgs : JoinArgs = JoinArgs(
-                joinType = "INNER",
-                joinTable = CountryData.EMPTY.tableName,
-                joinTable1Column = DestinationColumns.COUNTRY_ID.name,
-                joinTable2Column = CountryColumns.ID.name,
-                joinSelectColumns = CountryColumns.COLUMN_NAMES
+            val joinArgs : MultipleJoinArgs = MultipleJoinArgs(
+                listOf(
+                    JoinArgs(
+                        joinType = "INNER",
+                        rightTableJoin = CountryData.EMPTY.tableName,
+                        leftTableJoinColumn = DestinationColumns.COUNTRY_ID.name,
+                        rightTableJoinColumn = CountryColumns.ID.name,
+                        joinSelectColumns = CountryColumns.COLUMN_NAMES
+                    )
+                )
             )
 
             val whereArgs : WhereArgs = WhereArgs(
@@ -151,12 +160,16 @@ data class DestinationData(
         }
 
         fun getDestinationNames() : List<String> {
-            val joinArgs : JoinArgs = JoinArgs(
-                joinType = "INNER",
-                joinTable = CountryData.EMPTY.tableName,
-                joinTable1Column = DestinationColumns.COUNTRY_ID.name,
-                joinTable2Column = CountryColumns.ID.name,
-                joinSelectColumns = CountryColumns.COLUMN_NAMES
+            val joinArgs : MultipleJoinArgs = MultipleJoinArgs(
+                listOf(
+                    JoinArgs(
+                        joinType = "INNER",
+                        rightTableJoin = CountryData.EMPTY.tableName,
+                        leftTableJoinColumn = DestinationColumns.COUNTRY_ID.name,
+                        rightTableJoinColumn = CountryColumns.ID.name,
+                        joinSelectColumns = CountryColumns.COLUMN_NAMES
+                    )
+                )
             )
 
             return queryDatabase(joinArgs).map { result ->

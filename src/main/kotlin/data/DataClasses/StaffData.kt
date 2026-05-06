@@ -81,13 +81,16 @@ data class StaffData(
             get() = StaffData()
 
         fun queryDatabase (
-            joinArgs : JoinArgs? = null,
+            multipleJoinArgs : MultipleJoinArgs? = null,
             whereArgs : WhereArgs? = null,
             orderByArgs : OrderByArgs? = null,
-            limitArgs : LimitArgs? = null        
+            limitArgs : LimitArgs? = null,
+            groupByArgs : GroupByArgs? = null   
         ) : List<QueryResult<StaffData>> {
-            return EMPTY.queryDatabase(joinArgs, whereArgs, orderByArgs, limitArgs)
+            return EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
         }
+
+        fun queryDatabase(id : Int) : List<QueryResult<StaffData>> = queryDatabase(whereArgs = WhereArgs("${StaffColumns.ID.name} = ?", listOf(id)))
 
         fun updateTable (
             values : Map<Column<*>, Any?>,
@@ -101,12 +104,16 @@ data class StaffData(
         fun queryByLogIn(
             email : String
         ) : List<QueryResult<StaffData>> {
-            val joinArgs : JoinArgs = JoinArgs(
-                joinType = "INNER",
-                joinTable = LoginData.EMPTY.tableName,
-                joinTable1Column = StaffColumns.LOGIN_ID.name,
-                joinTable2Column = LoginColumns.ID.name,
-                joinSelectColumns = LoginColumns.ALL.map { it.name }
+            val joinArgs : MultipleJoinArgs = MultipleJoinArgs(
+                listOf(
+                    JoinArgs(
+                        joinType = "INNER",
+                        rightTableJoin = LoginData.EMPTY.tableName,
+                        leftTableJoinColumn = StaffColumns.LOGIN_ID.name,
+                        rightTableJoinColumn = LoginColumns.ID.name,
+                        joinSelectColumns = LoginColumns.ALL.map { it.name }
+                    )
+                )
             )
 
             val whereArgs : WhereArgs = WhereArgs(
@@ -115,7 +122,7 @@ data class StaffData(
             )
 
             return queryDatabase(
-                joinArgs = joinArgs,
+                multipleJoinArgs = joinArgs,
                 whereArgs = whereArgs
             )
         }

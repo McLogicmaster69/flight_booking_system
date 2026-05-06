@@ -78,28 +78,32 @@ abstract class DataClass<T : DataClass<T>> ( open val id : Int = 0 ) {
     fun delete() : Int = DatabaseManager.deleteFromTable(tableName, WhereArgs("id = ?", listOf(id)))
 
     fun queryDatabase (
-        joinArgs : JoinArgs? = null,
+        multipleJoinArgs : MultipleJoinArgs? = null,
         whereArgs : WhereArgs? = null,
         orderByArgs : OrderByArgs? = null,
-        limitArgs : LimitArgs? = null        
+        limitArgs : LimitArgs? = null,
+        groupByArgs : GroupByArgs? = null     
     ) : List<QueryResult<T>> {
 
         val columnNames = tableColumns.map { it.name }
         val rows = DatabaseManager.queryTable(
             tableName,
             columnNames,
-            joinArgs,
+            multipleJoinArgs,
             whereArgs,
             orderByArgs,
-            limitArgs
+            limitArgs,
+            groupByArgs
         )
 
         val columns : MutableList<String> = columnNames.toMutableList()
         val tables : MutableList<String> = MutableList(columns.size) { tableName }
 
-        if (joinArgs != null) {
-            columns.addAll(joinArgs.joinSelectColumns)
-            tables.addAll(List(joinArgs.joinSelectColumns.size) { joinArgs.joinTable })
+        if (multipleJoinArgs != null) {
+            multipleJoinArgs.joinArgs.forEach { joinArgs ->
+                columns.addAll(joinArgs.joinSelectColumns)
+                tables.addAll(List(joinArgs.joinSelectColumns.size) { joinArgs.rightTableJoin })
+            }
         }
 
         return rows.map { QueryResult<T>(mapRowToData(it), mapRawRows(tables.toList(), columns.toList(), it)) }
