@@ -47,7 +47,6 @@ fun Route.adminRoutes() {
     post("/manageFlights/create") { call.handleCreateFlightPost() }
     post("/manageFlights/update") { call.handleUpdateFlightPost() }
     post("/manageFlights/delete") { call.handleDeleteFlightPost() }
-
 }
 
 data class StaffAccountView(
@@ -66,7 +65,7 @@ data class PlaneModelView(
     val manufacturerName: String?,
     val capacity: Int,
     val pilots: Int,
-    val attendants: Int
+    val attendants: Int,
 )
 
 data class PlaneView(
@@ -77,7 +76,7 @@ data class PlaneView(
     val currentLocation: Int,
     val currentLocationName: String?,
     val currentLocationDate: LocalDate,
-    val currentLocationTime: LocalTime
+    val currentLocationTime: LocalTime,
 )
 
 data class RouteView(
@@ -86,7 +85,7 @@ data class RouteView(
     val startDestinationName: String?,
     val endDestination: Int,
     val endDestinationName: String?,
-    val duration: LocalTime
+    val duration: LocalTime,
 )
 
 data class FlightView(
@@ -96,7 +95,7 @@ data class FlightView(
     val planeId: Int,
     val planeRegistrationCode: String?,
     val date: LocalDate,
-    val time: LocalTime
+    val time: LocalTime,
 )
 
 private suspend fun ApplicationCall.handleAdminLoad() {
@@ -292,36 +291,42 @@ private suspend fun ApplicationCall.handleManagePlaneDataLoad() {
 
         val manufacturers = ManufacturerData.queryDatabase().map { it.dataClass }
 
-        val models = PlaneModelData.queryDatabase().map { result ->
-            val model = result.dataClass
+        val models =
+            PlaneModelData.queryDatabase().map { result ->
+                val model = result.dataClass
 
-            val manufacturer = ManufacturerData.queryDatabase(
-                whereArgs = WhereArgs(
-                    "${ManufacturerColumns.ID.name} = ?",
-                    listOf(model.manufacturerId)
+                val manufacturer =
+                    ManufacturerData
+                        .queryDatabase(
+                            whereArgs =
+                                WhereArgs(
+                                    "${ManufacturerColumns.ID.name} = ?",
+                                    listOf(model.manufacturerId),
+                                ),
+                        ).firstOrNull()
+                        ?.dataClass
+
+                PlaneModelView(
+                    id = model.id,
+                    name = model.name,
+                    manufacturerId = model.manufacturerId,
+                    manufacturerName = manufacturer?.name,
+                    capacity = model.capacity,
+                    pilots = model.pilots,
+                    attendants = model.attendants,
                 )
-            ).firstOrNull()?.dataClass
+            }
 
-            PlaneModelView(
-                id = model.id,
-                name = model.name,
-                manufacturerId = model.manufacturerId,
-                manufacturerName = manufacturer?.name,
-                capacity = model.capacity,
-                pilots = model.pilots,
-                attendants = model.attendants
+        val viewModel =
+            mapOf(
+                "title" to "Manage Planes",
+                "layout" to "admin",
+                "activePage" to "managePlaneData",
+                "inNav" to true,
+                "isAdmin" to true,
+                "models" to models,
+                "manufacturers" to manufacturers,
             )
-        }
-
-        val viewModel = mapOf(
-            "title" to "Manage Planes",
-            "layout" to "admin",
-            "activePage" to "managePlaneData",
-            "inNav" to true,
-            "isAdmin" to true,
-            "models" to models,
-            "manufacturers" to manufacturers
-        )
 
         val template = pebble.getTemplate("admin/managePlaneData.peb")
         val writer = StringWriter()
@@ -353,12 +358,14 @@ private suspend fun ApplicationCall.handleCreatePlaneModelPost() {
             return@timed
         }
 
-        val existing = PlaneModelData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${PlaneModelColumns.NAME.name} = ? AND ${PlaneModelColumns.MANUFACTURER_ID.name} = ?",
-                listOf(name, manufacturerId)
+        val existing =
+            PlaneModelData.queryDatabase(
+                whereArgs =
+                    WhereArgs(
+                        "${PlaneModelColumns.NAME.name} = ? AND ${PlaneModelColumns.MANUFACTURER_ID.name} = ?",
+                        listOf(name, manufacturerId),
+                    ),
             )
-        )
 
         if (existing.isNotEmpty()) {
             respondText("That plane model already exists for this manufacturer", status = HttpStatusCode.BadRequest)
@@ -370,7 +377,7 @@ private suspend fun ApplicationCall.handleCreatePlaneModelPost() {
             manufacturerId = manufacturerId,
             capacity = capacity,
             pilots = pilots,
-            attendants = attendants
+            attendants = attendants,
         ).insertIntoDatabase()
 
         response.headers.append("HX-Redirect", "/managePlaneData")
@@ -403,12 +410,14 @@ private suspend fun ApplicationCall.handleUpdatePlaneModelPost() {
             return@timed
         }
 
-        val duplicate = PlaneModelData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${PlaneModelColumns.NAME.name} = ? AND ${PlaneModelColumns.MANUFACTURER_ID.name} = ? AND ${PlaneModelColumns.ID.name} != ?",
-                listOf(name, manufacturerId, modelId)
+        val duplicate =
+            PlaneModelData.queryDatabase(
+                whereArgs =
+                    WhereArgs(
+                        "${PlaneModelColumns.NAME.name} = ? AND ${PlaneModelColumns.MANUFACTURER_ID.name} = ? AND ${PlaneModelColumns.ID.name} != ?",
+                        listOf(name, manufacturerId, modelId),
+                    ),
             )
-        )
 
         if (duplicate.isNotEmpty()) {
             respondText("That plane model already exists for this manufacturer", status = HttpStatusCode.BadRequest)
@@ -416,17 +425,19 @@ private suspend fun ApplicationCall.handleUpdatePlaneModelPost() {
         }
 
         PlaneModelData.updateTable(
-            values = mapOf(
-                PlaneModelColumns.NAME to name,
-                PlaneModelColumns.MANUFACTURER_ID to manufacturerId,
-                PlaneModelColumns.CAPACITY to capacity,
-                PlaneModelColumns.PILOTS to pilots,
-                PlaneModelColumns.ATTENDANTS to attendants
-            ),
-            whereArgs = WhereArgs(
-                "${PlaneModelColumns.ID.name} = ?",
-                listOf(modelId)
-            )
+            values =
+                mapOf(
+                    PlaneModelColumns.NAME to name,
+                    PlaneModelColumns.MANUFACTURER_ID to manufacturerId,
+                    PlaneModelColumns.CAPACITY to capacity,
+                    PlaneModelColumns.PILOTS to pilots,
+                    PlaneModelColumns.ATTENDANTS to attendants,
+                ),
+            whereArgs =
+                WhereArgs(
+                    "${PlaneModelColumns.ID.name} = ?",
+                    listOf(modelId),
+                ),
         )
 
         response.headers.append("HX-Redirect", "/managePlaneData")
@@ -445,15 +456,20 @@ private suspend fun ApplicationCall.handleDeletePlaneModelPost() {
             return@timed
         }
 
-        val planesUsingModel = PlaneData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${PlaneColumns.MODEL_ID.name} = ?",
-                listOf(modelId)
+        val planesUsingModel =
+            PlaneData.queryDatabase(
+                whereArgs =
+                    WhereArgs(
+                        "${PlaneColumns.MODEL_ID.name} = ?",
+                        listOf(modelId),
+                    ),
             )
-        )
 
         if (planesUsingModel.isNotEmpty()) {
-            respondText("Cannot delete this model because one or more planes use it", status = HttpStatusCode.BadRequest)
+            respondText(
+                "Cannot delete this model because one or more planes use it",
+                status = HttpStatusCode.BadRequest,
+            )
             return@timed
         }
 
@@ -475,12 +491,14 @@ private suspend fun ApplicationCall.handleCreateManufacturerPost() {
             return@timed
         }
 
-        val existing = ManufacturerData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${ManufacturerColumns.NAME.name} = ?",
-                listOf(name)
+        val existing =
+            ManufacturerData.queryDatabase(
+                whereArgs =
+                    WhereArgs(
+                        "${ManufacturerColumns.NAME.name} = ?",
+                        listOf(name),
+                    ),
             )
-        )
 
         if (existing.isNotEmpty()) {
             respondText("That manufacturer already exists", status = HttpStatusCode.BadRequest)
@@ -508,12 +526,14 @@ private suspend fun ApplicationCall.handleUpdateManufacturerPost() {
             return@timed
         }
 
-        val duplicate = ManufacturerData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${ManufacturerColumns.NAME.name} = ? AND ${ManufacturerColumns.ID.name} != ?",
-                listOf(name, manufacturerId)
+        val duplicate =
+            ManufacturerData.queryDatabase(
+                whereArgs =
+                    WhereArgs(
+                        "${ManufacturerColumns.NAME.name} = ? AND ${ManufacturerColumns.ID.name} != ?",
+                        listOf(name, manufacturerId),
+                    ),
             )
-        )
 
         if (duplicate.isNotEmpty()) {
             respondText("That manufacturer already exists", status = HttpStatusCode.BadRequest)
@@ -521,13 +541,15 @@ private suspend fun ApplicationCall.handleUpdateManufacturerPost() {
         }
 
         ManufacturerData.updateTable(
-            values = mapOf(
-                ManufacturerColumns.NAME to name
-            ),
-            whereArgs = WhereArgs(
-                "${ManufacturerColumns.ID.name} = ?",
-                listOf(manufacturerId)
-            )
+            values =
+                mapOf(
+                    ManufacturerColumns.NAME to name,
+                ),
+            whereArgs =
+                WhereArgs(
+                    "${ManufacturerColumns.ID.name} = ?",
+                    listOf(manufacturerId),
+                ),
         )
 
         response.headers.append("HX-Redirect", "/managePlaneData")
@@ -546,15 +568,20 @@ private suspend fun ApplicationCall.handleDeleteManufacturerPost() {
             return@timed
         }
 
-        val modelsUsingManufacturer = PlaneModelData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${PlaneModelColumns.MANUFACTURER_ID.name} = ?",
-                listOf(manufacturerId)
+        val modelsUsingManufacturer =
+            PlaneModelData.queryDatabase(
+                whereArgs =
+                    WhereArgs(
+                        "${PlaneModelColumns.MANUFACTURER_ID.name} = ?",
+                        listOf(manufacturerId),
+                    ),
             )
-        )
 
         if (modelsUsingManufacturer.isNotEmpty()) {
-            respondText("Cannot delete this manufacturer because one or more models use it", status = HttpStatusCode.BadRequest)
+            respondText(
+                "Cannot delete this manufacturer because one or more models use it",
+                status = HttpStatusCode.BadRequest,
+            )
             return@timed
         }
 
@@ -574,45 +601,55 @@ private suspend fun ApplicationCall.handleManagePlanesLoad() {
         val models = PlaneModelData.queryDatabase().map { it.dataClass }
         val destinations = DestinationData.queryDatabase().map { it.dataClass }
 
-        val planes = PlaneData.queryDatabase().map { result ->
-            val plane = result.dataClass
+        val planes =
+            PlaneData.queryDatabase().map { result ->
+                val plane = result.dataClass
 
-            val model = PlaneModelData.queryDatabase(
-                whereArgs = WhereArgs(
-                    "${PlaneModelColumns.ID.name} = ?",
-                    listOf(plane.modelId)
+                val model =
+                    PlaneModelData
+                        .queryDatabase(
+                            whereArgs =
+                                WhereArgs(
+                                    "${PlaneModelColumns.ID.name} = ?",
+                                    listOf(plane.modelId),
+                                ),
+                        ).firstOrNull()
+                        ?.dataClass
+
+                val destination =
+                    DestinationData
+                        .queryDatabase(
+                            whereArgs =
+                                WhereArgs(
+                                    "${DestinationColumns.ID.name} = ?",
+                                    listOf(plane.currentLocation),
+                                ),
+                        ).firstOrNull()
+                        ?.dataClass
+
+                PlaneView(
+                    id = plane.id,
+                    registrationCode = plane.registrationCode,
+                    modelId = plane.modelId,
+                    modelName = model?.name,
+                    currentLocation = plane.currentLocation,
+                    currentLocationName = destination?.cityName,
+                    currentLocationDate = plane.currentLocationDate,
+                    currentLocationTime = plane.currentLocationTime,
                 )
-            ).firstOrNull()?.dataClass
+            }
 
-            val destination = DestinationData.queryDatabase(
-                whereArgs = WhereArgs(
-                    "${DestinationColumns.ID.name} = ?",
-                    listOf(plane.currentLocation)
-                )
-            ).firstOrNull()?.dataClass
-
-            PlaneView(
-                id = plane.id,
-                registrationCode = plane.registrationCode,
-                modelId = plane.modelId,
-                modelName = model?.name,
-                currentLocation = plane.currentLocation,
-                currentLocationName = destination?.cityName,
-                currentLocationDate = plane.currentLocationDate,
-                currentLocationTime = plane.currentLocationTime
+        val viewModel =
+            mapOf(
+                "title" to "Manage Planes",
+                "layout" to "admin",
+                "activePage" to "managePlanes",
+                "inNav" to true,
+                "isAdmin" to true,
+                "planes" to planes,
+                "models" to models,
+                "destinations" to destinations,
             )
-        }
-
-        val viewModel = mapOf(
-            "title" to "Manage Planes",
-            "layout" to "admin",
-            "activePage" to "managePlanes",
-            "inNav" to true,
-            "isAdmin" to true,
-            "planes" to planes,
-            "models" to models,
-            "destinations" to destinations
-        )
 
         val template = pebble.getTemplate("admin/managePlanes.peb")
         val writer = StringWriter()
@@ -644,12 +681,14 @@ private suspend fun ApplicationCall.handleCreatePlanePost() {
             return@timed
         }
 
-        val existing = PlaneData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${PlaneColumns.REGISTRATION_CODE.name} = ?",
-                listOf(registrationCode)
+        val existing =
+            PlaneData.queryDatabase(
+                whereArgs =
+                    WhereArgs(
+                        "${PlaneColumns.REGISTRATION_CODE.name} = ?",
+                        listOf(registrationCode),
+                    ),
             )
-        )
 
         if (existing.isNotEmpty()) {
             respondText("That plane already exists", status = HttpStatusCode.BadRequest)
@@ -661,7 +700,7 @@ private suspend fun ApplicationCall.handleCreatePlanePost() {
             modelId = modelId,
             currentLocation = currentLocation,
             currentLocationDate = currentLocationDate,
-            currentLocationTime = currentLocationTime
+            currentLocationTime = currentLocationTime,
         ).insertIntoDatabase()
 
         response.headers.append("HX-Redirect", "/managePlanes")
@@ -694,12 +733,14 @@ private suspend fun ApplicationCall.handleUpdatePlanePost() {
             return@timed
         }
 
-        val duplicate = PlaneData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${PlaneColumns.REGISTRATION_CODE.name} = ? AND ${PlaneColumns.ID.name} != ?",
-                listOf(registrationCode, planeId)
+        val duplicate =
+            PlaneData.queryDatabase(
+                whereArgs =
+                    WhereArgs(
+                        "${PlaneColumns.REGISTRATION_CODE.name} = ? AND ${PlaneColumns.ID.name} != ?",
+                        listOf(registrationCode, planeId),
+                    ),
             )
-        )
 
         if (duplicate.isNotEmpty()) {
             respondText("That plane already exists", status = HttpStatusCode.BadRequest)
@@ -707,17 +748,19 @@ private suspend fun ApplicationCall.handleUpdatePlanePost() {
         }
 
         PlaneData.updateTable(
-            values = mapOf(
-                PlaneColumns.REGISTRATION_CODE to registrationCode,
-                PlaneColumns.MODEL_ID to modelId,
-                PlaneColumns.CURRENT_LOCATION to currentLocation,
-                PlaneColumns.CURRENT_LOCATION_DATE to currentLocationDate.toString(),
-                PlaneColumns.CURRENT_LOCATION_TIME to currentLocationTime.toString()
-            ),
-            whereArgs = WhereArgs(
-                "${PlaneColumns.ID.name} = ?",
-                listOf(planeId)
-            )
+            values =
+                mapOf(
+                    PlaneColumns.REGISTRATION_CODE to registrationCode,
+                    PlaneColumns.MODEL_ID to modelId,
+                    PlaneColumns.CURRENT_LOCATION to currentLocation,
+                    PlaneColumns.CURRENT_LOCATION_DATE to currentLocationDate.toString(),
+                    PlaneColumns.CURRENT_LOCATION_TIME to currentLocationTime.toString(),
+                ),
+            whereArgs =
+                WhereArgs(
+                    "${PlaneColumns.ID.name} = ?",
+                    listOf(planeId),
+                ),
         )
 
         response.headers.append("HX-Redirect", "/managePlanes")
@@ -736,15 +779,20 @@ private suspend fun ApplicationCall.handleDeletePlanePost() {
             return@timed
         }
 
-        val flightsUsingPlane = FlightData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${FlightColumns.PLANE_ID.name} = ?",
-                listOf(planeId)
+        val flightsUsingPlane =
+            FlightData.queryDatabase(
+                whereArgs =
+                    WhereArgs(
+                        "${FlightColumns.PLANE_ID.name} = ?",
+                        listOf(planeId),
+                    ),
             )
-        )
 
         if (flightsUsingPlane.isNotEmpty()) {
-            respondText("Cannot delete this plane because one or more flights use it", status = HttpStatusCode.BadRequest)
+            respondText(
+                "Cannot delete this plane because one or more flights use it",
+                status = HttpStatusCode.BadRequest,
+            )
             return@timed
         }
 
@@ -762,31 +810,33 @@ private suspend fun ApplicationCall.handleManageRoutesLoad() {
         val pebble = getEngine()
         val destinations = DestinationData.queryDatabase().map { it.dataClass }
 
-        val routes = RouteData.queryDatabase().map { result ->
-            val route = result.dataClass
+        val routes =
+            RouteData.queryDatabase().map { result ->
+                val route = result.dataClass
 
-            val start = DestinationData.queryDatabase(route.startDestination).firstOrNull()?.dataClass
-            val end = DestinationData.queryDatabase(route.endDestination).firstOrNull()?.dataClass
+                val start = DestinationData.queryDatabase(route.startDestination).firstOrNull()?.dataClass
+                val end = DestinationData.queryDatabase(route.endDestination).firstOrNull()?.dataClass
 
-            RouteView(
-                id = route.id,
-                startDestination = route.startDestination,
-                startDestinationName = start?.cityName,
-                endDestination = route.endDestination,
-                endDestinationName = end?.cityName,
-                duration = route.duration
+                RouteView(
+                    id = route.id,
+                    startDestination = route.startDestination,
+                    startDestinationName = start?.cityName,
+                    endDestination = route.endDestination,
+                    endDestinationName = end?.cityName,
+                    duration = route.duration,
+                )
+            }
+
+        val model =
+            mapOf(
+                "title" to "Manage Routes",
+                "layout" to "admin",
+                "activePage" to "manageRoutes",
+                "inNav" to true,
+                "isAdmin" to true,
+                "routes" to routes,
+                "destinations" to destinations,
             )
-        }
-
-        val model = mapOf(
-            "title" to "Manage Routes",
-            "layout" to "admin",
-            "activePage" to "manageRoutes",
-            "inNav" to true,
-            "isAdmin" to true,
-            "routes" to routes,
-            "destinations" to destinations
-        )
 
         val template = pebble.getTemplate("admin/manageRoutes.peb")
         val writer = StringWriter()
@@ -815,12 +865,14 @@ private suspend fun ApplicationCall.handleCreateRoutePost() {
             return@timed
         }
 
-        val existing = RouteData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${RouteColumns.START_DESTINATION.name} = ? AND ${RouteColumns.END_DESTINATION.name} = ?",
-                listOf(startDestination, endDestination)
+        val existing =
+            RouteData.queryDatabase(
+                whereArgs =
+                    WhereArgs(
+                        "${RouteColumns.START_DESTINATION.name} = ? AND ${RouteColumns.END_DESTINATION.name} = ?",
+                        listOf(startDestination, endDestination),
+                    ),
             )
-        )
 
         if (existing.isNotEmpty()) {
             respondText("That route already exists", status = HttpStatusCode.BadRequest)
@@ -830,7 +882,7 @@ private suspend fun ApplicationCall.handleCreateRoutePost() {
         RouteData(
             startDestination = startDestination,
             endDestination = endDestination,
-            duration = duration
+            duration = duration,
         ).insertIntoDatabase()
 
         response.headers.append("HX-Redirect", "/manageRoutes")
@@ -859,12 +911,14 @@ private suspend fun ApplicationCall.handleUpdateRoutePost() {
             return@timed
         }
 
-        val duplicate = RouteData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${RouteColumns.START_DESTINATION.name} = ? AND ${RouteColumns.END_DESTINATION.name} = ? AND ${RouteColumns.ID.name} != ?",
-                listOf(startDestination, endDestination, routeId)
+        val duplicate =
+            RouteData.queryDatabase(
+                whereArgs =
+                    WhereArgs(
+                        "${RouteColumns.START_DESTINATION.name} = ? AND ${RouteColumns.END_DESTINATION.name} = ? AND ${RouteColumns.ID.name} != ?",
+                        listOf(startDestination, endDestination, routeId),
+                    ),
             )
-        )
 
         if (duplicate.isNotEmpty()) {
             respondText("That route already exists", status = HttpStatusCode.BadRequest)
@@ -872,15 +926,17 @@ private suspend fun ApplicationCall.handleUpdateRoutePost() {
         }
 
         RouteData.updateTable(
-            values = mapOf(
-                RouteColumns.START_DESTINATION to startDestination,
-                RouteColumns.END_DESTINATION to endDestination,
-                RouteColumns.DURATION to duration.toString()
-            ),
-            whereArgs = WhereArgs(
-                "${RouteColumns.ID.name} = ?",
-                listOf(routeId)
-            )
+            values =
+                mapOf(
+                    RouteColumns.START_DESTINATION to startDestination,
+                    RouteColumns.END_DESTINATION to endDestination,
+                    RouteColumns.DURATION to duration.toString(),
+                ),
+            whereArgs =
+                WhereArgs(
+                    "${RouteColumns.ID.name} = ?",
+                    listOf(routeId),
+                ),
         )
 
         response.headers.append("HX-Redirect", "/manageRoutes")
@@ -899,15 +955,20 @@ private suspend fun ApplicationCall.handleDeleteRoutePost() {
             return@timed
         }
 
-        val flightsUsingRoute = FlightData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${FlightColumns.ROUTE_ID.name} = ?",
-                listOf(routeId)
+        val flightsUsingRoute =
+            FlightData.queryDatabase(
+                whereArgs =
+                    WhereArgs(
+                        "${FlightColumns.ROUTE_ID.name} = ?",
+                        listOf(routeId),
+                    ),
             )
-        )
 
         if (flightsUsingRoute.isNotEmpty()) {
-            respondText("Cannot delete this route because one or more flights use it", status = HttpStatusCode.BadRequest)
+            respondText(
+                "Cannot delete this route because one or more flights use it",
+                status = HttpStatusCode.BadRequest,
+            )
             return@timed
         }
 
@@ -929,40 +990,52 @@ private suspend fun ApplicationCall.handleManageFlightsLoad() {
         val destinations = DestinationData.queryDatabase().map { it.dataClass }
 
         fun routeName(route: RouteData): String {
-            val start = DestinationData.queryDatabase(route.startDestination).firstOrNull()?.dataClass?.cityName ?: "Unknown"
-            val end = DestinationData.queryDatabase(route.endDestination).firstOrNull()?.dataClass?.cityName ?: "Unknown"
+            val start =
+                DestinationData
+                    .queryDatabase(route.startDestination)
+                    .firstOrNull()
+                    ?.dataClass
+                    ?.cityName ?: "Unknown"
+            val end =
+                DestinationData
+                    .queryDatabase(route.endDestination)
+                    .firstOrNull()
+                    ?.dataClass
+                    ?.cityName ?: "Unknown"
             return "$start to $end"
         }
 
         val routeNames = routes.associate { it.id to routeName(it) }
 
-        val flights = FlightData.queryDatabase().map { result ->
-            val flight = result.dataClass
-            val plane = PlaneData.queryDatabase(flight.planeId).firstOrNull()?.dataClass
+        val flights =
+            FlightData.queryDatabase().map { result ->
+                val flight = result.dataClass
+                val plane = PlaneData.queryDatabase(flight.planeId).firstOrNull()?.dataClass
 
-            FlightView(
-                id = flight.id,
-                routeId = flight.routeId,
-                routeName = routeNames[flight.routeId],
-                planeId = flight.planeId,
-                planeRegistrationCode = plane?.registrationCode,
-                date = flight.date,
-                time = flight.time
+                FlightView(
+                    id = flight.id,
+                    routeId = flight.routeId,
+                    routeName = routeNames[flight.routeId],
+                    planeId = flight.planeId,
+                    planeRegistrationCode = plane?.registrationCode,
+                    date = flight.date,
+                    time = flight.time,
+                )
+            }
+
+        val model =
+            mapOf(
+                "title" to "Manage Flights",
+                "layout" to "admin",
+                "activePage" to "manageFlights",
+                "inNav" to true,
+                "isAdmin" to true,
+                "flights" to flights,
+                "routes" to routes,
+                "routeNames" to routeNames,
+                "planes" to planes,
+                "destinations" to destinations,
             )
-        }
-
-        val model = mapOf(
-            "title" to "Manage Flights",
-            "layout" to "admin",
-            "activePage" to "manageFlights",
-            "inNav" to true,
-            "isAdmin" to true,
-            "flights" to flights,
-            "routes" to routes,
-            "routeNames" to routeNames,
-            "planes" to planes,
-            "destinations" to destinations
-        )
 
         val template = pebble.getTemplate("admin/manageFlights.peb")
         val writer = StringWriter()
@@ -987,12 +1060,14 @@ private suspend fun ApplicationCall.handleCreateFlightPost() {
             return@timed
         }
 
-        val existing = FlightData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${FlightColumns.ROUTE_ID.name} = ? AND ${FlightColumns.PLANE_ID.name} = ? AND ${FlightColumns.DATE.name} = ? AND ${FlightColumns.TIME.name} = ?",
-                listOf(routeId, planeId, date.toString(), time.toString())
+        val existing =
+            FlightData.queryDatabase(
+                whereArgs =
+                    WhereArgs(
+                        "${FlightColumns.ROUTE_ID.name} = ? AND ${FlightColumns.PLANE_ID.name} = ? AND ${FlightColumns.DATE.name} = ? AND ${FlightColumns.TIME.name} = ?",
+                        listOf(routeId, planeId, date.toString(), time.toString()),
+                    ),
             )
-        )
 
         if (existing.isNotEmpty()) {
             respondText("That flight already exists", status = HttpStatusCode.BadRequest)
@@ -1003,7 +1078,7 @@ private suspend fun ApplicationCall.handleCreateFlightPost() {
             routeId = routeId,
             planeId = planeId,
             date = date,
-            time = time
+            time = time,
         ).insertIntoDatabase()
 
         response.headers.append("HX-Redirect", "/manageFlights")
@@ -1028,12 +1103,14 @@ private suspend fun ApplicationCall.handleUpdateFlightPost() {
             return@timed
         }
 
-        val duplicate = FlightData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${FlightColumns.ROUTE_ID.name} = ? AND ${FlightColumns.PLANE_ID.name} = ? AND ${FlightColumns.DATE.name} = ? AND ${FlightColumns.TIME.name} = ? AND ${FlightColumns.ID.name} != ?",
-                listOf(routeId, planeId, date.toString(), time.toString(), flightId)
+        val duplicate =
+            FlightData.queryDatabase(
+                whereArgs =
+                    WhereArgs(
+                        "${FlightColumns.ROUTE_ID.name} = ? AND ${FlightColumns.PLANE_ID.name} = ? AND ${FlightColumns.DATE.name} = ? AND ${FlightColumns.TIME.name} = ? AND ${FlightColumns.ID.name} != ?",
+                        listOf(routeId, planeId, date.toString(), time.toString(), flightId),
+                    ),
             )
-        )
 
         if (duplicate.isNotEmpty()) {
             respondText("That flight already exists", status = HttpStatusCode.BadRequest)
@@ -1041,16 +1118,18 @@ private suspend fun ApplicationCall.handleUpdateFlightPost() {
         }
 
         FlightData.updateTable(
-            values = mapOf(
-                FlightColumns.ROUTE_ID to routeId,
-                FlightColumns.PLANE_ID to planeId,
-                FlightColumns.DATE to date.toString(),
-                FlightColumns.TIME to time.toString()
-            ),
-            whereArgs = WhereArgs(
-                "${FlightColumns.ID.name} = ?",
-                listOf(flightId)
-            )
+            values =
+                mapOf(
+                    FlightColumns.ROUTE_ID to routeId,
+                    FlightColumns.PLANE_ID to planeId,
+                    FlightColumns.DATE to date.toString(),
+                    FlightColumns.TIME to time.toString(),
+                ),
+            whereArgs =
+                WhereArgs(
+                    "${FlightColumns.ID.name} = ?",
+                    listOf(flightId),
+                ),
         )
 
         response.headers.append("HX-Redirect", "/manageFlights")
@@ -1076,49 +1155,59 @@ private suspend fun ApplicationCall.handleDeleteFlightPost() {
             return@timed
         }
 
-        val seats = SeatData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${SeatColumns.FLIGHT_ID.name} = ?",
-                listOf(flightId)
-            )
-        ).map { it.dataClass }
+        val seats =
+            SeatData
+                .queryDatabase(
+                    whereArgs =
+                        WhereArgs(
+                            "${SeatColumns.FLIGHT_ID.name} = ?",
+                            listOf(flightId),
+                        ),
+                ).map { it.dataClass }
 
-        val bookedSeats = seats.flatMap { seat ->
-            BookedSeatData.queryDatabase(
-                whereArgs = WhereArgs(
-                    "${BookedSeatColumns.SEAT_ID.name} = ?",
-                    listOf(seat.id)
-                )
-            ).map { it.dataClass }
-        }
-
-        val bookingRows = bookedSeats.mapNotNull { bookedSeat ->
-            DatabaseManager.queryTable(
-                table = BookingData.EMPTY.tableName,
-                columns = BookingColumns.COLUMN_NAMES,
-                whereArgs = WhereArgs(
-                    "${BookingColumns.ID.name} = ?",
-                    listOf(bookedSeat.bookingId)
-                )
-            ).firstOrNull()
-        }
-
-        val refundableGroups = bookingRows
-            .filter { row ->
-                val paymentIntentId = row[5]?.toString()
-                val amountPaid = (row[6] as? Number)?.toLong()
-                val refundStatus = row[7]?.toString()
-
-                !paymentIntentId.isNullOrBlank() &&
-                amountPaid != null &&
-                amountPaid > 0L &&
-                refundStatus == null
-            }
-            .groupBy { row ->
-                "${row[5]}|${row[4]}"
+        val bookedSeats =
+            seats.flatMap { seat ->
+                BookedSeatData
+                    .queryDatabase(
+                        whereArgs =
+                            WhereArgs(
+                                "${BookedSeatColumns.SEAT_ID.name} = ?",
+                                listOf(seat.id),
+                            ),
+                    ).map { it.dataClass }
             }
 
-        Stripe.apiKey = "sk_test_51TCfFDDPNfjFe9Utry1rCfJEQJ0YIASnPd7O0SkI3Ewo7COIifnBpfEsP7xPhx5c1WJ8ndpJKxi1IrWqJEJfoyEL00engmejFe"
+        val bookingRows =
+            bookedSeats.mapNotNull { bookedSeat ->
+                DatabaseManager
+                    .queryTable(
+                        table = BookingData.EMPTY.tableName,
+                        columns = BookingColumns.COLUMN_NAMES,
+                        whereArgs =
+                            WhereArgs(
+                                "${BookingColumns.ID.name} = ?",
+                                listOf(bookedSeat.bookingId),
+                            ),
+                    ).firstOrNull()
+            }
+
+        val refundableGroups =
+            bookingRows
+                .filter { row ->
+                    val paymentIntentId = row[5]?.toString()
+                    val amountPaid = (row[6] as? Number)?.toLong()
+                    val refundStatus = row[7]?.toString()
+
+                    !paymentIntentId.isNullOrBlank() &&
+                        amountPaid != null &&
+                        amountPaid > 0L &&
+                        refundStatus == null
+                }.groupBy { row ->
+                    "${row[5]}|${row[4]}"
+                }
+
+        Stripe.apiKey =
+            "sk_test_51TCfFDDPNfjFe9Utry1rCfJEQJ0YIASnPd7O0SkI3Ewo7COIifnBpfEsP7xPhx5c1WJ8ndpJKxi1IrWqJEJfoyEL00engmejFe"
 
         for ((_, groupRows) in refundableGroups) {
             val firstRow = groupRows.first()
@@ -1126,21 +1215,24 @@ private suspend fun ApplicationCall.handleDeleteFlightPost() {
             val bookerId = firstRow[1] as Int
             val bookingReference = firstRow[4].toString()
             val paymentIntentId = firstRow[5]?.toString()
-            val refundAmount = groupRows.sumOf { row ->
-                (row[6] as? Number)?.toLong() ?: 0L
-            }
+            val refundAmount =
+                groupRows.sumOf { row ->
+                    (row[6] as? Number)?.toLong() ?: 0L
+                }
 
             if (paymentIntentId.isNullOrBlank() || refundAmount <= 0L) {
                 continue
             }
 
-            val refundParams = RefundCreateParams.builder()
-                .setPaymentIntent(paymentIntentId)
-                .setAmount(refundAmount)
-                .setReason(RefundCreateParams.Reason.REQUESTED_BY_CUSTOMER)
-                .putMetadata("booking_reference", bookingReference)
-                .putMetadata("admin_deleted_flight_id", flightId.toString())
-                .build()
+            val refundParams =
+                RefundCreateParams
+                    .builder()
+                    .setPaymentIntent(paymentIntentId)
+                    .setAmount(refundAmount)
+                    .setReason(RefundCreateParams.Reason.REQUESTED_BY_CUSTOMER)
+                    .putMetadata("booking_reference", bookingReference)
+                    .putMetadata("admin_deleted_flight_id", flightId.toString())
+                    .build()
 
             val refund = Refund.create(refundParams)
 
@@ -1148,15 +1240,17 @@ private suspend fun ApplicationCall.handleDeleteFlightPost() {
                 val bookingId = row[0] as Int
 
                 BookingData.updateTable(
-                    values = mapOf(
-                        BookingColumns.REFUND_STATUS to "REFUNDED_FULL",
-                        BookingColumns.STRIPE_REFUND_ID to refund.id,
-                        BookingColumns.REFUND_AMOUNT to refundAmount.toInt()
-                    ),
-                    whereArgs = WhereArgs(
-                        "${BookingColumns.ID.name} = ?",
-                        listOf(bookingId)
-                    )
+                    values =
+                        mapOf(
+                            BookingColumns.REFUND_STATUS to "REFUNDED_FULL",
+                            BookingColumns.STRIPE_REFUND_ID to refund.id,
+                            BookingColumns.REFUND_AMOUNT to refundAmount.toInt(),
+                        ),
+                    whereArgs =
+                        WhereArgs(
+                            "${BookingColumns.ID.name} = ?",
+                            listOf(bookingId),
+                        ),
                 )
             }
 
@@ -1167,7 +1261,7 @@ private suspend fun ApplicationCall.handleDeleteFlightPost() {
                     to = email,
                     reference = bookingReference,
                     refundAmount = refundAmount,
-                    refundId = refund.id
+                    refundId = refund.id,
                 )
             }
         }
@@ -1186,12 +1280,14 @@ private suspend fun ApplicationCall.handleDeleteFlightPost() {
             AssignedFlightStaffData.delete(assignment.dataClass.id)
         }
 
-        val flightSearchLinks = FlightSearchFlightData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${FlightSearchFlightColumns.FLIGHT_ID.name} = ?",
-                listOf(flightId)
+        val flightSearchLinks =
+            FlightSearchFlightData.queryDatabase(
+                whereArgs =
+                    WhereArgs(
+                        "${FlightSearchFlightColumns.FLIGHT_ID.name} = ?",
+                        listOf(flightId),
+                    ),
             )
-        )
 
         for (link in flightSearchLinks) {
             FlightSearchFlightData.delete(link.dataClass.id)
@@ -1239,26 +1335,38 @@ private suspend fun ApplicationCall.requireAdmin(): Boolean {
 }
 
 private fun getBookerEmail(bookerId: Int): String? {
-    val booker = BookerData.queryDatabase(
-        whereArgs = WhereArgs("${BookerColumns.ID.name} = ?", listOf(bookerId))
-    ).firstOrNull()?.dataClass ?: return null
+    val booker =
+        BookerData
+            .queryDatabase(
+                whereArgs = WhereArgs("${BookerColumns.ID.name} = ?", listOf(bookerId)),
+            ).firstOrNull()
+            ?.dataClass ?: return null
 
     booker.userId?.let { userId ->
-        val user = UserData.queryDatabase(
-            whereArgs = WhereArgs("${UserColumns.ID.name} = ?", listOf(userId))
-        ).firstOrNull()?.dataClass ?: return null
+        val user =
+            UserData
+                .queryDatabase(
+                    whereArgs = WhereArgs("${UserColumns.ID.name} = ?", listOf(userId)),
+                ).firstOrNull()
+                ?.dataClass ?: return null
 
-        val login = LoginData.queryDatabase(
-            whereArgs = WhereArgs("${LoginColumns.ID.name} = ?", listOf(user.loginId))
-        ).firstOrNull()?.dataClass
+        val login =
+            LoginData
+                .queryDatabase(
+                    whereArgs = WhereArgs("${LoginColumns.ID.name} = ?", listOf(user.loginId)),
+                ).firstOrNull()
+                ?.dataClass
 
         return login?.email
     }
 
     booker.guestId?.let { guestId ->
-        val guest = GuestData.queryDatabase(
-            whereArgs = WhereArgs("${GuestColumns.ID.name} = ?", listOf(guestId))
-        ).firstOrNull()?.dataClass
+        val guest =
+            GuestData
+                .queryDatabase(
+                    whereArgs = WhereArgs("${GuestColumns.ID.name} = ?", listOf(guestId)),
+                ).firstOrNull()
+                ?.dataClass
 
         return guest?.email
     }

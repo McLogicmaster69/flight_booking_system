@@ -20,10 +20,9 @@ object AssignedFlightStaffColumns {
 
 data class AssignedFlightStaffData(
     override val id: Int = 0,
-    var flightId : Int = 0,
-    var staffId : Int = 0,
-    var searchToken : String = ""
-
+    var flightId: Int = 0,
+    var staffId: Int = 0,
+    var searchToken: String = "",
 ) : DataClass<AssignedFlightStaffData>(id) {
     override val tableName = "assigned_flight_staff"
     override val tableColumns = AssignedFlightStaffColumns.ALL
@@ -38,7 +37,7 @@ data class AssignedFlightStaffData(
         mapOf(
             AssignedFlightStaffColumns.FLIGHT_ID to flightId,
             AssignedFlightStaffColumns.STAFF_ID to staffId,
-            AssignedFlightStaffColumns.SEARCH_TOKEN to searchToken
+            AssignedFlightStaffColumns.SEARCH_TOKEN to searchToken,
         )
 
     override fun mapRowToData(row: Array<Any?>): AssignedFlightStaffData =
@@ -46,7 +45,7 @@ data class AssignedFlightStaffData(
             id = castRowElement(row, AssignedFlightStaffColumns.ID),
             flightId = castRowElement(row, AssignedFlightStaffColumns.FLIGHT_ID),
             staffId = castRowElement(row, AssignedFlightStaffColumns.STAFF_ID),
-            searchToken = castRowElement(row, AssignedFlightStaffColumns.SEARCH_TOKEN)
+            searchToken = castRowElement(row, AssignedFlightStaffColumns.SEARCH_TOKEN),
         )
 
     override fun debugData() {
@@ -66,13 +65,13 @@ data class AssignedFlightStaffData(
         ): List<QueryResult<AssignedFlightStaffData>> =
             EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
 
-        fun queryDatabase (token : String) : List<QueryResult<AssignedFlightStaffData>>
-            = queryDatabase(whereArgs = WhereArgs("${AssignedFlightStaffColumns.SEARCH_TOKEN} = ?", listOf(token)))
+        fun queryDatabase(token: String): List<QueryResult<AssignedFlightStaffData>> =
+            queryDatabase(whereArgs = WhereArgs("${AssignedFlightStaffColumns.SEARCH_TOKEN} = ?", listOf(token)))
 
-        fun updateTable (
-            values : Map<Column<*>, Any?>,
-            whereArgs : WhereArgs
-        ) : Int = EMPTY.updateTable(values, whereArgs)
+        fun updateTable(
+            values: Map<Column<*>, Any?>,
+            whereArgs: WhereArgs,
+        ): Int = EMPTY.updateTable(values, whereArgs)
 
         fun delete(id: Int): Int = AssignedFlightStaffData(id = id).delete()
 
@@ -97,13 +96,14 @@ data class AssignedFlightStaffData(
                     ),
                 )
 
-            val whereArgs : WhereArgs = WhereArgs (
-                whereClause = """
+            val whereArgs: WhereArgs =
+                WhereArgs(
+                    whereClause = """
                     ${AssignedFlightStaffData.EMPTY.tableName}.${AssignedFlightStaffColumns.STAFF_ID.name} = ?
                     AND ${FlightData.EMPTY.tableName}.${FlightColumns.DATE.name} >= ?
                 """,
-                listOf(id, LocalDate.now().minusDays(1L))
-            )
+                    listOf(id, LocalDate.now().minusDays(1L)),
+                )
 
             return FlightData.queryDatabase(
                 multipleJoinArgs = joinArgs,
@@ -300,7 +300,7 @@ data class AssignedFlightStaffData(
                 AssignedFlightStaffData(
                     flightId = flight.id,
                     staffId = pilot.dataClass.id,
-                    searchToken = EMPTY.generateSecureToken()
+                    searchToken = EMPTY.generateSecureToken(),
                 ).insertIntoDatabase()
                 pilot.dataClass.updateLocation(route.endDestination)
             }
@@ -309,7 +309,7 @@ data class AssignedFlightStaffData(
                 AssignedFlightStaffData(
                     flightId = flight.id,
                     staffId = attendant.dataClass.id,
-                    searchToken = EMPTY.generateSecureToken()
+                    searchToken = EMPTY.generateSecureToken(),
                 ).insertIntoDatabase()
                 attendant.dataClass.updateLocation(route.endDestination)
             }

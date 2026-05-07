@@ -19,12 +19,11 @@ object PlaneColumns {
 
 data class PlaneData(
     override val id: Int = 0,
-    var modelId : Int = 0,
+    var modelId: Int = 0,
     var registrationCode: String = "",
-    var currentLocation : Int = 0,
-    var currentLocationDate : LocalDate = LocalDate.parse("1970-01-01"),
-    var currentLocationTime : LocalTime = LocalTime.parse("00:00")
-
+    var currentLocation: Int = 0,
+    var currentLocationDate: LocalDate = LocalDate.parse("1970-01-01"),
+    var currentLocationTime: LocalTime = LocalTime.parse("00:00"),
 ) : DataClass<PlaneData>(id) {
     override val tableName = "planes"
     override val tableColumns = PlaneColumns.ALL
@@ -36,10 +35,19 @@ data class PlaneData(
         )
 
     override val initialRows: List<PlaneData>
-        get() = listOf(
-            PlaneData(registrationCode = "G-BOE738", modelId = PlaneModelData.getPlaneModelId("Boeing 737-800"), currentLocation = DestinationData.getDestinationId("Luton")),
-            PlaneData(registrationCode = "G-AIRA321", modelId = PlaneModelData.getPlaneModelId("Airbus A321"), currentLocation = DestinationData.getDestinationId("Luton"))
-        )
+        get() =
+            listOf(
+                PlaneData(
+                    registrationCode = "G-BOE738",
+                    modelId = PlaneModelData.getPlaneModelId("Boeing 737-800"),
+                    currentLocation = DestinationData.getDestinationId("Luton"),
+                ),
+                PlaneData(
+                    registrationCode = "G-AIRA321",
+                    modelId = PlaneModelData.getPlaneModelId("Airbus A321"),
+                    currentLocation = DestinationData.getDestinationId("Luton"),
+                ),
+            )
 
     override val requiredTables: List<DataClass<*>>
         get() =
@@ -68,7 +76,9 @@ data class PlaneData(
         )
 
     override fun debugData() {
-        println("Plane data: (\"$id\", \"$registrationCode\", \"$modelId\", \"$currentLocation\", \"$currentLocationDate\", \"$currentLocationTime\")")
+        println(
+            "Plane data: (\"$id\", \"$registrationCode\", \"$modelId\", \"$currentLocation\", \"$currentLocationDate\", \"$currentLocationTime\")",
+        )
     }
 
     fun updateLocation(
@@ -101,29 +111,30 @@ data class PlaneData(
         fun getPlaneId(modelName: String): Int {
             val modelId = PlaneModelData.getPlaneModelId(modelName)
             return queryDatabase(
-                whereArgs = WhereArgs("${PlaneColumns.MODEL_ID.name} = ?", listOf(modelId))
+                whereArgs = WhereArgs("${PlaneColumns.MODEL_ID.name} = ?", listOf(modelId)),
             ).firstOrNull()?.dataClass?.id ?: -1
         }
 
-        fun updateTable (
-            values : Map<Column<*>, Any?>,
-            whereArgs : WhereArgs
-        ) : Int = EMPTY.updateTable(values, whereArgs)
+        fun updateTable(
+            values: Map<Column<*>, Any?>,
+            whereArgs: WhereArgs,
+        ): Int = EMPTY.updateTable(values, whereArgs)
 
-        fun delete(id : Int) : Int {
-            return PlaneData(id = id).delete()
-        }
+        fun delete(id: Int): Int = PlaneData(id = id).delete()
 
-        fun getAvailablePlane (
-            modelId : Int,
-            locationId : Int,
-            date : LocalDate,
-            time : LocalTime
-        ) : PlaneData? {
-            val availablePlanes : List<QueryResult<PlaneData>> = PlaneData.queryDatabase(
-                whereArgs = WhereArgs(
-                    whereClause = "${PlaneColumns.MODEL_ID.name} = ?",
-                    whereArgs = listOf(modelId)
+        fun getAvailablePlane(
+            modelId: Int,
+            locationId: Int,
+            date: LocalDate,
+            time: LocalTime,
+        ): PlaneData? {
+            val availablePlanes: List<QueryResult<PlaneData>> =
+                PlaneData.queryDatabase(
+                    whereArgs =
+                        WhereArgs(
+                            whereClause = "${PlaneColumns.MODEL_ID.name} = ?",
+                            whereArgs = listOf(modelId),
+                        ),
                 )
 
             val planeAvailableAtTime: List<QueryResult<PlaneData>> =
