@@ -12,7 +12,6 @@ import data.*
 import io.ktor.server.request.*
 import java.time.LocalDate
 import java.time.LocalTime
-import com.stripe.Stripe
 import com.stripe.model.Refund
 import com.stripe.param.RefundCreateParams
 import utils.EmailService
@@ -287,9 +286,6 @@ private suspend fun ApplicationCall.handleDeleteFlightPost() {
                 }.groupBy { row ->
                     "${row[5]}|${row[4]}"
                 }
-
-        Stripe.apiKey =
-            "sk_test_51TCfFDDPNfjFe9Utry1rCfJEQJ0YIASnPd7O0SkI3Ewo7COIifnBpfEsP7xPhx5c1WJ8ndpJKxi1IrWqJEJfoyEL00engmejFe"
 
         for ((_, groupRows) in refundableGroups) {
             val firstRow = groupRows.first()

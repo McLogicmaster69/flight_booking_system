@@ -13,7 +13,6 @@ import utils.jsMode
 import utils.timed
 import auth.*
 import utils.EmailService
-import com.stripe.Stripe
 import com.stripe.model.PaymentIntent
 import com.stripe.param.PaymentIntentCreateParams
 
@@ -333,8 +332,6 @@ private suspend fun ApplicationCall.handleCreatePaymentIntent() {
     timed("T2_payment_intent", jsMode()) {
         val body = receive<Map<String, String>>()
         val email = body["email"] ?: ""
-        Stripe.apiKey =
-            "sk_test_51TCfFDDPNfjFe9Utry1rCfJEQJ0YIASnPd7O0SkI3Ewo7COIifnBpfEsP7xPhx5c1WJ8ndpJKxi1IrWqJEJfoyEL00engmejFe"
 
         val amount = body["amount"]?.toLongOrNull()
 
