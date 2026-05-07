@@ -8,16 +8,9 @@ import java.io.StringWriter
 import utils.timed
 import utils.jsMode
 
-/**
- * UI template routes (server-rendered Pebble pages).
- *
- * Notes:
- * - These are *template scaffolds* only: they intentionally use placeholder data.
- * - Later, the team can wire them to real DB/API endpoints.
- */
 fun Route.pagesRoutes() {
-    get("/settings") { call.render("settings/index.peb", "Settings") }
-    get("/help") { call.render("help/index.peb", "Help") }
+    get("/settings") { call.handleSettingsLoad() }
+    get("/help") { call.handleHelpLoad() }
 }
 
 private suspend fun ApplicationCall.render(
@@ -45,6 +38,44 @@ private suspend fun ApplicationCall.render(
                 "headerRightText" to "",
             ) + loggedMap(),
         )
+
+        respondText(writer.toString(), ContentType.Text.Html)
+    }
+}
+
+private suspend fun ApplicationCall.handleSettingsLoad() {
+    timed("T1_Handle_Settings_Load", jsMode()) {
+        val pebble = getEngine()
+
+        val model: Map<String, Any?> = mapOf(
+            "title" to "Settings",
+            "inNav" to java.lang.Boolean.valueOf(true),
+            "activePage" to "settings"
+        )
+
+        val writer = StringWriter()
+        val template = pebble.getTemplate("settings/index.peb")
+
+        fullEvaluate(template, writer, model)
+
+        respondText(writer.toString(), ContentType.Text.Html)
+    }
+}
+
+private suspend fun ApplicationCall.handleHelpLoad() {
+    timed("T1_Handle_Settings_Load", jsMode()) {
+        val pebble = getEngine()
+
+        val model: Map<String, Any?> = mapOf(
+            "title" to "Help",
+            "inNav" to java.lang.Boolean.valueOf(true),
+            "activePage" to "help"
+        )
+
+        val writer = StringWriter()
+        val template = pebble.getTemplate("help/index.peb")
+
+        fullEvaluate(template, writer, model)
 
         respondText(writer.toString(), ContentType.Text.Html)
     }

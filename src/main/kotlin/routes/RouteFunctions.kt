@@ -85,6 +85,7 @@ fun ApplicationCall.fullEvaluate(
     val loggedState = loggedIn()
 
     var isAdmin = false
+    var user: UserData? = null
 
     if (loggedState.logged_in && loggedState.session != null) {
         val user =

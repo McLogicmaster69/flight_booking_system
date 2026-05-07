@@ -207,7 +207,8 @@ private suspend fun ApplicationCall.handleVerifyPost() {
         }
 
         TwoFAData.deleteByUserId(record.userId)
-        sessions.clear<Temp2FASession>()
+
+        val alreadyLoggedIn = loggedIn().logged_in
 
         val userQuery =
             UserData.queryDatabase(
@@ -242,12 +243,18 @@ private suspend fun ApplicationCall.handleVerifyPost() {
             user.update()
         }
 
-        sessions.set(SessionData.createSession(user.id).toTokenSession())
-        if (isAdmin) {
+        sessions.clear<Temp2FASession>()
+
+        if (!alreadyLoggedIn) {
+            sessions.set(SessionData.createSession(user.id).toTokenSession())
+        }
+
+        if (isAdmin && !alreadyLoggedIn) {
             response.headers.append("HX-Redirect", "/admin")
         } else {
             response.headers.append("HX-Redirect", "/")
         }
+
         respond(HttpStatusCode.OK)
     }
 }
