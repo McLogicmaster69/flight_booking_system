@@ -34,6 +34,18 @@ fun ApplicationCall.loggedIn() : LoggedInState {
     return LoggedInState(true, token)
 }
 
+fun ApplicationCall.staffLoggedIn() : StaffLoggedInState {
+    val token : StaffSessionToken? = sessions.get("STAFF_TOKEN_SESSION") as StaffSessionToken?
+    if (token == null)
+        return StaffLoggedInState(false, null, -1)
+    
+    val query : List<QueryResult<StaffSessionData>> = StaffSessionData.queryDatabase(token.token)
+    if (query.isEmpty())
+        return StaffLoggedInState(false, null, -1)
+
+    return StaffLoggedInState(true, token, query.first().dataClass.staffId)
+}
+
 fun ApplicationCall.createUserState(logged_state : LoggedInState) : UserSession? {
     if (!logged_state.logged_in)
         return null

@@ -103,13 +103,31 @@ private suspend fun ApplicationCall.handleStaffLoginPost() {
 private suspend fun ApplicationCall.handleStaffDashboardLoad() {
     timed("T2_staff_dashboard", jsMode()) {
         requireStaff() ?: return@timed
+        val logged_state : StaffLoggedInState = staffLoggedIn()
+        if (!logged_state.logged_in || logged_state.session == null) {
+            respondRedirect("/login")
+            return@timed
+        }
+
+        val staffAssignments = AssignedFlightStaffData.getFlightsAssignedToStaff(logged_state.staffId).mapNotNull { flight ->
+            val route = RouteData.queryDatabase(flight.dataClass.routeId).firstOrNull()?.dataClass ?: return@mapNotNull null
+
+            StaffFlightInfo(
+                DestinationData.getDestinationName(route.startDestination),
+                DestinationData.getDestinationName(route.endDestination),
+                "${flight.dataClass.date.toString()} ${flight.dataClass.time.toString()}",
+                route.duration.toString(),
+                flight.getColumn(AssignedFlightStaffData.EMPTY.tableName, AssignedFlightStaffColumns.SEARCH_TOKEN.name)?.columnVal as String
+            )
+        }
 
         val pebble = getEngine()
         val model = mapOf(
             "title" to "Staff Dashboard",
             "layout" to "staff",
             "activePage" to "staffDashboard",
-            "inNav" to true
+            "inNav" to true,
+            "staffFlights" to staffAssignments
         )
 
         val template = pebble.getTemplate("staff/index.peb")
