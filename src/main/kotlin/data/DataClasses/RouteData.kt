@@ -491,7 +491,7 @@ data class RouteData(
 
             return queryDatabase()
                 .sortedByDescending { route ->
-                    route.dataClass.getRoutePopularity(startDate, LocalDate.now())
+                    route.dataClass.getRoutePopularity(startDate, LocalDate.now().plusDays(7L))
                 }.take(amount)
         }
     }

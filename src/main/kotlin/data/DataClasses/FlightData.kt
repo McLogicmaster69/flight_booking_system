@@ -549,5 +549,77 @@ data class FlightData(
                 flight.dataClass.assignRemainingStaff()
             }
         }
+
+        fun getTimePopularity(
+            time: LocalTime,
+            startDate: LocalDate,
+            endDate: LocalDate,
+        ): Int {
+            val upperTime = time.plusHours(1L)
+
+            val joinArgs: MultipleJoinArgs =
+                MultipleJoinArgs(
+                    listOf(
+                        JoinArgs(
+                            "INNER",
+                            SeatData.EMPTY.tableName,
+                            FlightColumns.ID.name,
+                            SeatColumns.FLIGHT_ID.name,
+                            SeatColumns.COLUMN_NAMES,
+                            FlightData.EMPTY.tableName,
+                        ),
+                        JoinArgs(
+                            "INNER",
+                            BookedSeatData.EMPTY.tableName,
+                            SeatColumns.ID.name,
+                            BookedSeatColumns.SEAT_ID.name,
+                            BookedSeatColumns.COLUMN_NAMES,
+                            SeatData.EMPTY.tableName,
+                        ),
+                    ),
+                )
+
+            var whereArgs: WhereArgs
+
+            if (time.hour == 23) {
+                whereArgs =
+                    WhereArgs(
+                        whereClause = """
+                    ${FlightData.EMPTY.tableName}.${FlightColumns.DATE.name} >= ?
+                    AND ${FlightData.EMPTY.tableName}.${FlightColumns.DATE.name} < ?
+                    AND ${FlightData.EMPTY.tableName}.${FlightColumns.TIME.name} >= ?
+                    """,
+                        listOf(startDate, endDate, time),
+                    )
+            } else {
+                whereArgs =
+                    WhereArgs(
+                        whereClause = """
+                    ${FlightData.EMPTY.tableName}.${FlightColumns.DATE.name} >= ?
+                    AND ${FlightData.EMPTY.tableName}.${FlightColumns.DATE.name} < ?
+                    AND ${FlightData.EMPTY.tableName}.${FlightColumns.TIME.name} >= ?
+                    AND ${FlightData.EMPTY.tableName}.${FlightColumns.TIME.name} < ?
+                    """,
+                        listOf(startDate, endDate, time, upperTime),
+                    )
+            }
+
+            return queryDatabase(
+                multipleJoinArgs = joinArgs,
+                whereArgs = whereArgs,
+            ).size
+        }
+
+        fun getMostPopularTimes(): List<LocalTime> =
+            (0..23)
+                .map { i ->
+                    LocalTime.of(i, 0)
+                }.sortedByDescending { time ->
+                    getTimePopularity(
+                        time,
+                        LocalDate.now().minusMonths(1L),
+                        LocalDate.now().plusDays(7L),
+                    )
+                }
     }
 }
