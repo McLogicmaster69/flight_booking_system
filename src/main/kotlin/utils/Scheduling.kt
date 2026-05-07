@@ -10,7 +10,7 @@ import java.time.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-fun cleanup () {
+fun cleanup() {
     println("Cleaning database")
     FlightSearchData.deleteOld()
     FlightData.deleteOld()
@@ -34,14 +34,15 @@ fun scheduleDailyTasks() {
     val scheduler = Executors.newSingleThreadScheduledExecutor()
 
     val now = ZonedDateTime.now()
-    val updateTime = now
-        .withHour(12)
-        .withMinute(0)
-        .withSecond(0)
-        .withNano(0)
-        .let {
-            if (it.isBefore(now)) it.plusDays(1) else it
-        }
+    val updateTime =
+        now
+            .withHour(12)
+            .withMinute(0)
+            .withSecond(0)
+            .withNano(0)
+            .let {
+                if (it.isBefore(now)) it.plusDays(1) else it
+            }
 
     val initialDelay = Duration.between(now, updateTime).seconds
     val period = TimeUnit.DAYS.toSeconds(1)
@@ -66,6 +67,6 @@ fun scheduleDailyTasks() {
         },
         initialDelay,
         period,
-        TimeUnit.SECONDS
+        TimeUnit.SECONDS,
     )
 }

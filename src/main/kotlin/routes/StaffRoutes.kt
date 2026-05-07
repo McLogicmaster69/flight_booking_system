@@ -24,14 +24,14 @@ fun ApplicationCall.createStaffLoginStatus(message: String): String =
 
 private suspend fun ApplicationCall.handleStaffLoginLoad() {
     timed("T0_staff_login", jsMode()) {
-
         val pebble = getEngine()
 
-        val model = mapOf(
-            "title" to "Staff Login",
-            "activePage" to "staff",
-            "inNav" to true
-        )
+        val model =
+            mapOf(
+                "title" to "Staff Login",
+                "activePage" to "staff",
+                "inNav" to true,
+            )
 
         val template = pebble.getTemplate("staff/stafflogin.peb")
         val writer = StringWriter()
@@ -51,7 +51,7 @@ private suspend fun ApplicationCall.handleStaffLoginPost() {
             respondText(
                 createStaffLoginStatus("Incorrect email or password"),
                 ContentType.Text.Html,
-                status = HttpStatusCode.OK
+                status = HttpStatusCode.OK,
             )
             return@timed
         }
@@ -62,23 +62,24 @@ private suspend fun ApplicationCall.handleStaffLoginPost() {
             respondText(
                 createStaffLoginStatus("Incorrect email or password"),
                 ContentType.Text.Html,
-                status = HttpStatusCode.OK
+                status = HttpStatusCode.OK,
             )
             return@timed
         }
 
         val result = query.first()
 
-        val passwordColumn = result.getColumn(
-            LoginData.EMPTY.tableName,
-            LoginColumns.PASSWORD_HASH.name
-        )
+        val passwordColumn =
+            result.getColumn(
+                LoginData.EMPTY.tableName,
+                LoginColumns.PASSWORD_HASH.name,
+            )
 
         if (passwordColumn == null) {
             respondText(
                 createStaffLoginStatus("An error occurred, please try again later"),
                 ContentType.Text.Html,
-                status = HttpStatusCode.OK
+                status = HttpStatusCode.OK,
             )
             return@timed
         }
@@ -89,7 +90,7 @@ private suspend fun ApplicationCall.handleStaffLoginPost() {
             respondText(
                 createStaffLoginStatus("Incorrect email or password"),
                 ContentType.Text.Html,
-                status = HttpStatusCode.OK
+                status = HttpStatusCode.OK,
             )
             return@timed
         }
@@ -105,12 +106,13 @@ private suspend fun ApplicationCall.handleStaffDashboardLoad() {
         requireStaff() ?: return@timed
 
         val pebble = getEngine()
-        val model = mapOf(
-            "title" to "Staff Dashboard",
-            "layout" to "staff",
-            "activePage" to "staffDashboard",
-            "inNav" to true
-        )
+        val model =
+            mapOf(
+                "title" to "Staff Dashboard",
+                "layout" to "staff",
+                "activePage" to "staffDashboard",
+                "inNav" to true,
+            )
 
         val template = pebble.getTemplate("staff/index.peb")
         val writer = StringWriter()
@@ -127,8 +129,8 @@ private suspend fun ApplicationCall.requireStaff(): StaffSessionToken? {
         return null
     }
 
-    val results : List<QueryResult<StaffSessionData>> = StaffSessionData.queryDatabase(staffSession.token)
-    
+    val results: List<QueryResult<StaffSessionData>> = StaffSessionData.queryDatabase(staffSession.token)
+
     if (results.isEmpty()) {
         sessions.clear<StaffSessionToken>()
         respondRedirect("/stafflogin")

@@ -7,7 +7,8 @@ import java.time.LocalDateTime
 object PlaneColumns {
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
     val MODEL_ID = Column<Int>("model_id", "INTEGER NOT NULL REFERENCES ${PlaneModelData.EMPTY.tableName}(id)")
-    val CURRENT_LOCATION = Column<Int>("current_location", "INTEGER NOT NULL REFERENCES ${DestinationData.EMPTY.tableName}(id)")
+    val CURRENT_LOCATION =
+        Column<Int>("current_location", "INTEGER NOT NULL REFERENCES ${DestinationData.EMPTY.tableName}(id)")
     val CURRENT_LOCATION_DATE = Column<String>("current_location_date", "STRING NOT NULL")
     val CURRENT_LOCATION_TIME = Column<String>("current_location_time", "STRING NOT NULL")
 
@@ -16,57 +17,69 @@ object PlaneColumns {
 }
 
 data class PlaneData(
-
     override val id: Int = 0,
-    var modelId : Int = 0,
-    var currentLocation : Int = 0,
-    var currentLocationDate : LocalDate = LocalDate.parse("1970-01-01"),
-    var currentLocationTime : LocalTime = LocalTime.parse("00:00")
-
+    var modelId: Int = 0,
+    var currentLocation: Int = 0,
+    var currentLocationDate: LocalDate = LocalDate.parse("1970-01-01"),
+    var currentLocationTime: LocalTime = LocalTime.parse("00:00"),
 ) : DataClass<PlaneData>(id) {
-
     override val tableName = "planes"
     override val tableColumns = PlaneColumns.ALL
 
-    override val indexes : List<IndexArgs> = listOf(
-        IndexArgs("inx_planes_model_id", PlaneColumns.MODEL_ID.name),
-        IndexArgs("inx_planes_current_location", PlaneColumns.CURRENT_LOCATION.name)
-    )
+    override val indexes: List<IndexArgs> =
+        listOf(
+            IndexArgs("inx_planes_model_id", PlaneColumns.MODEL_ID.name),
+            IndexArgs("inx_planes_current_location", PlaneColumns.CURRENT_LOCATION.name),
+        )
 
     override val initialRows: List<PlaneData>
-        get() = listOf(
-            PlaneData(modelId = PlaneModelData.getPlaneModelId("Boeing 737-800"), currentLocation = DestinationData.getDestinationId("Luton")),
-            PlaneData(modelId = PlaneModelData.getPlaneModelId("Airbus A321"), currentLocation = DestinationData.getDestinationId("Luton"))
-        )
+        get() =
+            listOf(
+                PlaneData(
+                    modelId = PlaneModelData.getPlaneModelId("Boeing 737-800"),
+                    currentLocation = DestinationData.getDestinationId("Luton"),
+                ),
+                PlaneData(
+                    modelId = PlaneModelData.getPlaneModelId("Airbus A321"),
+                    currentLocation = DestinationData.getDestinationId("Luton"),
+                ),
+            )
 
     override val requiredTables: List<DataClass<*>>
-        get() = listOf(
-            PlaneModelData.EMPTY,
-            DestinationData.EMPTY
-        )
+        get() =
+            listOf(
+                PlaneModelData.EMPTY,
+                DestinationData.EMPTY,
+            )
 
-    override fun mapDataToColumns () : Map<Column<*>, Any?> =
+    override fun mapDataToColumns(): Map<Column<*>, Any?> =
         mapOf(
             PlaneColumns.MODEL_ID to modelId,
             PlaneColumns.CURRENT_LOCATION to currentLocation,
             PlaneColumns.CURRENT_LOCATION_DATE to currentLocationDate,
-            PlaneColumns.CURRENT_LOCATION_TIME to currentLocationTime
+            PlaneColumns.CURRENT_LOCATION_TIME to currentLocationTime,
         )
 
-    override fun mapRowToData(row : Array<Any?>) : PlaneData =
+    override fun mapRowToData(row: Array<Any?>): PlaneData =
         PlaneData(
             id = castRowElement(row, PlaneColumns.ID),
             modelId = castRowElement(row, PlaneColumns.MODEL_ID),
             currentLocation = castRowElement(row, PlaneColumns.CURRENT_LOCATION),
             currentLocationDate = castDateRowElement(row, PlaneColumns.CURRENT_LOCATION_DATE),
-            currentLocationTime = castTimeRowElement(row, PlaneColumns.CURRENT_LOCATION_TIME)
+            currentLocationTime = castTimeRowElement(row, PlaneColumns.CURRENT_LOCATION_TIME),
         )
 
     override fun debugData() {
-        println("Plane data: (\"$id\", \"$modelId\", \"$currentLocation\", \"$currentLocationDate\", \"$currentLocationTime\")")
+        println(
+            "Plane data: (\"$id\", \"$modelId\", \"$currentLocation\", \"$currentLocationDate\", \"$currentLocationTime\")",
+        )
     }
 
-    fun updateLocation(location : Int, date : LocalDate, time : LocalTime) {
+    fun updateLocation(
+        location: Int,
+        date: LocalDate,
+        time: LocalTime,
+    ) {
         currentLocation = location
         currentLocationDate = date
         currentLocationTime = time
@@ -74,58 +87,60 @@ data class PlaneData(
     }
 
     companion object {
-        val EMPTY : PlaneData
+        val EMPTY: PlaneData
             get() = PlaneData()
 
-        fun queryDatabase (
-            multipleJoinArgs : MultipleJoinArgs? = null,
-            whereArgs : WhereArgs? = null,
-            orderByArgs : OrderByArgs? = null,
-            limitArgs : LimitArgs? = null,
-            groupByArgs : GroupByArgs? = null   
-        ) : List<QueryResult<PlaneData>> {
-            return EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
-        }
+        fun queryDatabase(
+            multipleJoinArgs: MultipleJoinArgs? = null,
+            whereArgs: WhereArgs? = null,
+            orderByArgs: OrderByArgs? = null,
+            limitArgs: LimitArgs? = null,
+            groupByArgs: GroupByArgs? = null,
+        ): List<QueryResult<PlaneData>> =
+            EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
 
-        fun queryDatabase(id : Int) : List<QueryResult<PlaneData>> = queryDatabase(whereArgs = WhereArgs("${PlaneColumns.ID.name} = ?", listOf(id)))
+        fun queryDatabase(id: Int): List<QueryResult<PlaneData>> =
+            queryDatabase(whereArgs = WhereArgs("${PlaneColumns.ID.name} = ?", listOf(id)))
 
         fun getPlaneId(modelName: String): Int {
             val modelId = PlaneModelData.getPlaneModelId(modelName)
             return queryDatabase(
-                whereArgs = WhereArgs("${PlaneColumns.MODEL_ID} = ?", listOf(modelId))
+                whereArgs = WhereArgs("${PlaneColumns.MODEL_ID} = ?", listOf(modelId)),
             ).firstOrNull()?.dataClass?.id ?: -1
         }
 
-        fun updateTable (
-            values : Map<Column<*>, Any?>,
-            whereArgs : WhereArgs
-        ) : Int = EMPTY.updateTable(values, whereArgs)
+        fun updateTable(
+            values: Map<Column<*>, Any?>,
+            whereArgs: WhereArgs,
+        ): Int = EMPTY.updateTable(values, whereArgs)
 
-        fun delete(id : Int) : Int {
-            return PlaneData(id = id).delete()
-        }
+        fun delete(id: Int): Int = PlaneData(id = id).delete()
 
-        fun getAvailablePlane (
-            modelId : Int,
-            locationId : Int,
-            date : LocalDate,
-            time : LocalTime
-        ) : PlaneData? {
-            val availablePlanes : List<QueryResult<PlaneData>> = PlaneData.queryDatabase(
-                whereArgs = WhereArgs(
-                    whereClause = "${PlaneColumns.MODEL_ID} = ?",
-                    whereArgs = listOf(modelId)
+        fun getAvailablePlane(
+            modelId: Int,
+            locationId: Int,
+            date: LocalDate,
+            time: LocalTime,
+        ): PlaneData? {
+            val availablePlanes: List<QueryResult<PlaneData>> =
+                PlaneData.queryDatabase(
+                    whereArgs =
+                        WhereArgs(
+                            whereClause = "${PlaneColumns.MODEL_ID} = ?",
+                            whereArgs = listOf(modelId),
+                        ),
                 )
-            )
 
-            val planeAvailableAtTime : List<QueryResult<PlaneData>> = availablePlanes.filter {  plane ->
-                LocalDateTime.of(
-                    plane.dataClass.currentLocationDate, 
-                    plane.dataClass.currentLocationTime
-                ).isBefore(LocalDateTime.of(date, time))
-                && plane.dataClass.currentLocation == locationId
-            }
-            
+            val planeAvailableAtTime: List<QueryResult<PlaneData>> =
+                availablePlanes.filter { plane ->
+                    LocalDateTime
+                        .of(
+                            plane.dataClass.currentLocationDate,
+                            plane.dataClass.currentLocationTime,
+                        ).isBefore(LocalDateTime.of(date, time)) &&
+                        plane.dataClass.currentLocation == locationId
+                }
+
             return planeAvailableAtTime.firstOrNull()?.dataClass
         }
     }

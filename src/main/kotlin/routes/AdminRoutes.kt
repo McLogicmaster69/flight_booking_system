@@ -25,7 +25,7 @@ data class StaffAccountView(
     val lastName: String?,
     val positionId: Int,
     val positionName: String?,
-    val email: String?
+    val email: String?,
 )
 
 private suspend fun ApplicationCall.handleAdminLoad() {
@@ -34,13 +34,14 @@ private suspend fun ApplicationCall.handleAdminLoad() {
 
         val pebble = getEngine()
 
-        val model = mapOf(
-            "title" to "Admin",
-            "layout" to "admin",
-            "activePage" to "admin",
-            "inNav" to true,
-            "isAdmin" to true
-        )
+        val model =
+            mapOf(
+                "title" to "Admin",
+                "layout" to "admin",
+                "activePage" to "admin",
+                "inNav" to true,
+                "isAdmin" to true,
+            )
 
         val template = pebble.getTemplate("admin/index.peb")
         val writer = StringWriter()
@@ -55,48 +56,58 @@ private suspend fun ApplicationCall.handleManageStaffLoad() {
 
         val pebble = getEngine()
 
-        val staff = StaffData.queryDatabase().map { result ->
-        val staffMember = result.dataClass
+        val staff =
+            StaffData.queryDatabase().map { result ->
+                val staffMember = result.dataClass
 
-        val position = StaffPositionData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${StaffPositionColumns.ID.name} = ?",
-                listOf(staffMember.positionId)
+                val position =
+                    StaffPositionData
+                        .queryDatabase(
+                            whereArgs =
+                                WhereArgs(
+                                    "${StaffPositionColumns.ID.name} = ?",
+                                    listOf(staffMember.positionId),
+                                ),
+                        ).firstOrNull()
+                        ?.dataClass
+
+                val login =
+                    LoginData
+                        .queryDatabase(
+                            whereArgs =
+                                WhereArgs(
+                                    "${LoginColumns.ID.name} = ?",
+                                    listOf(staffMember.loginId),
+                                ),
+                        ).firstOrNull()
+                        ?.dataClass
+
+                StaffAccountView(
+                    id = staffMember.id,
+                    firstName = staffMember.firstName,
+                    lastName = staffMember.lastName,
+                    positionId = staffMember.positionId,
+                    positionName = position?.name,
+                    email = login?.email,
+                )
+            }
+
+        val positions = StaffPositionData.queryDatabase().map { it.dataClass }
+        val countries = CountryData.queryDatabase().map { it.dataClass }
+        val destinations = DestinationData.queryDatabase().map { it.dataClass }
+
+        val model =
+            mapOf(
+                "title" to "Manage Staff",
+                "layout" to "admin",
+                "activePage" to "manageStaff",
+                "inNav" to true,
+                "isAdmin" to true,
+                "staff" to staff,
+                "positions" to positions,
+                "countries" to countries,
+                "destinations" to destinations,
             )
-        ).firstOrNull()?.dataClass
-
-        val login = LoginData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${LoginColumns.ID.name} = ?",
-                listOf(staffMember.loginId)
-            )
-        ).firstOrNull()?.dataClass
-
-        StaffAccountView(
-            id = staffMember.id,
-            firstName = staffMember.firstName,
-            lastName = staffMember.lastName,
-            positionId = staffMember.positionId,
-            positionName = position?.name,
-            email = login?.email
-        )
-    }
-
-    val positions = StaffPositionData.queryDatabase().map { it.dataClass }
-    val countries = CountryData.queryDatabase().map { it.dataClass }
-    val destinations = DestinationData.queryDatabase().map { it.dataClass }
-
-    val model = mapOf(
-        "title" to "Manage Staff",
-        "layout" to "admin",
-        "activePage" to "manageStaff",
-        "inNav" to true,
-        "isAdmin" to true,
-        "staff" to staff,
-        "positions" to positions,
-        "countries" to countries,
-        "destinations" to destinations
-    )
 
         val template = pebble.getTemplate("admin/manageStaff.peb")
         val writer = StringWriter()
@@ -142,10 +153,11 @@ private suspend fun ApplicationCall.handleCreateStaffPost() {
 
         val passwordHash = BCrypt.hashpw(password, BCrypt.gensalt())
 
-        val loginId = LoginData(
-            email = email,
-            passwordHash = passwordHash
-        ).insertIntoDatabase()
+        val loginId =
+            LoginData(
+                email = email,
+                passwordHash = passwordHash,
+            ).insertIntoDatabase()
 
         StaffData(
             firstName = firstName,
@@ -153,7 +165,7 @@ private suspend fun ApplicationCall.handleCreateStaffPost() {
             positionId = positionId,
             loginId = loginId,
             homeId = homeId,
-            currentLocation = currentLocation
+            currentLocation = currentLocation,
         ).insertIntoDatabase()
 
         response.headers.append("HX-Redirect", "/manageStaff")
@@ -183,15 +195,17 @@ private suspend fun ApplicationCall.handleUpdateStaffPost() {
         }
 
         StaffData.updateTable(
-            values = mapOf(
-                StaffColumns.FIRSTNAME to firstName,
-                StaffColumns.LASTNAME to lastName,
-                StaffColumns.POSITION_ID to positionId
-            ),
-            whereArgs = WhereArgs(
-                "${StaffColumns.ID.name} = ?",
-                listOf(staffId)
-            )
+            values =
+                mapOf(
+                    StaffColumns.FIRSTNAME to firstName,
+                    StaffColumns.LASTNAME to lastName,
+                    StaffColumns.POSITION_ID to positionId,
+                ),
+            whereArgs =
+                WhereArgs(
+                    "${StaffColumns.ID.name} = ?",
+                    listOf(staffId),
+                ),
         )
 
         response.headers.append("HX-Redirect", "/manageStaff")
@@ -216,12 +230,14 @@ private suspend fun ApplicationCall.requireAdmin(): Boolean {
 
     val user = userQuery.first().dataClass
 
-    val adminQuery = AdminData.queryDatabase(
-        whereArgs = WhereArgs(
-            "${AdminColumns.LOGIN_ID.name} = ?",
-            listOf(user.loginId)
+    val adminQuery =
+        AdminData.queryDatabase(
+            whereArgs =
+                WhereArgs(
+                    "${AdminColumns.LOGIN_ID.name} = ?",
+                    listOf(user.loginId),
+                ),
         )
-    )
 
     if (adminQuery.isEmpty()) {
         respondText("403 Forbidden", ContentType.Text.Plain, HttpStatusCode.Forbidden)

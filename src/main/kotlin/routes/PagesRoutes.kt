@@ -23,7 +23,7 @@ fun Route.pagesRoutes() {
 private suspend fun ApplicationCall.render(
     template: String,
     title: String,
-    inNav: Boolean = true
+    inNav: Boolean = true,
 ) {
     timed("T0_page_$title", jsMode()) {
         val pebble = getEngine()

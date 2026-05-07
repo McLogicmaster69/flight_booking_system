@@ -1,5 +1,5 @@
 package auth
 
 data class StaffSession(
-    val staffId: Int
+    val staffId: Int,
 )
