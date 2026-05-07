@@ -18,10 +18,13 @@ import utils.SessionData
 import java.io.StringWriter
 import io.ktor.util.*
 import io.ktor.serialization.kotlinx.json.*
+import config.StripeConfig
 
 fun main() {
     val port = System.getenv("PORT")?.toIntOrNull() ?: 8080
     val host = "0.0.0.0"
+
+    StripeConfig.init()
 
     DatabaseManager.createTables()
     initialTasks()

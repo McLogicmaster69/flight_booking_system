@@ -1,0 +1,86 @@
+{% extends "_layout/base.peb" %}
+
+{% set layout = 'admin' %}
+{% set activePage = 'manageFlights' %}
+{% set inNav = true %}
+
+{% block content %}
+
+<h2 class="wf-title">Flight Details</h2>
+<div class="wf-rule"></div>
+
+<section class="auth-form">
+    <h3>{{ routeName }}</h3>
+    <p>Plane: {{ planeRegistrationCode }}</p>
+    <p>Date: {{ flight.date }} {{ flight.time }}</p>
+</section>
+
+<div class="wf-rule"></div>
+
+<section>
+    <h3>Reservations</h3>
+
+    <form class="auth-form" method="get" action="/manageFlights/details/{{ flight.id }}">
+        <label class="auth-label">Search Reservations</label>
+
+        <input
+            class="auth-input"
+            name="search"
+            type="text"
+            value="{{ search }}"
+            placeholder="Search by booking reference, email, or seat ID">
+
+        <button class="wf-btn wide" type="submit" style="margin: 6px 0 12px 0;">
+            Search Reservations
+        </button>
+    </form>
+
+    <div class="wf-rule"></div>
+
+    {% for reservation in reservations %}
+
+        <div class="staff-flight-assignment">
+            <div class="staff-flight-button">
+                <h2>{{ reservation.bookingReference }}</h2>
+
+                <div class="staff-flight-info">
+                    <p>Email: {{ reservation.bookerEmail }}</p>
+                    <p>Seat ID: {{ reservation.seatId }}</p>
+                    <p>Amount Paid: {{ reservation.amountPaidDisplay }}</p>
+                    <p>Refund Status: {{ reservation.refundStatus }}</p>
+                </div>
+            </div>
+        </div>
+
+        <br>
+
+    {% else %}
+
+        <p>No reservations found.</p>
+
+    {% endfor %}
+
+    {% if totalPages > 1 %}
+        <div style="display: flex; gap: 12px; align-items: center; margin-top: 18px;">
+            {% if page > 1 %}
+                <a class="wf-btn" href="/manageFlights/details/{{ flight.id }}?page={{ page - 1 }}&search={{ search }}">
+                    Previous
+                </a>
+            {% endif %}
+
+            <span>Page {{ page }} of {{ totalPages }}</span>
+
+            {% if page < totalPages %}
+                <a class="wf-btn" href="/manageFlights/details/{{ flight.id }}?page={{ page + 1 }}&search={{ search }}">
+                    Next
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <div style="margin-top: 18px;">
+        <a class="wf-btn" href="/manageFlights">Back</a>
+    </div>
+</section>
+
+{% endblock %}

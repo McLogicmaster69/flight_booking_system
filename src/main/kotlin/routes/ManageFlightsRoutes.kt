@@ -18,6 +18,8 @@ import utils.EmailService
 
 fun Route.manageFlightsRoutes() {
     get("/manageFlights") { call.handleManageFlightsLoad() }
+    get("/manageFlights/edit/{id}") { call.handleEditFlightLoad() }
+    get("/manageFlights/details/{id}") { call.handleFlightDetailsLoad() }
     post("/manageFlights/create") { call.handleCreateFlightPost() }
     post("/manageFlights/update") { call.handleUpdateFlightPost() }
     post("/manageFlights/delete") { call.handleDeleteFlightPost() }
@@ -31,6 +33,16 @@ data class FlightView(
     val planeRegistrationCode: String?,
     val date: LocalDate,
     val time: LocalTime,
+)
+
+data class FlightReservationView(
+    val bookingId: Int,
+    val bookingReference: String,
+    val bookerEmail: String?,
+    val seatId: Int,
+    val amountPaid: Long?,
+    val amountPaidDisplay: String,
+    val refundStatus: String?,
 )
 
 private suspend fun ApplicationCall.handleManageFlightsLoad() {
@@ -375,6 +387,193 @@ private suspend fun ApplicationCall.handleDeleteFlightPost() {
 
         response.headers.append("HX-Redirect", "/manageFlights")
         respond(HttpStatusCode.OK)
+    }
+}
+
+private suspend fun ApplicationCall.handleEditFlightLoad() {
+    timed("T4_edit_flight_load", jsMode()) {
+        if (!requireAdmin()) return@timed
+
+        val flightId = parameters["id"]?.toIntOrNull()
+        if (flightId == null) {
+            respondRedirect("/manageFlights")
+            return@timed
+        }
+
+        val flight = FlightData.queryDatabase(flightId).firstOrNull()?.dataClass
+        if (flight == null) {
+            respondRedirect("/manageFlights")
+            return@timed
+        }
+
+        val routes = RouteData.queryDatabase().map { it.dataClass }
+        val planes = PlaneData.queryDatabase().map { it.dataClass }
+
+        fun routeName(route: RouteData): String {
+            val start =
+                DestinationData
+                    .queryDatabase(route.startDestination)
+                    .firstOrNull()
+                    ?.dataClass
+                    ?.cityName ?: "Unknown"
+
+            val end =
+                DestinationData
+                    .queryDatabase(route.endDestination)
+                    .firstOrNull()
+                    ?.dataClass
+                    ?.cityName ?: "Unknown"
+
+            return "$start to $end"
+        }
+
+        val routeNames = routes.associate { it.id to routeName(it) }
+
+        val model =
+            mapOf(
+                "title" to "Edit Flight",
+                "layout" to "admin",
+                "activePage" to "manageFlights",
+                "inNav" to true,
+                "isAdmin" to true,
+                "flight" to flight,
+                "routes" to routes,
+                "routeNames" to routeNames,
+                "planes" to planes,
+            )
+
+        val template = getEngine().getTemplate("admin/editFlight.peb")
+        val writer = StringWriter()
+        fullEvaluate(template, writer, model)
+        respondText(writer.toString(), ContentType.Text.Html)
+    }
+}
+
+private suspend fun ApplicationCall.handleFlightDetailsLoad() {
+    timed("T5_flight_details_load", jsMode()) {
+        if (!requireAdmin()) return@timed
+
+        val flightId = parameters["id"]?.toIntOrNull()
+        if (flightId == null) {
+            respondRedirect("/manageFlights")
+            return@timed
+        }
+
+        val flight = FlightData.queryDatabase(flightId).firstOrNull()?.dataClass
+        if (flight == null) {
+            respondRedirect("/manageFlights")
+            return@timed
+        }
+
+        val route = RouteData.queryDatabase(flight.routeId).firstOrNull()?.dataClass
+        val plane = PlaneData.queryDatabase(flight.planeId).firstOrNull()?.dataClass
+
+        val routeName =
+            if (route == null) {
+                "Unknown"
+            } else {
+                val start = DestinationData.getDestinationName(route.startDestination)
+                val end = DestinationData.getDestinationName(route.endDestination)
+                "$start to $end"
+            }
+
+        val search = request.queryParameters["search"]?.trim().orEmpty()
+        val page = request.queryParameters["page"]?.toIntOrNull()?.coerceAtLeast(1) ?: 1
+        val pageSize = 5
+
+        val seats =
+            SeatData
+                .queryDatabase(
+                    whereArgs =
+                        WhereArgs(
+                            "${SeatColumns.FLIGHT_ID.name} = ?",
+                            listOf(flightId),
+                        ),
+                ).map { it.dataClass }
+
+        val reservations =
+            seats.flatMap { seat ->
+                BookedSeatData
+                    .queryDatabase(
+                        whereArgs =
+                            WhereArgs(
+                                "${BookedSeatColumns.SEAT_ID.name} = ?",
+                                listOf(seat.id),
+                            ),
+                    ).mapNotNull { bookedSeatResult ->
+                        val bookedSeat = bookedSeatResult.dataClass
+
+                        val bookingRow =
+                            DatabaseManager
+                                .queryTable(
+                                    table = BookingData.EMPTY.tableName,
+                                    columns = BookingColumns.COLUMN_NAMES,
+                                    whereArgs =
+                                        WhereArgs(
+                                            "${BookingColumns.ID.name} = ?",
+                                            listOf(bookedSeat.bookingId),
+                                        ),
+                                ).firstOrNull() ?: return@mapNotNull null
+
+                        val bookingId = bookingRow[0] as Int
+                        val bookerId = bookingRow[1] as Int
+                        val bookingReference = bookingRow[4]?.toString() ?: "Unknown"
+                        val amountPaid = (bookingRow[6] as? Number)?.toLong()
+                        val amountPaidDisplay =
+                            if (amountPaid == null) "£0.00" else "£%.2f".format(amountPaid / 100.0)
+                        val refundStatus = bookingRow[7]?.toString()
+
+                        FlightReservationView(
+                            bookingId = bookingId,
+                            bookingReference = bookingReference,
+                            bookerEmail = getBookerEmail(bookerId),
+                            seatId = seat.id,
+                            amountPaid = amountPaid,
+                            amountPaidDisplay = amountPaidDisplay,
+                            refundStatus = refundStatus,
+                        )
+                    }
+            }
+
+        val filteredReservations =
+            if (search.isBlank()) {
+                reservations
+            } else {
+                reservations.filter { reservation ->
+                    reservation.bookingReference.contains(search, ignoreCase = true) ||
+                        reservation.bookerEmail?.contains(search, ignoreCase = true) == true ||
+                        reservation.seatId.toString().contains(search)
+                }
+            }
+
+        val totalPages = ((filteredReservations.size + pageSize - 1) / pageSize).coerceAtLeast(1)
+        val safePage = page.coerceAtMost(totalPages)
+
+        val pagedReservations =
+            filteredReservations
+                .drop((safePage - 1) * pageSize)
+                .take(pageSize)
+
+        val model =
+            mapOf(
+                "title" to "Flight Details",
+                "layout" to "admin",
+                "activePage" to "manageFlights",
+                "inNav" to true,
+                "isAdmin" to true,
+                "flight" to flight,
+                "routeName" to routeName,
+                "planeRegistrationCode" to plane?.registrationCode,
+                "reservations" to pagedReservations,
+                "search" to search,
+                "page" to safePage,
+                "totalPages" to totalPages,
+            )
+
+        val template = getEngine().getTemplate("admin/flightDetails.peb")
+        val writer = StringWriter()
+        fullEvaluate(template, writer, model)
+        respondText(writer.toString(), ContentType.Text.Html)
     }
 }
 

@@ -23,7 +23,7 @@
                 value="{{ search }}"
                 placeholder="Search by route, plane, date, or time">
 
-            <button class="wf-btn wide" type="submit" style="margin-top: 6px;">
+            <button class="wf-btn wide" type="submit" style="margin: 6px 0 12px 0;">
                 Search Flights
             </button>
         </form>
@@ -31,50 +31,43 @@
         <div class="wf-rule"></div>
 
         {% for flight in flights %}
-            <form class="auth-form" method="post" action="/manageFlights/update" hx-post="/manageFlights/update">
 
-                <input type="hidden" name="flightId" value="{{ flight.id }}">
+            <div class="staff-flight-assignment">
+                <div class="staff-flight-button">
+                    <h2>{{ flight.routeName }}</h2>
 
-                <label class="auth-label">Route</label>
-                <select class="auth-input" name="routeId">
-                    {% for route in routes %}
-                        <option value="{{ route.id }}" {% if route.id == flight.routeId %}selected{% endif %}>
-                            {{ routeNames[route.id] }}
-                        </option>
-                    {% endfor %}
-                </select>
+                    <div class="staff-flight-info" style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">
+                        <p style="margin: 0;">
+                            Plane: {{ flight.planeRegistrationCode }}
+                        </p>
 
-                <label class="auth-label">Plane</label>
-                <select class="auth-input" name="planeId">
-                    {% for plane in planes %}
-                        <option value="{{ plane.id }}" {% if plane.id == flight.planeId %}selected{% endif %}>
-                            {{ plane.registrationCode }}
-                        </option>
-                    {% endfor %}
-                </select>
+                        <p style="margin: 0;">
+                            Date: {{ flight.date }}
+                        </p>
 
-                <label class="auth-label">Date</label>
-                <input class="auth-input" name="date" type="date" value="{{ flight.date }}">
+                        <p style="margin: 0;">
+                            Time: {{ flight.time }}
+                        </p>
+                    </div>
 
-                <label class="auth-label">Time</label>
-                <input class="auth-input" name="time" type="time" value="{{ flight.time }}">
+                    <div style="display: flex; gap: 12px; margin-top: 14px;">
+                        <a class="wf-btn" href="/manageFlights/edit/{{ flight.id }}">
+                            Edit Flight
+                        </a>
 
-                <div style="display: flex; gap: 12px; margin-top: 14px;">
-                    <button class="wf-btn" type="submit">Save Changes</button>
-
-                    <button
-                        class="wf-btn"
-                        type="button"
-                        hx-post="/manageFlights/delete"
-                        hx-vals='{"flightId":"{{ flight.id }}"}'>
-                        Delete Flight and Refund Tickets
-                    </button>
+                        <a class="wf-btn" href="/manageFlights/details/{{ flight.id }}">
+                            View Reservations
+                        </a>
+                    </div>
                 </div>
-            </form>
+            </div>
 
-            <div class="wf-rule"></div>
+            <br>
+
         {% else %}
+
             <p>No flights found.</p>
+
         {% endfor %}
 
         {% if totalPages > 1 %}

@@ -14,6 +14,7 @@ import org.mindrot.jbcrypt.BCrypt
 
 fun Route.manageStaffRoutes() {
     get("/manageStaff") { call.handleManageStaffLoad() }
+    get("/manageStaff/edit/{id}") { call.handleEditStaffLoad() }
     post("/manageStaff/create") { call.handleCreateStaffPost() }
     post("/manageStaff/update") { call.handleUpdateStaffPost() }
 }
@@ -212,5 +213,63 @@ private suspend fun ApplicationCall.handleUpdateStaffPost() {
 
         response.headers.append("HX-Redirect", "/manageStaff")
         respond(HttpStatusCode.OK)
+    }
+}
+
+private suspend fun ApplicationCall.handleEditStaffLoad() {
+    timed("T3_edit_staff_load", jsMode()) {
+        if (!requireAdmin()) return@timed
+
+        val staffId = parameters["id"]?.toIntOrNull()
+        if (staffId == null) {
+            respondRedirect("/manageStaff")
+            return@timed
+        }
+
+        val staff =
+            StaffData
+                .queryDatabase(
+                    whereArgs =
+                        WhereArgs(
+                            "${StaffColumns.ID.name} = ?",
+                            listOf(staffId),
+                        ),
+                ).firstOrNull()
+                ?.dataClass
+
+        if (staff == null) {
+            respondRedirect("/manageStaff")
+            return@timed
+        }
+
+        val login =
+            LoginData
+                .queryDatabase(
+                    whereArgs =
+                        WhereArgs(
+                            "${LoginColumns.ID.name} = ?",
+                            listOf(staff.loginId),
+                        ),
+                ).firstOrNull()
+                ?.dataClass
+
+        val positions = StaffPositionData.queryDatabase().map { it.dataClass }
+
+        val model =
+            mapOf(
+                "title" to "Edit Staff",
+                "layout" to "admin",
+                "activePage" to "manageStaff",
+                "inNav" to true,
+                "isAdmin" to true,
+                "staff" to staff,
+                "email" to login?.email,
+                "positions" to positions,
+            )
+
+        val template = getEngine().getTemplate("admin/editStaff.peb")
+        val writer = StringWriter()
+        fullEvaluate(template, writer, model)
+        respondText(writer.toString(), ContentType.Text.Html)
     }
 }

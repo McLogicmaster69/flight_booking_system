@@ -13,6 +13,8 @@ import io.ktor.server.request.*
 
 fun Route.managePlaneDataRoutes() {
     get("/managePlaneData") { call.handleManagePlaneDataLoad() }
+    get("/managePlaneData/model/edit/{id}") { call.handleEditPlaneModelLoad() }
+    get("/managePlaneData/manufacturer/edit/{id}") { call.handleEditManufacturerLoad() }
     post("/managePlaneData/model/create") { call.handleCreatePlaneModelPost() }
     post("/managePlaneData/model/update") { call.handleUpdatePlaneModelPost() }
     post("/managePlaneData/model/delete") { call.handleDeletePlaneModelPost() }
@@ -387,5 +389,86 @@ private suspend fun ApplicationCall.handleDeleteManufacturerPost() {
 
         response.headers.append("HX-Redirect", "/managePlaneData")
         respond(HttpStatusCode.OK)
+    }
+}
+
+private suspend fun ApplicationCall.handleEditPlaneModelLoad() {
+    timed("T7_edit_plane_model_load", jsMode()) {
+        if (!requireAdmin()) return@timed
+
+        val modelId = parameters["id"]?.toIntOrNull()
+        if (modelId == null) {
+            respondRedirect("/managePlaneData")
+            return@timed
+        }
+
+        val model =
+            PlaneModelData
+                .queryDatabase(
+                    whereArgs = WhereArgs("${PlaneModelColumns.ID.name} = ?", listOf(modelId)),
+                ).firstOrNull()
+                ?.dataClass
+
+        if (model == null) {
+            respondRedirect("/managePlaneData")
+            return@timed
+        }
+
+        val manufacturers = ManufacturerData.queryDatabase().map { it.dataClass }
+
+        val viewModel =
+            mapOf(
+                "title" to "Edit Plane Model",
+                "layout" to "admin",
+                "activePage" to "managePlaneData",
+                "inNav" to true,
+                "isAdmin" to true,
+                "model" to model,
+                "manufacturers" to manufacturers,
+            )
+
+        val template = getEngine().getTemplate("admin/editPlaneModel.peb")
+        val writer = StringWriter()
+        fullEvaluate(template, writer, viewModel)
+        respondText(writer.toString(), ContentType.Text.Html)
+    }
+}
+
+private suspend fun ApplicationCall.handleEditManufacturerLoad() {
+    timed("T8_edit_manufacturer_load", jsMode()) {
+        if (!requireAdmin()) return@timed
+
+        val manufacturerId = parameters["id"]?.toIntOrNull()
+        if (manufacturerId == null) {
+            respondRedirect("/managePlaneData")
+            return@timed
+        }
+
+        val manufacturer =
+            ManufacturerData
+                .queryDatabase(
+                    whereArgs = WhereArgs("${ManufacturerColumns.ID.name} = ?", listOf(manufacturerId)),
+                ).firstOrNull()
+                ?.dataClass
+
+        if (manufacturer == null) {
+            respondRedirect("/managePlaneData")
+            return@timed
+        }
+
+        val viewModel =
+            mapOf(
+                "title" to "Edit Manufacturer",
+                "layout" to "admin",
+                "activePage" to "managePlaneData",
+                "inNav" to true,
+                "isAdmin" to true,
+                "manufacturer" to manufacturer,
+            )
+
+        val template = getEngine().getTemplate("admin/editManufacturer.peb")
+        val writer = StringWriter()
+        fullEvaluate(template, writer, viewModel)
+        respondText(writer.toString(), ContentType.Text.Html)
     }
 }

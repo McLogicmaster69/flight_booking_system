@@ -14,6 +14,7 @@ import java.time.LocalTime
 
 fun Route.manageRoutesRoutes() {
     get("/manageRoutes") { call.handleManageRoutesLoad() }
+    get("/manageRoutes/edit/{id}") { call.handleEditRouteLoad() }
     post("/manageRoutes/create") { call.handleCreateRoutePost() }
     post("/manageRoutes/update") { call.handleUpdateRoutePost() }
     post("/manageRoutes/delete") { call.handleDeleteRoutePost() }
@@ -227,5 +228,51 @@ private suspend fun ApplicationCall.handleDeleteRoutePost() {
 
         response.headers.append("HX-Redirect", "/manageRoutes")
         respond(HttpStatusCode.OK)
+    }
+}
+
+private suspend fun ApplicationCall.handleEditRouteLoad() {
+    timed("T4_edit_route_load", jsMode()) {
+        if (!requireAdmin()) return@timed
+
+        val routeId = parameters["id"]?.toIntOrNull()
+        if (routeId == null) {
+            respondRedirect("/manageRoutes")
+            return@timed
+        }
+
+        val route =
+            RouteData
+                .queryDatabase(
+                    whereArgs =
+                        WhereArgs(
+                            "${RouteColumns.ID.name} = ?",
+                            listOf(routeId),
+                        ),
+                ).firstOrNull()
+                ?.dataClass
+
+        if (route == null) {
+            respondRedirect("/manageRoutes")
+            return@timed
+        }
+
+        val destinations = DestinationData.queryDatabase().map { it.dataClass }
+
+        val model =
+            mapOf(
+                "title" to "Edit Route",
+                "layout" to "admin",
+                "activePage" to "manageRoutes",
+                "inNav" to true,
+                "isAdmin" to true,
+                "route" to route,
+                "destinations" to destinations,
+            )
+
+        val template = getEngine().getTemplate("admin/editRoute.peb")
+        val writer = StringWriter()
+        fullEvaluate(template, writer, model)
+        respondText(writer.toString(), ContentType.Text.Html)
     }
 }
