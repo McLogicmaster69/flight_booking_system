@@ -15,6 +15,7 @@ import java.time.LocalTime
 
 fun Route.managePlanesRoutes() {
     get("/managePlanes") { call.handleManagePlanesLoad() }
+    get("/managePlanes/edit/{id}") { call.handleEditPlaneLoad() }
     post("/managePlanes/create") { call.handleCreatePlanePost() }
     post("/managePlanes/update") { call.handleUpdatePlanePost() }
     post("/managePlanes/delete") { call.handleDeletePlanePost() }
@@ -265,5 +266,53 @@ private suspend fun ApplicationCall.handleDeletePlanePost() {
 
         response.headers.append("HX-Redirect", "/managePlanes")
         respond(HttpStatusCode.OK)
+    }
+}
+
+private suspend fun ApplicationCall.handleEditPlaneLoad() {
+    timed("T4_edit_plane_load", jsMode()) {
+        if (!requireAdmin()) return@timed
+
+        val planeId = parameters["id"]?.toIntOrNull()
+        if (planeId == null) {
+            respondRedirect("/managePlanes")
+            return@timed
+        }
+
+        val plane =
+            PlaneData
+                .queryDatabase(
+                    whereArgs =
+                        WhereArgs(
+                            "${PlaneColumns.ID.name} = ?",
+                            listOf(planeId),
+                        ),
+                ).firstOrNull()
+                ?.dataClass
+
+        if (plane == null) {
+            respondRedirect("/managePlanes")
+            return@timed
+        }
+
+        val models = PlaneModelData.queryDatabase().map { it.dataClass }
+        val destinations = DestinationData.queryDatabase().map { it.dataClass }
+
+        val viewModel =
+            mapOf(
+                "title" to "Edit Plane",
+                "layout" to "admin",
+                "activePage" to "managePlanes",
+                "inNav" to true,
+                "isAdmin" to true,
+                "plane" to plane,
+                "models" to models,
+                "destinations" to destinations,
+            )
+
+        val template = getEngine().getTemplate("admin/editPlane.peb")
+        val writer = StringWriter()
+        fullEvaluate(template, writer, viewModel)
+        respondText(writer.toString(), ContentType.Text.Html)
     }
 }

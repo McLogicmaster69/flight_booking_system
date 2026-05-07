@@ -1,0 +1,45 @@
+{% extends "_layout/base.peb" %}
+
+{% set layout = 'admin' %}
+{% set activePage = 'manageStaff' %}
+{% set inNav = true %}
+
+{% block content %}
+
+<h2 class="wf-title">Edit Staff</h2>
+<div class="wf-rule"></div>
+
+<form
+    class="auth-form"
+    method="post"
+    action="/manageStaff/update"
+    hx-post="/manageStaff/update">
+
+    <input type="hidden" name="staffId" value="{{ staff.id }}">
+
+    <label class="auth-label">First Name</label>
+    <input class="auth-input" name="firstName" type="text" value="{{ staff.firstName }}">
+
+    <label class="auth-label">Last Name</label>
+    <input class="auth-input" name="lastName" type="text" value="{{ staff.lastName }}">
+
+    <label class="auth-label">Email</label>
+    <input class="auth-input" type="email" value="{{ email }}" disabled>
+
+    <label class="auth-label">Position</label>
+    <select class="auth-input" name="positionId">
+        {% for position in positions %}
+            <option value="{{ position.id }}" {% if position.id == staff.positionId %}selected{% endif %}>
+                {{ position.name }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <div style="display: flex; gap: 12px; margin-top: 14px;">
+        <button class="wf-btn" type="submit">Save Changes</button>
+        <a class="wf-btn" href="/manageStaff">Back</a>
+    </div>
+
+</form>
+
+{% endblock %}

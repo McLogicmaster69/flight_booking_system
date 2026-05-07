@@ -1,0 +1,53 @@
+{% extends "_layout/base.peb" %}
+
+{% set layout = 'admin' %}
+{% set activePage = 'manageRoutes' %}
+{% set inNav = true %}
+
+{% block content %}
+
+<h2 class="wf-title">Edit Route</h2>
+<div class="wf-rule"></div>
+
+<form class="auth-form" method="post" action="/manageRoutes/update" hx-post="/manageRoutes/update">
+
+    <input type="hidden" name="routeId" value="{{ route.id }}">
+
+    <label class="auth-label">Start Destination</label>
+    <select class="auth-input" name="startDestination">
+        {% for destination in destinations %}
+            <option value="{{ destination.id }}" {% if destination.id == route.startDestination %}selected{% endif %}>
+                {{ destination.cityName }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <label class="auth-label">End Destination</label>
+    <select class="auth-input" name="endDestination">
+        {% for destination in destinations %}
+            <option value="{{ destination.id }}" {% if destination.id == route.endDestination %}selected{% endif %}>
+                {{ destination.cityName }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <label class="auth-label">Duration</label>
+    <input class="auth-input" name="duration" type="time" value="{{ route.duration }}">
+
+    <div style="display: flex; gap: 12px; margin-top: 14px;">
+        <button class="wf-btn" type="submit">Save Changes</button>
+
+        <button
+            class="wf-btn"
+            type="button"
+            hx-post="/manageRoutes/delete"
+            hx-vals='{"routeId":"{{ route.id }}"}'>
+            Delete Route
+        </button>
+
+        <a class="wf-btn" href="/manageRoutes">Back</a>
+    </div>
+
+</form>
+
+{% endblock %}

@@ -32,65 +32,32 @@
             </div>
 
             <div style="margin-top: 0px;"></div>
-            <button class="wf-btn wide" type="submit">Search Models</button>
+            <button class="wf-btn wide" type="submit" style="margin: 0px 0 12px 0;">Search Models</button>
         </form>
 
         <div class="wf-rule"></div>
 
         {% for model in models %}
-            <form
-                class="auth-form"
-                method="post"
-                action="/managePlaneData/model/update"
-                hx-post="/managePlaneData/model/update">
 
-                <input type="hidden" name="modelId" value="{{ model.id }}">
+            <div class="staff-flight-assignment">
+                <a href="/managePlaneData/model/edit/{{ model.id }}" class="staff-flight-button">
+                    <h2>{{ model.name }}</h2>
 
-                <label class="auth-label">Model Name</label>
-                <input class="auth-input" name="name" type="text" value="{{ model.name }}">
-
-                <label class="auth-label">Manufacturer</label>
-                <select class="auth-input" name="manufacturerId">
-                    {% for manufacturer in manufacturers %}
-                        <option value="{{ manufacturer.id }}" {% if manufacturer.id == model.manufacturerId %}selected{% endif %}>
-                            {{ manufacturer.name }}
-                        </option>
-                    {% endfor %}
-                </select>
-
-                <label class="auth-label">Capacity</label>
-                <input class="auth-input" name="capacity" type="number" min="1" value="{{ model.capacity }}">
-
-                <label class="auth-label">Pilots</label>
-                <input class="auth-input" name="pilots" type="number" min="1" value="{{ model.pilots }}">
-
-                <label class="auth-label">Attendants</label>
-                <input class="auth-input" name="attendants" type="number" min="0" value="{{ model.attendants }}">
-
-            <div style="display: flex; gap: 12px; margin-top: 0px;">
-
-                <button class="wf-btn" type="submit">
-                    Save Changes
-                </button>
-
-                <button
-                    class="wf-btn"
-                    type="button"
-                    hx-post="/managePlaneData/model/delete"
-                    hx-vals='{"modelId":"{{ model.id }}"}'
-                    hx-target="#model-status-{{ model.id }}"
-                    hx-swap="innerHTML">
-                    Delete Model
-                </button>
-
+                    <div class="staff-flight-info">
+                        <p>Manufacturer: {{ model.manufacturerName }}</p>
+                        <p>Capacity: {{ model.capacity }}</p>
+                        <p>Pilots: {{ model.pilots }}</p>
+                        <p>Attendants: {{ model.attendants }}</p>
+                    </div>
+                </a>
             </div>
 
-            <div id="model-status-{{ model.id }}" role="status" aria-live="polite"></div>
-            </form>
+            <br>
 
-            <div class="wf-rule"></div>
         {% else %}
+
             <p>No plane models found.</p>
+
         {% endfor %}
 
         {% if totalModelPages > 1 %}
@@ -173,47 +140,25 @@
             </div>
 
             <div style="margin-top: 0px;"></div>
-            <button class="wf-btn wide" type="submit">Search Manufacturers</button>
+            <button class="wf-btn wide" type="submit" style="margin: 0px 0 12px 0;">Search Manufacturers</button>
         </form>
 
         <div class="wf-rule"></div>
 
         {% for manufacturer in manufacturers %}
-            <form
-                class="auth-form"
-                method="post"
-                action="/managePlaneData/manufacturer/update"
-                hx-post="/managePlaneData/manufacturer/update">
 
-                <input type="hidden" name="manufacturerId" value="{{ manufacturer.id }}">
-
-                <label class="auth-label">Manufacturer Name</label>
-                <input class="auth-input" name="name" type="text" value="{{ manufacturer.name }}">
-
-                <div style="display: flex; gap: 12px; margin-top: 0px;">
-
-                <button class="wf-btn" type="submit">
-                    Save Changes
-                </button>
-
-                <button
-                    class="wf-btn"
-                    type="button"
-                    hx-post="/managePlaneData/manufacturer/delete"
-                    hx-vals='{"manufacturerId":"{{ manufacturer.id }}"}'
-                    hx-target="#manufacturer-status-{{ manufacturer.id }}"
-                    hx-swap="innerHTML">
-                    Delete Manufacturer
-                </button>
-
+            <div class="staff-flight-assignment">
+                <a href="/managePlaneData/manufacturer/edit/{{ manufacturer.id }}" class="staff-flight-button">
+                    <h2>{{ manufacturer.name }}</h2>
+                </a>
             </div>
 
-            <div id="manufacturer-status-{{ manufacturer.id }}" role="status" aria-live="polite"></div>
-            </form>
+            <br>
 
-            <div class="wf-rule"></div>
         {% else %}
+
             <p>No manufacturers found.</p>
+
         {% endfor %}
 
         {% if totalManufacturerPages > 1 %}

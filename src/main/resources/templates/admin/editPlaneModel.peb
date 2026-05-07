@@ -1,0 +1,61 @@
+{% extends "_layout/base.peb" %}
+
+{% set layout = 'admin' %}
+{% set activePage = 'managePlaneData' %}
+{% set inNav = true %}
+
+{% block content %}
+
+<h2 class="wf-title">Edit Plane Model</h2>
+<div class="wf-rule"></div>
+
+<form
+    class="auth-form"
+    method="post"
+    action="/managePlaneData/model/update"
+    hx-post="/managePlaneData/model/update">
+
+    <input type="hidden" name="modelId" value="{{ model.id }}">
+
+    <label class="auth-label">Model Name</label>
+    <input class="auth-input" name="name" type="text" value="{{ model.name }}">
+
+    <label class="auth-label">Manufacturer</label>
+    <select class="auth-input" name="manufacturerId">
+        {% for manufacturer in manufacturers %}
+            <option value="{{ manufacturer.id }}" {% if manufacturer.id == model.manufacturerId %}selected{% endif %}>
+                {{ manufacturer.name }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <label class="auth-label">Capacity</label>
+    <input class="auth-input" name="capacity" type="number" min="1" value="{{ model.capacity }}">
+
+    <label class="auth-label">Pilots</label>
+    <input class="auth-input" name="pilots" type="number" min="1" value="{{ model.pilots }}">
+
+    <label class="auth-label">Attendants</label>
+    <input class="auth-input" name="attendants" type="number" min="0" value="{{ model.attendants }}">
+
+    <div style="display: flex; gap: 12px; margin-top: 14px;">
+        <button class="wf-btn" type="submit">Save Changes</button>
+
+        <button
+            class="wf-btn"
+            type="button"
+            hx-post="/managePlaneData/model/delete"
+            hx-vals='{"modelId":"{{ model.id }}"}'
+            hx-target="#model-status"
+            hx-swap="innerHTML">
+            Delete Model
+        </button>
+
+        <a class="wf-btn" href="/managePlaneData">Back</a>
+    </div>
+
+    <div id="model-status" role="status" aria-live="polite"></div>
+
+</form>
+
+{% endblock %}
