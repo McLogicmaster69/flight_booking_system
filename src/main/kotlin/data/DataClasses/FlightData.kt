@@ -86,42 +86,19 @@ data class FlightData(
     }
 
     fun assignRemainingStaff() {
-        val pilotId: Int =
-            StaffPositionData
-                .queryDatabase(StaffPositions.PILOT)
-                .first()
-                .dataClass.id
-        val attendantId: Int =
-            StaffPositionData
-                .queryDatabase(StaffPositions.FLIGHT_ATTENDANT)
-                .first()
-                .dataClass.id
-        val staffAssignments: List<QueryResult<AssignedFlightStaffData>> = AssignedFlightStaffData.queryByFlightID(id)
-        val plane: PlaneData = PlaneData.queryDatabase(planeId).firstOrNull()?.dataClass ?: return
-        val model: PlaneModelData = PlaneModelData.queryDatabase(plane.modelId).firstOrNull()?.dataClass ?: return
+        val pilotId : Int = StaffPositionData.queryDatabase(StaffPositions.PILOT).first().dataClass.id
+        val attendantId : Int = StaffPositionData.queryDatabase(StaffPositions.FLIGHT_ATTENDANT).first().dataClass.id
+        val staffAssignments : List<QueryResult<AssignedFlightStaffData>> = AssignedFlightStaffData.queryByFlightID(id)
+        val plane : PlaneData = PlaneData.queryDatabase(planeId).firstOrNull()?.dataClass ?: return
+        val model : PlaneModelData = PlaneModelData.queryDatabase(plane.modelId).firstOrNull()?.dataClass ?: return
 
-        val pilots =
-            model.pilots -
-                staffAssignments
-                    .filter {
-                        StaffData
-                            .queryDatabase(it.dataClass.id)
-                            .first()
-                            .dataClass.positionId ==
-                            pilotId
-                    }.size
-        val attendants =
-            model.attendants -
-                staffAssignments
-                    .filter {
-                        StaffData
-                            .queryDatabase(it.dataClass.id)
-                            .first()
-                            .dataClass.positionId ==
-                            attendantId
-                    }.size
+        val pilots = model.pilots - staffAssignments.filter { 
+                StaffData.queryDatabase(it.dataClass.staffId).first().dataClass.positionId == pilotId 
+            }.size
 
-        println("Assigning $pilots pilots and $attendants attendants to flight ID $id")
+        val attendants = model.attendants - staffAssignments.filter { 
+                StaffData.queryDatabase(it.dataClass.staffId).first().dataClass.positionId == attendantId 
+            }.size
 
         AssignedFlightStaffData.assignStaffToFlight(
             id,

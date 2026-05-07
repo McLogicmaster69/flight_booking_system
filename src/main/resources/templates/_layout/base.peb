@@ -58,6 +58,10 @@
         <a href="/" class="{% if activePage == 'live' %}is-active{% endif %}">View Live Site</a>
         <a href="/admin" class="{% if activePage == 'admin' %}is-active{% endif %}">Admin Dashboard</a>
         <a href="/manageStaff" class="{% if activePage == 'manageStaff' %}is-active{% endif %}">Manage Staff</a>
+        <a href="/managePlaneData" class="{% if activePage == 'managePlaneData' %}is-active{% endif %}">Manage Plane Data</a>
+        <a href="/managePlanes" class="{% if activePage == 'managePlanes' %}is-active{% endif %}">Manage Planes</a>
+        <a href="/manageFlights" class="{% if activePage == 'manageFlights' %}is-active{% endif %}">Manage Flights</a>
+        <a href="/manageRoutes" class="{% if activePage == 'manageRoutes' %}is-active{% endif %}">Manage Routes</a>
         <a href="/logout">Logout</a>
       </nav>
 

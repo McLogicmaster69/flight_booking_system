@@ -1,0 +1,93 @@
+{% extends "_layout/base.peb" %}
+
+{% set layout = 'admin' %}
+{% set activePage = 'manageFlights' %}
+{% set inNav = true %}
+
+{% block content %}
+
+<h2 class="wf-title">Manage Flights</h2>
+<div class="wf-rule"></div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start;">
+
+    <section>
+        <h3>Registered Flights</h3>
+
+        {% for flight in flights %}
+            <form class="auth-form" method="post" action="/manageFlights/update" hx-post="/manageFlights/update">
+
+                <input type="hidden" name="flightId" value="{{ flight.id }}">
+
+                <label class="auth-label">Route</label>
+                <select class="auth-input" name="routeId">
+                    {% for route in routes %}
+                        <option value="{{ route.id }}" {% if route.id == flight.routeId %}selected{% endif %}>
+                            {{ routeNames[route.id] }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <label class="auth-label">Plane</label>
+                <select class="auth-input" name="planeId">
+                    {% for plane in planes %}
+                        <option value="{{ plane.id }}" {% if plane.id == flight.planeId %}selected{% endif %}>
+                            {{ plane.registrationCode }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <label class="auth-label">Date</label>
+                <input class="auth-input" name="date" type="date" value="{{ flight.date }}">
+
+                <label class="auth-label">Time</label>
+                <input class="auth-input" name="time" type="time" value="{{ flight.time }}">
+
+                <div style="margin-top: 14px;"></div>
+                <button class="wf-btn wide" type="submit">Save Changes</button>
+            </form>
+
+            <form class="auth-form" method="post" action="/manageFlights/delete" hx-post="/manageFlights/delete">
+                <input type="hidden" name="flightId" value="{{ flight.id }}">
+                <button class="wf-btn wide" type="submit">Delete Flight and Refund Tickets</button>
+            </form>
+
+            <div class="wf-rule"></div>
+        {% else %}
+            <p>No flights found.</p>
+        {% endfor %}
+    </section>
+
+    <section>
+        <h3>Register Flight</h3>
+
+        <form class="auth-form" method="post" action="/manageFlights/create" hx-post="/manageFlights/create">
+
+            <label class="auth-label">Route</label>
+            <select class="auth-input" name="routeId">
+                {% for route in routes %}
+                    <option value="{{ route.id }}">{{ routeNames[route.id] }}</option>
+                {% endfor %}
+            </select>
+
+            <label class="auth-label">Plane</label>
+            <select class="auth-input" name="planeId">
+                {% for plane in planes %}
+                    <option value="{{ plane.id }}">{{ plane.registrationCode }}</option>
+                {% endfor %}
+            </select>
+
+            <label class="auth-label">Date</label>
+            <input class="auth-input" name="date" type="date">
+
+            <label class="auth-label">Time</label>
+            <input class="auth-input" name="time" type="time" value="00:00">
+
+            <div style="margin-top: 14px;"></div>
+            <button class="wf-btn wide" type="submit">Register Flight</button>
+        </form>
+    </section>
+
+</div>
+
+{% endblock %}

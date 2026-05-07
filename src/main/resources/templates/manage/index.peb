@@ -71,8 +71,8 @@
         </div>
 
         <form method="post" action="/manage/refund">
-            <input type="hidden" name="bookingRef" value="{{ row[0] }}">
-            <input type="hidden" name="last" value="{{ row[1] }}">
+            <input type="hidden" name="bookingRef" value="{{ booking[0] }}">
+            <input type="hidden" name="last" value="{{ booking[1] }}">
             <button type="submit" onclick="return confirm('Cancel this booking and issue a full refund?');">
               Cancel booking and refund
             </button>

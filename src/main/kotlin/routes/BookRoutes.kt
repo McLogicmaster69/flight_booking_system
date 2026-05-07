@@ -21,11 +21,8 @@ fun representAsTime(minutes: Long): String {
     return "${hours.toString().padStart(2, '0')}h ${(minutes - hours * 60L).toString().padStart(2, '0')}m"
 }
 
-fun getResultHTML(
-    result: JourneyFlightTimePath,
-    index: Int,
-): String {
-    val searchData: FlightSearchData = FlightSearchData.queryOrAddFlightPath(result)
+fun getResultHTML(result : JourneyFlightTimePath) : String {
+    val searchData : FlightSearchData = FlightSearchData.queryOrAddFlightPath(result)
     return """
     <div class="flight-result-container">
         <a href="/book/${searchData.token}" class="flight-result-button">
@@ -53,7 +50,7 @@ fun getResultsHTML(results: List<JourneyFlightTimePath>): String {
     var output = """<div id="flight-results">"""
 
     for (i in 0..((if (results.size > MAX_RESULTS) MAX_RESULTS else results.size) - 1)) {
-        output += getResultHTML(results[i], i)
+        output += getResultHTML(results[i])
         output += "\n"
     }
 

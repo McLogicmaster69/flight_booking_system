@@ -1,0 +1,12 @@
+{% extends "_layout/base.peb" %}
+
+{% set activePage = 'staff/assignment' %}
+{% set inNav = true %}
+
+{% block content %}
+
+<h2>{{ start }} to {{ end }}</h2>
+<h3>Date: {{ date }}</h3>
+<h3>Duration: {{ duration }}</h3>
+
+{% endblock %}

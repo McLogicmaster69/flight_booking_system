@@ -201,7 +201,6 @@ private suspend fun ApplicationCall.handleRefundBooking() {
                 refundId = refund.id,
             )
         }
-
         respondRedirect("/manage")
     }
 }
