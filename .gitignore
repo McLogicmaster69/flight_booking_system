@@ -34,3 +34,6 @@ gradle-app.setting
 /.kotlin
 
 /.vscode
+
+# environment variables
+.env

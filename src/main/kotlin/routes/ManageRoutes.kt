@@ -10,7 +10,6 @@ import java.io.StringWriter
 import utils.jsMode
 import utils.timed
 import auth.*
-import com.stripe.Stripe
 import com.stripe.model.Refund
 import com.stripe.param.RefundCreateParams
 import utils.EmailService
@@ -168,9 +167,6 @@ private suspend fun ApplicationCall.handleRefundBooking() {
         }
 
         val refundAmount = amountPaid
-
-        Stripe.apiKey =
-            "sk_test_51TCfFDDPNfjFe9Utry1rCfJEQJ0YIASnPd7O0SkI3Ewo7COIifnBpfEsP7xPhx5c1WJ8ndpJKxi1IrWqJEJfoyEL00engmejFe"
 
         val refundParams =
             RefundCreateParams
