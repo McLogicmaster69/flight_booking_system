@@ -32,3 +32,6 @@ gradle-app.setting
 /bin
 
 /.kotlin
+
+# environment variables
+.env
