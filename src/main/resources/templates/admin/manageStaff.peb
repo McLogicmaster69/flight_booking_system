@@ -14,6 +14,21 @@
     <section>
         <h3>Existing Staff</h3>
 
+        <form class="auth-form" method="get" action="/manageStaff">
+            <label class="auth-label">Search Staff</label>
+            <input
+                class="auth-input"
+                name="search"
+                type="text"
+                value="{{ search }}"
+                placeholder="Search by first or last name">
+
+            <div style="margin-top: 14px;"></div>
+            <button class="wf-btn wide" type="submit">Search</button>
+        </form>
+
+        <div class="wf-rule"></div>
+
         {% for member in staff %}
             <form
                 class="auth-form"
@@ -49,6 +64,20 @@
         {% else %}
             <p>No staff accounts found.</p>
         {% endfor %}
+
+        {% if totalPages > 1 %}
+            <div style="display: flex; gap: 12px; align-items: center; margin-top: 18px;">
+                {% if page > 1 %}
+                    <a class="wf-btn" href="/manageStaff?page={{ page - 1 }}&search={{ search }}">Previous</a>
+                {% endif %}
+
+                <span>Page {{ page }} of {{ totalPages }}</span>
+
+                {% if page < totalPages %}
+                    <a class="wf-btn" href="/manageStaff?page={{ page + 1 }}&search={{ search }}">Next</a>
+                {% endif %}
+            </div>
+        {% endif %}
     </section>
 
     <section>
