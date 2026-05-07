@@ -143,5 +143,10 @@ fun Application.configureRouting() {
         adminRoutes()
         chatRoutes()
         staffRoutes()
+        manageFlightsRoutes()
+        manageRoutesRoutes()
+        managePlaneDataRoutes()
+        manageStaffRoutes()
+        managePlanesRoutes()
     }
 }

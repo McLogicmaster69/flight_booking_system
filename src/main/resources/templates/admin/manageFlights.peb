@@ -14,6 +14,22 @@
     <section>
         <h3>Registered Flights</h3>
 
+        <form class="auth-form" method="get" action="/manageFlights">
+            <label class="auth-label">Search Flights</label>
+            <input
+                class="auth-input"
+                name="search"
+                type="text"
+                value="{{ search }}"
+                placeholder="Search by route, plane, date, or time">
+
+            <button class="wf-btn wide" type="submit" style="margin-top: 6px;">
+                Search Flights
+            </button>
+        </form>
+
+        <div class="wf-rule"></div>
+
         {% for flight in flights %}
             <form class="auth-form" method="post" action="/manageFlights/update" hx-post="/manageFlights/update">
 
@@ -43,19 +59,37 @@
                 <label class="auth-label">Time</label>
                 <input class="auth-input" name="time" type="time" value="{{ flight.time }}">
 
-                <div style="margin-top: 14px;"></div>
-                <button class="wf-btn wide" type="submit">Save Changes</button>
-            </form>
+                <div style="display: flex; gap: 12px; margin-top: 14px;">
+                    <button class="wf-btn" type="submit">Save Changes</button>
 
-            <form class="auth-form" method="post" action="/manageFlights/delete" hx-post="/manageFlights/delete">
-                <input type="hidden" name="flightId" value="{{ flight.id }}">
-                <button class="wf-btn wide" type="submit">Delete Flight and Refund Tickets</button>
+                    <button
+                        class="wf-btn"
+                        type="button"
+                        hx-post="/manageFlights/delete"
+                        hx-vals='{"flightId":"{{ flight.id }}"}'>
+                        Delete Flight and Refund Tickets
+                    </button>
+                </div>
             </form>
 
             <div class="wf-rule"></div>
         {% else %}
             <p>No flights found.</p>
         {% endfor %}
+
+        {% if totalPages > 1 %}
+            <div style="display: flex; gap: 12px; align-items: center; margin-top: 18px;">
+                {% if page > 1 %}
+                    <a class="wf-btn" href="/manageFlights?page={{ page - 1 }}&search={{ search }}">Previous</a>
+                {% endif %}
+
+                <span>Page {{ page }} of {{ totalPages }}</span>
+
+                {% if page < totalPages %}
+                    <a class="wf-btn" href="/manageFlights?page={{ page + 1 }}&search={{ search }}">Next</a>
+                {% endif %}
+            </div>
+        {% endif %}
     </section>
 
     <section>
