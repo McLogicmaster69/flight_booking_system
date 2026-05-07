@@ -9,88 +9,100 @@ import io.ktor.server.sessions.*
 import io.pebbletemplates.pebble.PebbleEngine
 import io.pebbletemplates.pebble.template.PebbleTemplate
 import java.io.StringWriter
-import utils.jsMode
-import utils.logValidationError
-import utils.timed
 import auth.*
 import data.*
 
 fun ApplicationCall.isHtmx(): Boolean = request.headers["HX-Request"]?.equals("true", ignoreCase = true) == true
 
-fun ApplicationCall.getEngine() : PebbleEngine = PebbleEngine.Builder().loader(
-    io.pebbletemplates.pebble.loader.ClasspathLoader().apply {
-        prefix = "templates/"
-    }).build()
+fun ApplicationCall.getEngine(): PebbleEngine =
+    PebbleEngine
+        .Builder()
+        .loader(
+            io.pebbletemplates.pebble.loader.ClasspathLoader().apply {
+                prefix = "templates/"
+            },
+        ).build()
 
-fun ApplicationCall.loggedIn() : LoggedInState {
-    val token : SessionToken? = sessions.get("TOKEN_SESSION") as SessionToken?
-    if (token == null)
+fun ApplicationCall.loggedIn(): LoggedInState {
+    val token: SessionToken? = sessions.get("TOKEN_SESSION") as SessionToken?
+    if (token == null) {
         return LoggedInState(false, null)
-    
-    val query : List<QueryResult<SessionData>> = SessionData.queryDatabase(token.token)
-    if (query.isEmpty())
+    }
+
+    val query: List<QueryResult<SessionData>> = SessionData.queryDatabase(token.token)
+    if (query.isEmpty()) {
         return LoggedInState(false, null)
+    }
 
     return LoggedInState(true, token)
 }
 
-fun ApplicationCall.staffLoggedIn() : StaffLoggedInState {
-    val token : StaffSessionToken? = sessions.get("STAFF_TOKEN_SESSION") as StaffSessionToken?
-    if (token == null)
+fun ApplicationCall.staffLoggedIn(): StaffLoggedInState {
+    val token: StaffSessionToken? = sessions.get("STAFF_TOKEN_SESSION") as StaffSessionToken?
+    if (token == null) {
         return StaffLoggedInState(false, null, -1)
-    
-    val query : List<QueryResult<StaffSessionData>> = StaffSessionData.queryDatabase(token.token)
-    if (query.isEmpty())
+    }
+
+    val query: List<QueryResult<StaffSessionData>> = StaffSessionData.queryDatabase(token.token)
+    if (query.isEmpty()) {
         return StaffLoggedInState(false, null, -1)
+    }
 
     return StaffLoggedInState(true, token, query.first().dataClass.staffId)
 }
 
-fun ApplicationCall.createUserState(logged_state : LoggedInState) : UserSession? {
-    if (!logged_state.logged_in)
+fun ApplicationCall.createUserState(logged_state: LoggedInState): UserSession? {
+    if (!logged_state.logged_in) {
         return null
+    }
 
-    val query : List<QueryResult<UserData>> = UserData.queryByToken(logged_state.session?.token ?: "")
-    if (query.isEmpty())
+    val query: List<QueryResult<UserData>> = UserData.queryByToken(logged_state.session?.token ?: "")
+    if (query.isEmpty()) {
         return UserSession("", "", 0)
+    }
 
-    val user : UserData = query.first().dataClass
+    val user: UserData = query.first().dataClass
     return UserSession(
         user.firstName ?: "",
         user.lastName ?: "",
-        user.loyaltyPoints ?: 0
+        user.loyaltyPoints ?: 0,
     )
 }
 
-fun ApplicationCall.loggedMap() : Map<String, Any?> {
-    val logged_state = loggedIn()
+fun ApplicationCall.loggedMap(): Map<String, Any?> {
+    val loggedState = loggedIn()
     return mapOf(
-        "logged_in" to logged_state.logged_in,
-        "user" to createUserState(logged_state)
+        "logged_in" to loggedState.logged_in,
+        "user" to createUserState(loggedState),
     )
 }
 
 fun ApplicationCall.fullEvaluate(
     template: PebbleTemplate,
     writer: StringWriter,
-    model: Map<String, Any?>
+    model: Map<String, Any?>,
 ) {
     val loggedState = loggedIn()
 
     var isAdmin = false
 
     if (loggedState.logged_in && loggedState.session != null) {
-        val user = UserData.queryByToken(loggedState.session.token)
-            .firstOrNull()
-            ?.dataClass
+        val user =
+            UserData
+                .queryByToken(loggedState.session.token)
+                .firstOrNull()
+                ?.dataClass
 
         if (user != null) {
-            isAdmin = AdminData.queryDatabase(
-                whereArgs = WhereArgs(
-                    "${AdminColumns.LOGIN_ID.name} = ?",
-                    listOf(user.loginId)
-                )
-            ).isNotEmpty()
+            isAdmin =
+                AdminData
+                    .queryDatabase(
+                        whereArgs =
+                            WhereArgs(
+                                "${AdminColumns.LOGIN_ID.name} = ?",
+                                listOf(user.loginId),
+                            ),
+                    ).isNotEmpty()
         }
     }
 
@@ -98,9 +110,10 @@ fun ApplicationCall.fullEvaluate(
 
     template.evaluate(
         writer,
-        model + loggedMap() + mapOf(
-            "isAdmin" to isAdmin,
-            "isStaff" to isStaff
-        )
+        model + loggedMap() +
+            mapOf(
+                "isAdmin" to isAdmin,
+                "isStaff" to isStaff,
+            ),
     )
 }

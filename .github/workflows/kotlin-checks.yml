@@ -24,3 +24,6 @@ jobs:
 
       - name: Run tests
         run: ./gradlew test
+
+      - name: Check formatting
+        run: ./gradlew ktlintCheck

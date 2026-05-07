@@ -1,5 +1,5 @@
 package auth
 
 data class AdminSessionToken(
-    val token : String
+    val token: String,
 )

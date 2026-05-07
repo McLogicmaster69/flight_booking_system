@@ -14,35 +14,33 @@ object PaymentMethodColumns {
 }
 
 data class PaymentMethodData(
-
     override val id: Int = 0,
-    var userId : Int = 0,
-    var paymentToken : String? = null,
-    var lastFour : String? = null,
-    var brand : String? = null,
-    var expMonth : Int? = null,
-    var expYear : Int? = null
-
+    var userId: Int = 0,
+    var paymentToken: String? = null,
+    var lastFour: String? = null,
+    var brand: String? = null,
+    var expMonth: Int? = null,
+    var expYear: Int? = null,
 ) : DataClass<PaymentMethodData>(id) {
-
     override val tableName = "payment_methods"
     override val tableColumns = PaymentMethodColumns.ALL
 
-    override val indexes : List<IndexArgs> = listOf(
-        IndexArgs("inx_payment_methods_user_id", PaymentMethodColumns.USER_ID.name)
-    )
+    override val indexes: List<IndexArgs> =
+        listOf(
+            IndexArgs("inx_payment_methods_user_id", PaymentMethodColumns.USER_ID.name),
+        )
 
-    override fun mapDataToColumns () : Map<Column<*>, Any?> =
+    override fun mapDataToColumns(): Map<Column<*>, Any?> =
         mapOf(
             PaymentMethodColumns.USER_ID to userId,
             PaymentMethodColumns.PAYMENT_TOKEN to paymentToken,
             PaymentMethodColumns.LAST_FOUR to lastFour,
             PaymentMethodColumns.BRAND to brand,
             PaymentMethodColumns.EXP_MONTH to expMonth,
-            PaymentMethodColumns.EXP_YEAR to expYear
+            PaymentMethodColumns.EXP_YEAR to expYear,
         )
 
-    override fun mapRowToData(row : Array<Any?>) : PaymentMethodData =
+    override fun mapRowToData(row: Array<Any?>): PaymentMethodData =
         PaymentMethodData(
             id = castRowElement(row, PaymentMethodColumns.ID),
             userId = castRowElement(row, PaymentMethodColumns.USER_ID),
@@ -50,34 +48,33 @@ data class PaymentMethodData(
             lastFour = castRowElement(row, PaymentMethodColumns.LAST_FOUR),
             brand = castRowElement(row, PaymentMethodColumns.BRAND),
             expMonth = castRowElement(row, PaymentMethodColumns.EXP_MONTH),
-            expYear = castRowElement(row, PaymentMethodColumns.EXP_YEAR)
+            expYear = castRowElement(row, PaymentMethodColumns.EXP_YEAR),
         )
 
     override fun debugData() {
-        println("Payment method data: (\"$id\", \"$userId\", \"$paymentToken\", \"$lastFour\", \"$brand\", \"$expMonth\", \"$expYear\")")
+        println(
+            "Payment method data: (\"$id\", \"$userId\", \"$paymentToken\", \"$lastFour\", \"$brand\", \"$expMonth\", \"$expYear\")",
+        )
     }
 
     companion object {
-        val EMPTY : PaymentMethodData
+        val EMPTY: PaymentMethodData
             get() = PaymentMethodData()
 
-        fun queryDatabase (
-            multipleJoinArgs : MultipleJoinArgs? = null,
-            whereArgs : WhereArgs? = null,
-            orderByArgs : OrderByArgs? = null,
-            limitArgs : LimitArgs? = null,
-            groupByArgs : GroupByArgs? = null   
-        ) : List<QueryResult<PaymentMethodData>> {
-            return EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
-        }
+        fun queryDatabase(
+            multipleJoinArgs: MultipleJoinArgs? = null,
+            whereArgs: WhereArgs? = null,
+            orderByArgs: OrderByArgs? = null,
+            limitArgs: LimitArgs? = null,
+            groupByArgs: GroupByArgs? = null,
+        ): List<QueryResult<PaymentMethodData>> =
+            EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
 
-        fun updateTable (
-            values : Map<Column<*>, Any?>,
-            whereArgs : WhereArgs
-        ) : Int = EMPTY.updateTable(values, whereArgs)
+        fun updateTable(
+            values: Map<Column<*>, Any?>,
+            whereArgs: WhereArgs,
+        ): Int = EMPTY.updateTable(values, whereArgs)
 
-        fun delete(id : Int) : Int {
-            return PaymentMethodData(id = id).delete()
-        }
+        fun delete(id: Int): Int = PaymentMethodData(id = id).delete()
     }
 }

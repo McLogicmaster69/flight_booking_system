@@ -18,9 +18,6 @@ import utils.SessionData
 import java.io.StringWriter
 import io.ktor.util.*
 import io.ktor.serialization.kotlinx.json.*
-import kotlinx.serialization.json.Json
-import java.time.LocalDate
-import java.time.LocalTime
 
 fun main() {
     val port = System.getenv("PORT")?.toIntOrNull() ?: 8080
@@ -127,7 +124,7 @@ fun Application.configureSessions() {
 
 fun Application.configureSerialization() {
     install(io.ktor.server.plugins.contentnegotiation.ContentNegotiation) {
-        json()  // enables parsing application/json in receive<Map<String,String>>()
+        json() // enables parsing application/json in receive<Map<String,String>>()
     }
 }
 

@@ -1,6 +1,6 @@
 package data
 
 data class DestinationArgs(
-    val startDestination : Int,
-    val endDestination : Int
+    val startDestination: Int,
+    val endDestination: Int,
 )
