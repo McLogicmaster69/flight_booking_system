@@ -84,7 +84,7 @@
 
       <nav class="top-links" aria-label="Utility navigation">
 
-        {% if (user.verifiedAccount == false) and logged_in %}
+        {% if user is not null and logged_in and user.verifiedAccount != true %}
         <form method="post" action="/send-verification" style="display:inline;">
           <button type="submit" class="btn btn-secondary" style="height:32px; min-height:32px; padding: 0 12px; font-size:12px;">
             Verify Email

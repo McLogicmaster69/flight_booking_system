@@ -66,9 +66,10 @@ fun ApplicationCall.fullEvaluate(
     val loggedState = loggedIn()
 
     var isAdmin = false
+    var user: UserData? = null
 
     if (loggedState.logged_in && loggedState.session != null) {
-        val user = UserData.queryByToken(loggedState.session.token)
+        user = UserData.queryByToken(loggedState.session.token)
             .firstOrNull()
             ?.dataClass
 
@@ -87,6 +88,9 @@ fun ApplicationCall.fullEvaluate(
     template.evaluate(
         writer,
         model + loggedMap() + mapOf(
+            "language" to (request.queryParameters["lang"] ?: "en"),
+            "user" to user,
+            "logged_in" to loggedState.logged_in,
             "isAdmin" to isAdmin,
             "isStaff" to isStaff
         )

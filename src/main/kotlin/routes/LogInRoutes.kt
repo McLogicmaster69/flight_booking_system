@@ -184,7 +184,8 @@ private suspend fun ApplicationCall.handleVerifyPost() {
         }
 
         TwoFAData.deleteByUserId(record.userId)
-        sessions.clear<Temp2FASession>()
+
+        val alreadyLoggedIn = loggedIn().logged_in
 
         val userQuery = UserData.queryDatabase(
             whereArgs = WhereArgs(
@@ -201,6 +202,7 @@ private suspend fun ApplicationCall.handleVerifyPost() {
         }
 
         val user = userQuery.first().dataClass
+
         val adminQuery = AdminData.queryDatabase(
             whereArgs = WhereArgs(
                 "${AdminColumns.LOGIN_ID.name} = ?",
@@ -209,18 +211,24 @@ private suspend fun ApplicationCall.handleVerifyPost() {
         )
 
         val isAdmin = adminQuery.isNotEmpty()
-        
+
         if (user.verifiedAccount != true) {
             user.verifiedAccount = true
             user.update()
         }
 
-        sessions.set(SessionData.createSession(user.id).toTokenSession())
-        if (isAdmin) {
+        sessions.clear<Temp2FASession>()
+
+        if (!alreadyLoggedIn) {
+            sessions.set(SessionData.createSession(user.id).toTokenSession())
+        }
+
+        if (isAdmin && !alreadyLoggedIn) {
             response.headers.append("HX-Redirect", "/admin")
         } else {
             response.headers.append("HX-Redirect", "/")
         }
+
         respond(HttpStatusCode.OK)
     }
 }
@@ -228,45 +236,19 @@ private suspend fun ApplicationCall.handleVerifyPost() {
 private suspend fun ApplicationCall.handleSendVerification() {
     timed("T5_verify_send", jsMode()) {
 
-        val tempSession = sessions.get<Temp2FASession>()
-            ?: return@timed respondRedirect("/login")
+        val loggedState = loggedIn()
 
-        val query = TwoFAData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${TwoFAColumns.SESSION_TOKEN.name} = ?",
-                listOf(tempSession.token)
-            )
-        )
-
-        if (query.isEmpty()) {
+        if (!loggedState.logged_in || loggedState.session == null) {
             return@timed respondRedirect("/login")
         }
 
-        val record = query.first().dataClass
-
-        val userQuery = UserData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${UserColumns.ID.name} = ?",
-                listOf(record.userId)
-            )
-        )
-
-        if (userQuery.isEmpty()) {
-            return@timed respondRedirect("/")
-        }
-
-        val user = userQuery.first().dataClass
+        val user = UserData.queryByToken(loggedState.session.token)
+            .firstOrNull()
+            ?.dataClass
+            ?: return@timed respondRedirect("/login")
 
         if (user.verifiedAccount == true) {
             return@timed respondRedirect("/")
-        }
-
-        if (record.ttl.after(Timestamp.from(Instant.now()))) {
-            respondText(
-                "<div class='error-message'>Please wait before requesting another code</div>",
-                ContentType.Text.Html
-            )
-            return@timed
         }
 
         val code = generate2FACode()
@@ -288,7 +270,10 @@ private suspend fun ApplicationCall.handleSendVerification() {
         ).insertIntoDatabase()
 
         val loginQuery = LoginData.queryDatabase(
-            whereArgs = WhereArgs("${LoginColumns.ID.name} = ?", listOf(user.loginId))
+            whereArgs = WhereArgs(
+                "${LoginColumns.ID.name} = ?",
+                listOf(user.loginId)
+            )
         )
 
         if (loginQuery.isEmpty()) {

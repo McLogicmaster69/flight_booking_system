@@ -26,7 +26,6 @@ private suspend fun ApplicationCall.handleLoadPage() {
             "activePage" to "home",
             "layout" to "",
             "headerRightText" to "",
-            "language" to (request.queryParameters["lang"] ?: "en"),
             "destinations" to DestinationData.getDestinationNames()
         )
 
