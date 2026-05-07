@@ -10,7 +10,6 @@ import utils.jsMode
 import auth.*
 import data.*
 import io.ktor.server.request.*
-import org.mindrot.jbcrypt.BCrypt
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -29,7 +28,7 @@ data class PlaneView(
     val currentLocation: Int,
     val currentLocationName: String?,
     val currentLocationDate: LocalDate,
-    val currentLocationTime: LocalTime
+    val currentLocationTime: LocalTime,
 )
 
 private suspend fun ApplicationCall.handleManagePlanesLoad() {
@@ -45,34 +44,43 @@ private suspend fun ApplicationCall.handleManagePlanesLoad() {
         val models = PlaneModelData.queryDatabase().map { it.dataClass }
         val destinations = DestinationData.queryDatabase().map { it.dataClass }
 
-        val allPlanes = PlaneData.queryDatabase().map { result ->
-            val plane = result.dataClass
+        val allPlanes =
+            PlaneData.queryDatabase().map { result ->
+                val plane = result.dataClass
 
-            val model = PlaneModelData.queryDatabase(
-                whereArgs = WhereArgs(
-                    "${PlaneModelColumns.ID.name} = ?",
-                    listOf(plane.modelId)
+                val model =
+                    PlaneModelData
+                        .queryDatabase(
+                            whereArgs =
+                                WhereArgs(
+                                    "${PlaneModelColumns.ID.name} = ?",
+                                    listOf(plane.modelId),
+                                ),
+                        ).firstOrNull()
+                        ?.dataClass
+
+                val destination =
+                    DestinationData
+                        .queryDatabase(
+                            whereArgs =
+                                WhereArgs(
+                                    "${DestinationColumns.ID.name} = ?",
+                                    listOf(plane.currentLocation),
+                                ),
+                        ).firstOrNull()
+                        ?.dataClass
+
+                PlaneView(
+                    id = plane.id,
+                    registrationCode = plane.registrationCode,
+                    modelId = plane.modelId,
+                    modelName = model?.name,
+                    currentLocation = plane.currentLocation,
+                    currentLocationName = destination?.cityName,
+                    currentLocationDate = plane.currentLocationDate,
+                    currentLocationTime = plane.currentLocationTime,
                 )
-            ).firstOrNull()?.dataClass
-
-            val destination = DestinationData.queryDatabase(
-                whereArgs = WhereArgs(
-                    "${DestinationColumns.ID.name} = ?",
-                    listOf(plane.currentLocation)
-                )
-            ).firstOrNull()?.dataClass
-
-            PlaneView(
-                id = plane.id,
-                registrationCode = plane.registrationCode,
-                modelId = plane.modelId,
-                modelName = model?.name,
-                currentLocation = plane.currentLocation,
-                currentLocationName = destination?.cityName,
-                currentLocationDate = plane.currentLocationDate,
-                currentLocationTime = plane.currentLocationTime
-            )
-        }
+            }
 
         val filteredPlanes =
             if (search.isBlank()) {
@@ -80,31 +88,33 @@ private suspend fun ApplicationCall.handleManagePlanesLoad() {
             } else {
                 allPlanes.filter { plane ->
                     plane.registrationCode.contains(search, ignoreCase = true) ||
-                    plane.modelName?.contains(search, ignoreCase = true) == true ||
-                    plane.currentLocationName?.contains(search, ignoreCase = true) == true
+                        plane.modelName?.contains(search, ignoreCase = true) == true ||
+                        plane.currentLocationName?.contains(search, ignoreCase = true) == true
                 }
             }
 
         val totalPages = ((filteredPlanes.size + pageSize - 1) / pageSize).coerceAtLeast(1)
         val safePage = page.coerceAtMost(totalPages)
 
-        val planes = filteredPlanes
-            .drop((safePage - 1) * pageSize)
-            .take(pageSize)
+        val planes =
+            filteredPlanes
+                .drop((safePage - 1) * pageSize)
+                .take(pageSize)
 
-        val viewModel = mapOf(
-            "title" to "Manage Planes",
-            "layout" to "admin",
-            "activePage" to "managePlanes",
-            "inNav" to true,
-            "isAdmin" to true,
-            "planes" to planes,
-            "models" to models,
-            "destinations" to destinations,
-            "search" to search,
-            "page" to safePage,
-            "totalPages" to totalPages
-        )
+        val viewModel =
+            mapOf(
+                "title" to "Manage Planes",
+                "layout" to "admin",
+                "activePage" to "managePlanes",
+                "inNav" to true,
+                "isAdmin" to true,
+                "planes" to planes,
+                "models" to models,
+                "destinations" to destinations,
+                "search" to search,
+                "page" to safePage,
+                "totalPages" to totalPages,
+            )
 
         val template = pebble.getTemplate("admin/managePlanes.peb")
         val writer = StringWriter()
@@ -136,12 +146,14 @@ private suspend fun ApplicationCall.handleCreatePlanePost() {
             return@timed
         }
 
-        val existing = PlaneData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${PlaneColumns.REGISTRATION_CODE.name} = ?",
-                listOf(registrationCode)
+        val existing =
+            PlaneData.queryDatabase(
+                whereArgs =
+                    WhereArgs(
+                        "${PlaneColumns.REGISTRATION_CODE.name} = ?",
+                        listOf(registrationCode),
+                    ),
             )
-        )
 
         if (existing.isNotEmpty()) {
             respondText("That plane already exists", status = HttpStatusCode.BadRequest)
@@ -153,7 +165,7 @@ private suspend fun ApplicationCall.handleCreatePlanePost() {
             modelId = modelId,
             currentLocation = currentLocation,
             currentLocationDate = currentLocationDate,
-            currentLocationTime = currentLocationTime
+            currentLocationTime = currentLocationTime,
         ).insertIntoDatabase()
 
         response.headers.append("HX-Redirect", "/managePlanes")
@@ -186,12 +198,14 @@ private suspend fun ApplicationCall.handleUpdatePlanePost() {
             return@timed
         }
 
-        val duplicate = PlaneData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${PlaneColumns.REGISTRATION_CODE.name} = ? AND ${PlaneColumns.ID.name} != ?",
-                listOf(registrationCode, planeId)
+        val duplicate =
+            PlaneData.queryDatabase(
+                whereArgs =
+                    WhereArgs(
+                        "${PlaneColumns.REGISTRATION_CODE.name} = ? AND ${PlaneColumns.ID.name} != ?",
+                        listOf(registrationCode, planeId),
+                    ),
             )
-        )
 
         if (duplicate.isNotEmpty()) {
             respondText("That plane already exists", status = HttpStatusCode.BadRequest)
@@ -199,17 +213,19 @@ private suspend fun ApplicationCall.handleUpdatePlanePost() {
         }
 
         PlaneData.updateTable(
-            values = mapOf(
-                PlaneColumns.REGISTRATION_CODE to registrationCode,
-                PlaneColumns.MODEL_ID to modelId,
-                PlaneColumns.CURRENT_LOCATION to currentLocation,
-                PlaneColumns.CURRENT_LOCATION_DATE to currentLocationDate.toString(),
-                PlaneColumns.CURRENT_LOCATION_TIME to currentLocationTime.toString()
-            ),
-            whereArgs = WhereArgs(
-                "${PlaneColumns.ID.name} = ?",
-                listOf(planeId)
-            )
+            values =
+                mapOf(
+                    PlaneColumns.REGISTRATION_CODE to registrationCode,
+                    PlaneColumns.MODEL_ID to modelId,
+                    PlaneColumns.CURRENT_LOCATION to currentLocation,
+                    PlaneColumns.CURRENT_LOCATION_DATE to currentLocationDate.toString(),
+                    PlaneColumns.CURRENT_LOCATION_TIME to currentLocationTime.toString(),
+                ),
+            whereArgs =
+                WhereArgs(
+                    "${PlaneColumns.ID.name} = ?",
+                    listOf(planeId),
+                ),
         )
 
         response.headers.append("HX-Redirect", "/managePlanes")
@@ -228,15 +244,20 @@ private suspend fun ApplicationCall.handleDeletePlanePost() {
             return@timed
         }
 
-        val flightsUsingPlane = FlightData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${FlightColumns.PLANE_ID.name} = ?",
-                listOf(planeId)
+        val flightsUsingPlane =
+            FlightData.queryDatabase(
+                whereArgs =
+                    WhereArgs(
+                        "${FlightColumns.PLANE_ID.name} = ?",
+                        listOf(planeId),
+                    ),
             )
-        )
 
         if (flightsUsingPlane.isNotEmpty()) {
-            respondText("Cannot delete this plane because one or more flights use it", status = HttpStatusCode.BadRequest)
+            respondText(
+                "Cannot delete this plane because one or more flights use it",
+                status = HttpStatusCode.BadRequest,
+            )
             return@timed
         }
 

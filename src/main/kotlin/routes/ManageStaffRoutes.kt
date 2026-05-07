@@ -11,8 +11,6 @@ import auth.*
 import data.*
 import io.ktor.server.request.*
 import org.mindrot.jbcrypt.BCrypt
-import java.time.LocalDate
-import java.time.LocalTime
 
 fun Route.manageStaffRoutes() {
     get("/manageStaff") { call.handleManageStaffLoad() }
@@ -26,7 +24,7 @@ data class StaffAccountView(
     val lastName: String?,
     val positionId: Int,
     val positionName: String?,
-    val email: String?
+    val email: String?,
 )
 
 private suspend fun ApplicationCall.handleManageStaffLoad() {
@@ -39,32 +37,41 @@ private suspend fun ApplicationCall.handleManageStaffLoad() {
         val page = request.queryParameters["page"]?.toIntOrNull()?.coerceAtLeast(1) ?: 1
         val pageSize = 5
 
-        val allStaff = StaffData.queryDatabase().map { result ->
-            val staffMember = result.dataClass
+        val allStaff =
+            StaffData.queryDatabase().map { result ->
+                val staffMember = result.dataClass
 
-            val position = StaffPositionData.queryDatabase(
-                whereArgs = WhereArgs(
-                    "${StaffPositionColumns.ID.name} = ?",
-                    listOf(staffMember.positionId)
+                val position =
+                    StaffPositionData
+                        .queryDatabase(
+                            whereArgs =
+                                WhereArgs(
+                                    "${StaffPositionColumns.ID.name} = ?",
+                                    listOf(staffMember.positionId),
+                                ),
+                        ).firstOrNull()
+                        ?.dataClass
+
+                val login =
+                    LoginData
+                        .queryDatabase(
+                            whereArgs =
+                                WhereArgs(
+                                    "${LoginColumns.ID.name} = ?",
+                                    listOf(staffMember.loginId),
+                                ),
+                        ).firstOrNull()
+                        ?.dataClass
+
+                StaffAccountView(
+                    id = staffMember.id,
+                    firstName = staffMember.firstName,
+                    lastName = staffMember.lastName,
+                    positionId = staffMember.positionId,
+                    positionName = position?.name,
+                    email = login?.email,
                 )
-            ).firstOrNull()?.dataClass
-
-            val login = LoginData.queryDatabase(
-                whereArgs = WhereArgs(
-                    "${LoginColumns.ID.name} = ?",
-                    listOf(staffMember.loginId)
-                )
-            ).firstOrNull()?.dataClass
-
-            StaffAccountView(
-                id = staffMember.id,
-                firstName = staffMember.firstName,
-                lastName = staffMember.lastName,
-                positionId = staffMember.positionId,
-                positionName = position?.name,
-                email = login?.email
-            )
-        }
+            }
 
         val filteredStaff =
             if (search.isBlank()) {
@@ -72,35 +79,37 @@ private suspend fun ApplicationCall.handleManageStaffLoad() {
             } else {
                 allStaff.filter { member ->
                     member.firstName?.contains(search, ignoreCase = true) == true ||
-                    member.lastName?.contains(search, ignoreCase = true) == true
+                        member.lastName?.contains(search, ignoreCase = true) == true
                 }
             }
 
         val totalPages = ((filteredStaff.size + pageSize - 1) / pageSize).coerceAtLeast(1)
         val safePage = page.coerceAtMost(totalPages)
 
-        val staff = filteredStaff
-            .drop((safePage - 1) * pageSize)
-            .take(pageSize)
+        val staff =
+            filteredStaff
+                .drop((safePage - 1) * pageSize)
+                .take(pageSize)
 
         val positions = StaffPositionData.queryDatabase().map { it.dataClass }
         val countries = CountryData.queryDatabase().map { it.dataClass }
         val destinations = DestinationData.queryDatabase().map { it.dataClass }
 
-        val model = mapOf(
-            "title" to "Manage Staff",
-            "layout" to "admin",
-            "activePage" to "manageStaff",
-            "inNav" to true,
-            "isAdmin" to true,
-            "staff" to staff,
-            "positions" to positions,
-            "countries" to countries,
-            "destinations" to destinations,
-            "search" to search,
-            "page" to safePage,
-            "totalPages" to totalPages
-        )
+        val model =
+            mapOf(
+                "title" to "Manage Staff",
+                "layout" to "admin",
+                "activePage" to "manageStaff",
+                "inNav" to true,
+                "isAdmin" to true,
+                "staff" to staff,
+                "positions" to positions,
+                "countries" to countries,
+                "destinations" to destinations,
+                "search" to search,
+                "page" to safePage,
+                "totalPages" to totalPages,
+            )
 
         val template = pebble.getTemplate("admin/manageStaff.peb")
         val writer = StringWriter()
@@ -146,10 +155,11 @@ private suspend fun ApplicationCall.handleCreateStaffPost() {
 
         val passwordHash = BCrypt.hashpw(password, BCrypt.gensalt())
 
-        val loginId = LoginData(
-            email = email,
-            passwordHash = passwordHash
-        ).insertIntoDatabase()
+        val loginId =
+            LoginData(
+                email = email,
+                passwordHash = passwordHash,
+            ).insertIntoDatabase()
 
         StaffData(
             firstName = firstName,
@@ -157,7 +167,7 @@ private suspend fun ApplicationCall.handleCreateStaffPost() {
             positionId = positionId,
             loginId = loginId,
             homeId = homeId,
-            currentLocation = currentLocation
+            currentLocation = currentLocation,
         ).insertIntoDatabase()
 
         response.headers.append("HX-Redirect", "/manageStaff")
@@ -187,15 +197,17 @@ private suspend fun ApplicationCall.handleUpdateStaffPost() {
         }
 
         StaffData.updateTable(
-            values = mapOf(
-                StaffColumns.FIRSTNAME to firstName,
-                StaffColumns.LASTNAME to lastName,
-                StaffColumns.POSITION_ID to positionId
-            ),
-            whereArgs = WhereArgs(
-                "${StaffColumns.ID.name} = ?",
-                listOf(staffId)
-            )
+            values =
+                mapOf(
+                    StaffColumns.FIRSTNAME to firstName,
+                    StaffColumns.LASTNAME to lastName,
+                    StaffColumns.POSITION_ID to positionId,
+                ),
+            whereArgs =
+                WhereArgs(
+                    "${StaffColumns.ID.name} = ?",
+                    listOf(staffId),
+                ),
         )
 
         response.headers.append("HX-Redirect", "/manageStaff")

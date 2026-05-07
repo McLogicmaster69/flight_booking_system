@@ -47,11 +47,12 @@ private suspend fun ApplicationCall.handleSettingsLoad() {
     timed("T1_Handle_Settings_Load", jsMode()) {
         val pebble = getEngine()
 
-        val model: Map<String, Any?> = mapOf(
-            "title" to "Settings",
-            "inNav" to java.lang.Boolean.valueOf(true),
-            "activePage" to "settings"
-        )
+        val model: Map<String, Any?> =
+            mapOf(
+                "title" to "Settings",
+                "inNav" to java.lang.Boolean.valueOf(true),
+                "activePage" to "settings",
+            )
 
         val writer = StringWriter()
         val template = pebble.getTemplate("settings/index.peb")
@@ -66,11 +67,12 @@ private suspend fun ApplicationCall.handleHelpLoad() {
     timed("T1_Handle_Settings_Load", jsMode()) {
         val pebble = getEngine()
 
-        val model: Map<String, Any?> = mapOf(
-            "title" to "Help",
-            "inNav" to java.lang.Boolean.valueOf(true),
-            "activePage" to "help"
-        )
+        val model: Map<String, Any?> =
+            mapOf(
+                "title" to "Help",
+                "inNav" to java.lang.Boolean.valueOf(true),
+                "activePage" to "help",
+            )
 
         val writer = StringWriter()
         val template = pebble.getTemplate("help/index.peb")

@@ -10,18 +10,10 @@ import utils.jsMode
 import auth.*
 import data.*
 import io.ktor.server.request.*
-import org.mindrot.jbcrypt.BCrypt
-import java.time.LocalDate
-import java.time.LocalTime
-import com.stripe.Stripe
-import com.stripe.model.Refund
-import com.stripe.param.RefundCreateParams
-import utils.EmailService
 
 fun Route.adminRoutes() {
     get("/admin") { call.handleAdminLoad() }
 }
-
 
 private suspend fun ApplicationCall.handleAdminLoad() {
     timed("T0_admin", jsMode()) {

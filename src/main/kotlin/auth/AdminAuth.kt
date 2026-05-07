@@ -23,12 +23,14 @@ suspend fun ApplicationCall.requireAdmin(): Boolean {
 
     val user = userQuery.first().dataClass
 
-    val adminQuery = AdminData.queryDatabase(
-        whereArgs = WhereArgs(
-            "${AdminColumns.LOGIN_ID.name} = ?",
-            listOf(user.loginId)
+    val adminQuery =
+        AdminData.queryDatabase(
+            whereArgs =
+                WhereArgs(
+                    "${AdminColumns.LOGIN_ID.name} = ?",
+                    listOf(user.loginId),
+                ),
         )
-    )
 
     if (adminQuery.isEmpty()) {
         respondText("403 Forbidden", ContentType.Text.Plain, HttpStatusCode.Forbidden)
