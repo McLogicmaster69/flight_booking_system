@@ -8,7 +8,6 @@ data class GroupByArgs(
      * The clause used in the statement. `GROUP BY <clause>`.
      */
     val groupClause: String,
-
     /**
      * Optional HAVING args.
      */

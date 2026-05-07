@@ -14,7 +14,6 @@ import java.util.Base64
 abstract class DataClass<T : DataClass<T>>(
     open val id: Int = 0,
 ) {
-
     /**
      * The name of the table being created and accessed.
      */
@@ -238,9 +237,11 @@ abstract class DataClass<T : DataClass<T>>(
         if (multipleJoinArgs != null) {
             multipleJoinArgs.joinArgs.forEach { joinArgs ->
                 columns.addAll(joinArgs.joinSelectColumns)
-                tables.addAll(List(joinArgs.joinSelectColumns.size) {
-                    joinArgs.rightTableJoin
-                })
+                tables.addAll(
+                    List(joinArgs.joinSelectColumns.size) {
+                        joinArgs.rightTableJoin
+                    },
+                )
             }
         }
 

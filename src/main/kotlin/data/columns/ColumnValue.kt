@@ -8,12 +8,10 @@ data class ColumnValue(
      * The table the value came from.
      */
     val table: String,
-
     /**
      * The column the value came from.
      */
     val column: String,
-
     /**
      * The value.
      */

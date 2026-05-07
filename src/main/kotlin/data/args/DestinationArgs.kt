@@ -8,7 +8,6 @@ data class DestinationArgs(
      * The start destination.
      */
     val startDestination: Int,
-
     /**
      * The end destination.
      */

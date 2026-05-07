@@ -8,7 +8,6 @@ data class Column<T>(
      * The name of the column.
      */
     val name: String,
-
     /**
      * Information used to create the column, such as type and any additional properties.
      */
