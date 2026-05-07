@@ -9,28 +9,26 @@ object RemainingSeatColumns {
 }
 
 data class RemainingSeatData(
-
     override val id: Int = 0,
-    var seatId : Int = 0,
-
+    var seatId: Int = 0,
 ) : DataClass<RemainingSeatData>(id) {
-
     override val tableName = "remaining_seats"
     override val tableColumns = RemainingSeatColumns.ALL
 
-    override val indexes : List<IndexArgs> = listOf(
-        IndexArgs("inx_remaining_seats_seat_id", RemainingSeatColumns.SEAT_ID.name)
-    )
-
-    override fun mapDataToColumns () : Map<Column<*>, Any?> =
-        mapOf(
-            RemainingSeatColumns.SEAT_ID to seatId
+    override val indexes: List<IndexArgs> =
+        listOf(
+            IndexArgs("inx_remaining_seats_seat_id", RemainingSeatColumns.SEAT_ID.name),
         )
 
-    override fun mapRowToData(row : Array<Any?>) : RemainingSeatData =
+    override fun mapDataToColumns(): Map<Column<*>, Any?> =
+        mapOf(
+            RemainingSeatColumns.SEAT_ID to seatId,
+        )
+
+    override fun mapRowToData(row: Array<Any?>): RemainingSeatData =
         RemainingSeatData(
             id = castRowElement(row, RemainingSeatColumns.ID),
-            seatId = castRowElement(row, RemainingSeatColumns.SEAT_ID)
+            seatId = castRowElement(row, RemainingSeatColumns.SEAT_ID),
         )
 
     override fun debugData() {
@@ -38,26 +36,23 @@ data class RemainingSeatData(
     }
 
     companion object {
-        val EMPTY : RemainingSeatData
+        val EMPTY: RemainingSeatData
             get() = RemainingSeatData()
 
-        fun queryDatabase (
-            multipleJoinArgs : MultipleJoinArgs? = null,
-            whereArgs : WhereArgs? = null,
-            orderByArgs : OrderByArgs? = null,
-            limitArgs : LimitArgs? = null,
-            groupByArgs : GroupByArgs? = null   
-        ) : List<QueryResult<RemainingSeatData>> {
-            return EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
-        }
+        fun queryDatabase(
+            multipleJoinArgs: MultipleJoinArgs? = null,
+            whereArgs: WhereArgs? = null,
+            orderByArgs: OrderByArgs? = null,
+            limitArgs: LimitArgs? = null,
+            groupByArgs: GroupByArgs? = null,
+        ): List<QueryResult<RemainingSeatData>> =
+            EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
 
-        fun updateTable (
-            values : Map<Column<*>, Any?>,
-            whereArgs : WhereArgs
-        ) : Int = EMPTY.updateTable(values, whereArgs)
+        fun updateTable(
+            values: Map<Column<*>, Any?>,
+            whereArgs: WhereArgs,
+        ): Int = EMPTY.updateTable(values, whereArgs)
 
-        fun delete(id : Int) : Int {
-            return RemainingSeatData(id = id).delete()
-        }
+        fun delete(id: Int): Int = RemainingSeatData(id = id).delete()
     }
 }

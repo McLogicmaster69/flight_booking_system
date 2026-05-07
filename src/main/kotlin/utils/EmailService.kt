@@ -5,31 +5,37 @@ import jakarta.mail.internet.*
 import java.util.*
 
 object EmailService {
-
     private const val FROM_EMAIL = "alidos37pro@gmail.com"
     private const val APP_PASSWORD = "oyeq zeqm bmvv qvpn"
 
-    fun send2FA(to: String, code: String) {
-
-        val props = Properties().apply {
-            put("mail.smtp.auth", "true")
-            put("mail.smtp.starttls.enable", "true")
-            put("mail.smtp.host", "smtp.gmail.com")
-            put("mail.smtp.port", "587")
-        }
-
-        val session = Session.getInstance(props, object : Authenticator() {
-            override fun getPasswordAuthentication(): PasswordAuthentication {
-                return PasswordAuthentication(FROM_EMAIL, APP_PASSWORD)
+    fun send2FA(
+        to: String,
+        code: String,
+    ) {
+        val props =
+            Properties().apply {
+                put("mail.smtp.auth", "true")
+                put("mail.smtp.starttls.enable", "true")
+                put("mail.smtp.host", "smtp.gmail.com")
+                put("mail.smtp.port", "587")
             }
-        })
 
-        val message = MimeMessage(session).apply {
-            setFrom(InternetAddress(FROM_EMAIL))
-            setRecipients(Message.RecipientType.TO, InternetAddress.parse(to))
-            subject = "Your verification code"
-            setText("Your login verification code is: $code\n\nIt expires in 5 minutes.")
-        }
+        val session =
+            Session.getInstance(
+                props,
+                object : Authenticator() {
+                    override fun getPasswordAuthentication(): PasswordAuthentication =
+                        PasswordAuthentication(FROM_EMAIL, APP_PASSWORD)
+                },
+            )
+
+        val message =
+            MimeMessage(session).apply {
+                setFrom(InternetAddress(FROM_EMAIL))
+                setRecipients(Message.RecipientType.TO, InternetAddress.parse(to))
+                subject = "Your verification code"
+                setText("Your login verification code is: $code\n\nIt expires in 5 minutes.")
+            }
 
         Transport.send(message)
     }
@@ -41,57 +47,62 @@ object EmailService {
         destination: String,
         dateTime: String,
         passengers: List<String>,
-        rewards: List<String> = emptyList()
+        rewards: List<String> = emptyList(),
     ) {
-
-        val props = Properties().apply {
-            put("mail.smtp.auth", "true")
-            put("mail.smtp.starttls.enable", "true")
-            put("mail.smtp.host", "smtp.gmail.com")
-            put("mail.smtp.port", "587")
-        }
-
-        val session = Session.getInstance(props, object : Authenticator() {
-            override fun getPasswordAuthentication(): PasswordAuthentication {
-                return PasswordAuthentication(FROM_EMAIL, APP_PASSWORD)
+        val props =
+            Properties().apply {
+                put("mail.smtp.auth", "true")
+                put("mail.smtp.starttls.enable", "true")
+                put("mail.smtp.host", "smtp.gmail.com")
+                put("mail.smtp.port", "587")
             }
-        })
+
+        val session =
+            Session.getInstance(
+                props,
+                object : Authenticator() {
+                    override fun getPasswordAuthentication(): PasswordAuthentication =
+                        PasswordAuthentication(FROM_EMAIL, APP_PASSWORD)
+                },
+            )
 
         val passengerList = passengers.joinToString("\n") { "    - $it" }
         val rewardList = rewards.joinToString("\n") { "    - $it" }
 
-        val body = buildString {
-            appendLine("Booking Confirmation")
-            appendLine()
-            appendLine("Reference: $reference")
-            appendLine()
-            appendLine("Route:")
-            appendLine("$startLocation → $destination")
-            appendLine()
-            appendLine("Departure:")
-            appendLine(dateTime)
-            appendLine()
-            appendLine("Passengers:")
-            appendLine(passengerList)
-            appendLine()
-
-            if (rewards.isNotEmpty()) {
-                appendLine("Loyalty Rewards:")
-                appendLine(rewardList)
+        val body =
+            buildString {
+                appendLine("Booking Confirmation")
                 appendLine()
+                appendLine("Reference: $reference")
+                appendLine()
+                appendLine("Route:")
+                appendLine("$startLocation → $destination")
+                appendLine()
+                appendLine("Departure:")
+                appendLine(dateTime)
+                appendLine()
+                appendLine("Passengers:")
+                appendLine(passengerList)
+                appendLine()
+
+                if (rewards.isNotEmpty()) {
+                    appendLine("Loyalty Rewards:")
+                    appendLine(rewardList)
+                    appendLine()
+                }
+
+                appendLine("Please keep this reference for check-in.")
+                appendLine()
+                append("Thank you for booking with us.")
             }
 
-            appendLine("Please keep this reference for check-in.")
-            appendLine()
-            append("Thank you for booking with us.")
-        }
-
-        val message = MimeMessage(session).apply {
-            setFrom(InternetAddress(FROM_EMAIL))
-            setRecipients(Message.RecipientType.TO, InternetAddress.parse(to))
-            subject = "Booking Confirmation - Ref $reference"
-            setText(body)
-        }
+        val message =
+            MimeMessage(session).apply {
+                setFrom(InternetAddress(FROM_EMAIL))
+                setRecipients(Message.RecipientType.TO, InternetAddress.parse(to))
+                subject = "Booking Confirmation - Ref $reference"
+                setText(body)
+            }
 
         Transport.send(message)
     }
@@ -100,24 +111,29 @@ object EmailService {
         to: String,
         reference: String,
         refundAmount: Long,
-        refundId: String
+        refundId: String,
     ) {
-        val props = Properties().apply {
-            put("mail.smtp.auth", "true")
-            put("mail.smtp.starttls.enable", "true")
-            put("mail.smtp.host", "smtp.gmail.com")
-            put("mail.smtp.port", "587")
-        }
-
-        val session = Session.getInstance(props, object : Authenticator() {
-            override fun getPasswordAuthentication(): PasswordAuthentication {
-                return PasswordAuthentication(FROM_EMAIL, APP_PASSWORD)
+        val props =
+            Properties().apply {
+                put("mail.smtp.auth", "true")
+                put("mail.smtp.starttls.enable", "true")
+                put("mail.smtp.host", "smtp.gmail.com")
+                put("mail.smtp.port", "587")
             }
-        })
+
+        val session =
+            Session.getInstance(
+                props,
+                object : Authenticator() {
+                    override fun getPasswordAuthentication(): PasswordAuthentication =
+                        PasswordAuthentication(FROM_EMAIL, APP_PASSWORD)
+                },
+            )
 
         val formattedAmount = "£%.2f".format(refundAmount / 100.0)
 
-        val body = """
+        val body =
+            """
             Refund Confirmation
 
             Reference: $reference
@@ -130,14 +146,15 @@ object EmailService {
             Your booked seats have now been released.
 
             Thank you.
-        """.trimIndent()
+            """.trimIndent()
 
-        val message = MimeMessage(session).apply {
-            setFrom(InternetAddress(FROM_EMAIL))
-            setRecipients(Message.RecipientType.TO, InternetAddress.parse(to))
-            subject = "Refund Confirmation - Ref $reference"
-            setText(body)
-        }
+        val message =
+            MimeMessage(session).apply {
+                setFrom(InternetAddress(FROM_EMAIL))
+                setRecipients(Message.RecipientType.TO, InternetAddress.parse(to))
+                subject = "Refund Confirmation - Ref $reference"
+                setText(body)
+            }
 
         Transport.send(message)
     }

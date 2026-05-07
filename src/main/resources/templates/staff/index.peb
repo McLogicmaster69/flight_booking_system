@@ -5,4 +5,25 @@
 
 {% block content %}
 
+<h2>Your assigned flights</h2>
+
+{% for flight in staffFlights %}
+
+    <div class="staff-flight-assignment">
+        <a href="/staff-assignment/{{ flight.searchToken }}" class="staff-flight-button">
+            <h2>{{ flight.startDestination }} to {{ flight.endDestination }}</h2>
+            <div class="staff-flight-info">
+                <p>Date: {{ flight.dateTime }}</p>
+                <p>Duration: {{ flight.duration }}</p>
+            </div>
+        </a>
+    </div>
+    <br>
+
+{% else %}
+
+    <p>No flights have been assigned</p>
+
+{% endfor %}
+
 {% endblock %}

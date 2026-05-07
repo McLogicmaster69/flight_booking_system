@@ -10,31 +10,28 @@ object LoginColumns {
 }
 
 data class LoginData(
-
     override val id: Int = 0,
     var email: String = "",
-    var passwordHash: String = ""
-
+    var passwordHash: String = "",
 ) : DataClass<LoginData>(id) {
-
     override val tableName = "login_info"
     override val tableColumns = LoginColumns.ALL
 
     override val initialRows: List<LoginData>
-        get() = listOf(
-        )
+        get() =
+            listOf()
 
-    override fun mapDataToColumns () : Map<Column<*>, Any?> =
+    override fun mapDataToColumns(): Map<Column<*>, Any?> =
         mapOf(
             LoginColumns.EMAIL to email,
-            LoginColumns.PASSWORD_HASH to passwordHash
+            LoginColumns.PASSWORD_HASH to passwordHash,
         )
 
-    override fun mapRowToData(row : Array<Any?>) : LoginData =
+    override fun mapRowToData(row: Array<Any?>): LoginData =
         LoginData(
             id = castRowElement(row, LoginColumns.ID),
             email = castRowElement(row, LoginColumns.EMAIL),
-            passwordHash = castRowElement(row, LoginColumns.PASSWORD_HASH)
+            passwordHash = castRowElement(row, LoginColumns.PASSWORD_HASH),
         )
 
     override fun debugData() {
@@ -42,21 +39,21 @@ data class LoginData(
     }
 
     companion object {
-        val EMPTY : LoginData
+        val EMPTY: LoginData
             get() = LoginData()
 
-        fun queryDatabase (
-            multipleJoinArgs : MultipleJoinArgs? = null,
-            whereArgs : WhereArgs? = null,
-            orderByArgs : OrderByArgs? = null,
-            limitArgs : LimitArgs? = null,
-            groupByArgs : GroupByArgs? = null   
-        ) : List<QueryResult<LoginData>> {
-            return EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
-        }
+        fun queryDatabase(
+            multipleJoinArgs: MultipleJoinArgs? = null,
+            whereArgs: WhereArgs? = null,
+            orderByArgs: OrderByArgs? = null,
+            limitArgs: LimitArgs? = null,
+            groupByArgs: GroupByArgs? = null,
+        ): List<QueryResult<LoginData>> =
+            EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
 
-        fun getLoginData (email : String) : Int {
-            val query : List<QueryResult<LoginData>> = queryDatabase(whereArgs = WhereArgs("${LoginColumns.EMAIL.name} = ?", listOf(email)))
+        fun getLoginData(email: String): Int {
+            val query: List<QueryResult<LoginData>> =
+                queryDatabase(whereArgs = WhereArgs("${LoginColumns.EMAIL.name} = ?", listOf(email)))
             if (query.isEmpty()) {
                 println("Could not find log in for $email")
                 return -1
@@ -65,13 +62,11 @@ data class LoginData(
             return query.first().dataClass.id
         }
 
-        fun updateTable (
-            values : Map<Column<*>, Any?>,
-            whereArgs : WhereArgs
-        ) : Int = EMPTY.updateTable(values, whereArgs)
+        fun updateTable(
+            values: Map<Column<*>, Any?>,
+            whereArgs: WhereArgs,
+        ): Int = EMPTY.updateTable(values, whereArgs)
 
-        fun delete(id : Int) : Int {
-            return LoginData(id = id).delete()
-        }
+        fun delete(id: Int): Int = LoginData(id = id).delete()
     }
 }

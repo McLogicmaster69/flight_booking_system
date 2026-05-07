@@ -1,0 +1,9 @@
+{% extends "_layout/base.peb" %}
+
+{% set activePage = 'staff/assignment' %}
+
+{% block content %}
+
+<h1>Could not find assignment!</h1>
+
+{% endblock %}

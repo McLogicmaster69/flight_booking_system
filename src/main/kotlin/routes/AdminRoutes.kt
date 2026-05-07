@@ -29,13 +29,14 @@ private suspend fun ApplicationCall.handleAdminLoad() {
 
         val pebble = getEngine()
 
-        val model = mapOf(
-            "title" to "Admin",
-            "layout" to "admin",
-            "activePage" to "admin",
-            "inNav" to true,
-            "isAdmin" to true
-        )
+        val model =
+            mapOf(
+                "title" to "Admin",
+                "layout" to "admin",
+                "activePage" to "admin",
+                "inNav" to true,
+                "isAdmin" to true,
+            )
 
         val template = pebble.getTemplate("admin/index.peb")
         val writer = StringWriter()

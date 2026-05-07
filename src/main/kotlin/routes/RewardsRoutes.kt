@@ -6,34 +6,33 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.pebbletemplates.pebble.PebbleEngine
 import java.io.StringWriter
 import utils.jsMode
 import utils.timed
 import auth.*
-import utils.EmailService
 
 data class RewardTier(
     val key: String,
     val name: String,
     val cost: Int,
-    val supportsQuantity: Boolean = false
+    val supportsQuantity: Boolean = false,
 )
 
 data class SelectedReward(
     val key: String,
     val name: String,
     val cost: Int,
-    val quantity: Int = 1
+    val quantity: Int = 1,
 )
 
-val REWARD_TIERS = listOf(
-    RewardTier("lounge", "Lounge Access Voucher", 5000),
-    RewardTier("priority", "Priority Boarding", 10000),
-    RewardTier("bag", "Free Checked Bag", 15000, true),
-    RewardTier("upgrade", "Free Flight Upgrade", 30000, true),
-    RewardTier("discount15", "15% Off Next Purchase", 40000)
-)
+val REWARD_TIERS =
+    listOf(
+        RewardTier("lounge", "Lounge Access Voucher", 5000),
+        RewardTier("priority", "Priority Boarding", 10000),
+        RewardTier("bag", "Free Checked Bag", 15000, true),
+        RewardTier("upgrade", "Free Flight Upgrade", 30000, true),
+        RewardTier("discount15", "15% Off Next Purchase", 40000),
+    )
 
 val SELECTED_REWARDS_BY_USER = mutableMapOf<String, List<SelectedReward>>()
 
@@ -45,13 +44,13 @@ fun Route.rewardsRoutes() {
 
 private suspend fun ApplicationCall.handleRewardsLoad() {
     timed("T0_rewards", jsMode()) {
-        val logged_state : LoggedInState = loggedIn()
-        if (!logged_state.logged_in || logged_state.session == null) {
+        val loggedState: LoggedInState = loggedIn()
+        if (!loggedState.logged_in || loggedState.session == null) {
             respondRedirect("/login")
             return@timed
         }
 
-        val userQuery = UserData.queryByToken(logged_state.session.token)
+        val userQuery = UserData.queryByToken(loggedState.session.token)
         if (userQuery.isEmpty()) {
             respondRedirect("/login")
             return@timed
@@ -62,13 +61,14 @@ private suspend fun ApplicationCall.handleRewardsLoad() {
         val availableRewards = REWARD_TIERS.filter { it.cost <= user.loyaltyPoints }
         val upcomingRewards = REWARD_TIERS.filter { it.cost > user.loyaltyPoints }
 
-        val model = mapOf(
-            "title" to "Loyalty Rewards",
-            "inNav" to true,
-            "user" to user,
-            "availableRewards" to availableRewards,
-            "upcomingRewards" to upcomingRewards
-        )
+        val model =
+            mapOf(
+                "title" to "Loyalty Rewards",
+                "inNav" to true,
+                "user" to user,
+                "availableRewards" to availableRewards,
+                "upcomingRewards" to upcomingRewards,
+            )
 
         val pebble = getEngine()
         val template = pebble.getTemplate("rewards/index.peb")
@@ -87,9 +87,11 @@ private suspend fun ApplicationCall.handleRewardsRedeem() {
             return@timed
         }
 
-        val user = UserData.queryByToken(loggedState.session.token)
-            .firstOrNull()
-            ?.dataClass
+        val user =
+            UserData
+                .queryByToken(loggedState.session.token)
+                .firstOrNull()
+                ?.dataClass
 
         if (user == null) {
             respondRedirect("/login")
@@ -101,19 +103,20 @@ private suspend fun ApplicationCall.handleRewardsRedeem() {
 
         for (tier in REWARD_TIERS) {
             if (params["reward_${tier.key}"] == "on") {
-                val quantity = if (tier.supportsQuantity) {
-                    params["quantity_${tier.key}"]?.toIntOrNull()?.coerceAtLeast(1) ?: 1
-                } else {
-                    1
-                }
+                val quantity =
+                    if (tier.supportsQuantity) {
+                        params["quantity_${tier.key}"]?.toIntOrNull()?.coerceAtLeast(1) ?: 1
+                    } else {
+                        1
+                    }
 
                 selected.add(
                     SelectedReward(
                         key = tier.key,
                         name = tier.name,
                         cost = tier.cost,
-                        quantity = quantity
-                    )
+                        quantity = quantity,
+                    ),
                 )
             }
         }
@@ -138,18 +141,24 @@ private suspend fun ApplicationCall.handleRewardsRedeem() {
 
 private suspend fun ApplicationCall.handleTestAddPoints() {
     timed("T2_test_add_points", jsMode()) {
-        val logged_state = loggedIn()
-        if (logged_state.logged_in && logged_state.session != null) {
-            val user = UserData.queryByToken(logged_state.session.token).firstOrNull()?.dataClass
+        val loggedState = loggedIn()
+        if (loggedState.logged_in && loggedState.session != null) {
+            val user = UserData.queryByToken(loggedState.session.token).firstOrNull()?.dataClass
             if (user != null) {
-
                 val amount = request.queryParameters["amount"]?.toIntOrNull() ?: 5000
                 user.awardPoints(amount)
 
-                respondText("Success! Added $amount points. Your new balance is: ${user.loyaltyPoints}", ContentType.Text.Plain)
+                respondText(
+                    "Success! Added $amount points. Your new balance is: ${user.loyaltyPoints}",
+                    ContentType.Text.Plain,
+                )
                 return@timed
             }
         }
-        respondText("Error: You must be logged in to add test points.", ContentType.Text.Plain, status = HttpStatusCode.Unauthorized)
+        respondText(
+            "Error: You must be logged in to add test points.",
+            ContentType.Text.Plain,
+            status = HttpStatusCode.Unauthorized,
+        )
     }
 }

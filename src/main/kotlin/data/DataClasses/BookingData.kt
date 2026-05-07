@@ -12,33 +12,43 @@ object BookingColumns {
     val STRIPE_REFUND_ID = Column<String?>("stripe_refund_id", "STRING")
     val REFUND_AMOUNT = Column<Int?>("refund_amount", "INTEGER")
 
-    val ALL = listOf(ID, BOOKER_ID, PASSPORT_NUMBER, LASTNAME, BOOKING_REFERENCE, PAYMENT_INTENT_ID, AMOUNT_PAID, REFUND_STATUS, STRIPE_REFUND_ID, REFUND_AMOUNT)
+    val ALL =
+        listOf(
+            ID,
+            BOOKER_ID,
+            PASSPORT_NUMBER,
+            LASTNAME,
+            BOOKING_REFERENCE,
+            PAYMENT_INTENT_ID,
+            AMOUNT_PAID,
+            REFUND_STATUS,
+            STRIPE_REFUND_ID,
+            REFUND_AMOUNT,
+        )
     val COLUMN_NAMES = ALL.map { it.name }
 }
 
 data class BookingData(
-
-    override val id : Int = 0,
-    var bookerId : Int = 0,
-    var passportNumber : String? = null,
-    var lastname : String? = null,
-    var bookingReference : String = "",
+    override val id: Int = 0,
+    var bookerId: Int = 0,
+    var passportNumber: String? = null,
+    var lastname: String? = null,
+    var bookingReference: String = "",
     var paymentIntentId: String? = null,
     var amountPaid: Int? = null,
     var refundStatus: String? = null,
     var stripeRefundId: String? = null,
-    var refundAmount: Int? = null
-
+    var refundAmount: Int? = null,
 ) : DataClass<BookingData>(id) {
-
     override val tableName = "bookings"
     override val tableColumns = BookingColumns.ALL
 
-    override val indexes : List<IndexArgs> = listOf(
-        IndexArgs("inx_bookings_booker_id", BookingColumns.BOOKER_ID.name)
-    )
+    override val indexes: List<IndexArgs> =
+        listOf(
+            IndexArgs("inx_bookings_booker_id", BookingColumns.BOOKER_ID.name),
+        )
 
-    override fun mapDataToColumns () : Map<Column<*>, Any?> =
+    override fun mapDataToColumns(): Map<Column<*>, Any?> =
         mapOf(
             BookingColumns.BOOKER_ID to bookerId,
             BookingColumns.PASSPORT_NUMBER to passportNumber,
@@ -48,7 +58,7 @@ data class BookingData(
             BookingColumns.AMOUNT_PAID to amountPaid,
             BookingColumns.REFUND_STATUS to refundStatus,
             BookingColumns.STRIPE_REFUND_ID to stripeRefundId,
-            BookingColumns.REFUND_AMOUNT to refundAmount
+            BookingColumns.REFUND_AMOUNT to refundAmount,
         )
 
     override fun mapRowToData(row: Array<Any?>): BookingData =
@@ -62,34 +72,33 @@ data class BookingData(
             amountPaid = castRowElement(row, BookingColumns.AMOUNT_PAID),
             refundStatus = castRowElement(row, BookingColumns.REFUND_STATUS),
             stripeRefundId = castRowElement(row, BookingColumns.STRIPE_REFUND_ID),
-            refundAmount = castRowElement(row, BookingColumns.REFUND_AMOUNT)
+            refundAmount = castRowElement(row, BookingColumns.REFUND_AMOUNT),
         )
 
     override fun debugData() {
-        println("Booking data: (\"$id\", \"$bookerId\", \"$passportNumber\", \"$lastname\", \"$bookingReference\", \"$paymentIntentId\", \"$amountPaid\", \"$refundStatus\", \"$stripeRefundId\", \"$refundAmount\")")
+        println(
+            "Booking data: (\"$id\", \"$bookerId\", \"$passportNumber\", \"$lastname\", \"$bookingReference\", \"$paymentIntentId\", \"$amountPaid\", \"$refundStatus\", \"$stripeRefundId\", \"$refundAmount\")",
+        )
     }
 
     companion object {
-        val EMPTY : BookingData
+        val EMPTY: BookingData
             get() = BookingData()
 
-        fun queryDatabase (
-            multipleJoinArgs : MultipleJoinArgs? = null,
-            whereArgs : WhereArgs? = null,
-            orderByArgs : OrderByArgs? = null,
-            limitArgs : LimitArgs? = null,
-            groupByArgs : GroupByArgs? = null   
-        ) : List<QueryResult<BookingData>> {
-            return EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
-        }
+        fun queryDatabase(
+            multipleJoinArgs: MultipleJoinArgs? = null,
+            whereArgs: WhereArgs? = null,
+            orderByArgs: OrderByArgs? = null,
+            limitArgs: LimitArgs? = null,
+            groupByArgs: GroupByArgs? = null,
+        ): List<QueryResult<BookingData>> =
+            EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
 
-        fun updateTable (
-            values : Map<Column<*>, Any?>,
-            whereArgs : WhereArgs
-        ) : Int = EMPTY.updateTable(values, whereArgs)
+        fun updateTable(
+            values: Map<Column<*>, Any?>,
+            whereArgs: WhereArgs,
+        ): Int = EMPTY.updateTable(values, whereArgs)
 
-        fun delete(id : Int) : Int {
-            return BookingData(id = id).delete()
-        }
+        fun delete(id: Int): Int = BookingData(id = id).delete()
     }
 }

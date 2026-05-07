@@ -7,11 +7,9 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
-import io.pebbletemplates.pebble.PebbleEngine
 import java.io.StringWriter
 import java.security.SecureRandom
 import utils.jsMode
-import utils.logValidationError
 import utils.timed
 import auth.*
 import org.mindrot.jbcrypt.BCrypt
@@ -19,6 +17,8 @@ import utils.EmailService
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+
+const val MAX_ATTEMPTS = 5
 
 fun Route.logInRoutes() {
     get("/login") { call.handleLogInLoad() }
@@ -29,20 +29,23 @@ fun Route.logInRoutes() {
     post("/send-verification") { call.handleSendVerification() }
 }
 
-fun ApplicationCall.createLoginStatus(message : String) : String = """<div id="log-in-status" hx-swap-oob="true" role="status" aria-live="polite" aria-atomic="true">$message</div>"""
+fun ApplicationCall.createLoginStatus(message: String): String =
+    """<div id="log-in-status" hx-swap-oob="true" role="status" aria-live="polite" aria-atomic="true">$message</div>"""
 
 private suspend fun ApplicationCall.handleLogInLoad() {
     timed("T0_log_in", jsMode()) {
         val pebble = getEngine()
-        val logged_state : LoggedInState = loggedIn()
+        val loggedState: LoggedInState = loggedIn()
 
-        if (logged_state.logged_in)
+        if (loggedState.logged_in) {
             respondRedirect("/")
+        }
 
-        val model = mapOf(
-            "title" to "Log In / Sign Up",
-            "inNav" to true
-        )
+        val model =
+            mapOf(
+                "title" to "Log In / Sign Up",
+                "inNav" to true,
+            )
 
         val template = pebble.getTemplate("auth/login.peb")
         val writer = StringWriter()
@@ -58,38 +61,55 @@ private suspend fun ApplicationCall.handleLogInPost() {
         val password = params["loginPw"]
 
         if (email == null) {
-            respondText(createLoginStatus("Incorrect email or password"), ContentType.Text.Html, status = HttpStatusCode.OK)
+            respondText(
+                createLoginStatus("Incorrect email or password"),
+                ContentType.Text.Html,
+                status = HttpStatusCode.OK,
+            )
             return@timed
         }
 
-        val query : List<QueryResult<UserData>> = UserData.queryByLogIn(email)
+        val query: List<QueryResult<UserData>> = UserData.queryByLogIn(email)
 
         if (query.size == 0) {
-            respondText(createLoginStatus("Incorrect email or password"), ContentType.Text.Html, status = HttpStatusCode.OK)
+            respondText(
+                createLoginStatus("Incorrect email or password"),
+                ContentType.Text.Html,
+                status = HttpStatusCode.OK,
+            )
             return@timed
         }
 
-        val result : QueryResult<UserData> = query[0]
-        val column : ColumnValue? = result.getColumn(LoginData.EMPTY.tableName, LoginColumns.PASSWORD_HASH.name)
+        val result: QueryResult<UserData> = query[0]
+        val column: ColumnValue? = result.getColumn(LoginData.EMPTY.tableName, LoginColumns.PASSWORD_HASH.name)
 
         if (column == null) {
-            respondText(createLoginStatus("An error occured, please try again later"), ContentType.Text.Html, status = HttpStatusCode.OK)
+            respondText(
+                createLoginStatus("An error occured, please try again later"),
+                ContentType.Text.Html,
+                status = HttpStatusCode.OK,
+            )
             return@timed
         }
 
-        val stored_password : String = column.columnVal as String
+        val storedPassword: String = column.columnVal as String
 
-        if (!BCrypt.checkpw(password, stored_password)){
-            respondText(createLoginStatus("Incorrect email or password"), ContentType.Text.Html, status = HttpStatusCode.OK)
+        if (!BCrypt.checkpw(password, storedPassword)) {
+            respondText(
+                createLoginStatus("Incorrect email or password"),
+                ContentType.Text.Html,
+                status = HttpStatusCode.OK,
+            )
             return@timed
         }
 
         val code = generate2FACode()
         val hashedCode = BCrypt.hashpw(code, BCrypt.gensalt(10))
 
-        val expiration = Timestamp.from(
-            Instant.now().plus(5, ChronoUnit.MINUTES)
-        )
+        val expiration =
+            Timestamp.from(
+                Instant.now().plus(5, ChronoUnit.MINUTES),
+            )
 
         TwoFAData.deleteByUserId(result.dataClass.id)
         val token = TwoFAData.EMPTY.generateToken()
@@ -99,7 +119,7 @@ private suspend fun ApplicationCall.handleLogInPost() {
             ttl = expiration,
             code_hash = hashedCode,
             attempts = 0,
-            sessionToken = token
+            sessionToken = token,
         ).insertIntoDatabase()
 
         EmailService.send2FA(email, code)
@@ -124,9 +144,10 @@ private suspend fun ApplicationCall.handleVerifyLoad() {
     timed("T3_verify", jsMode()) {
         val pebble = getEngine()
 
-        val model = mapOf(
-            "title" to "2 Factor Authentication"
-        )
+        val model =
+            mapOf(
+                "title" to "2 Factor Authentication",
+            )
 
         val template = pebble.getTemplate("auth/verify.peb")
         val writer = StringWriter()
@@ -137,24 +158,26 @@ private suspend fun ApplicationCall.handleVerifyLoad() {
 
 private suspend fun ApplicationCall.handleVerifyPost() {
     timed("T4_verify_post", jsMode()) {
-        val MAX_ATTEMPTS = 5
-        val tempSession = sessions.get<Temp2FASession>()
-            ?: return@timed respondRedirect("/login")
+        val tempSession =
+            sessions.get<Temp2FASession>()
+                ?: return@timed respondRedirect("/login")
 
         val params = receiveParameters()
         val enteredCode = params["code"] ?: ""
 
-        val query = TwoFAData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${TwoFAColumns.SESSION_TOKEN.name} = ?",
-                listOf(tempSession.token)
+        val query =
+            TwoFAData.queryDatabase(
+                whereArgs =
+                    WhereArgs(
+                        "${TwoFAColumns.SESSION_TOKEN.name} = ?",
+                        listOf(tempSession.token),
+                    ),
             )
-        )
 
         if (query.isEmpty()) {
             respondText(
                 "<div class='error-message'>Code Expired, Please Log In Again</div>",
-                ContentType.Text.Html
+                ContentType.Text.Html,
             )
             return@timed
         }
@@ -171,72 +194,85 @@ private suspend fun ApplicationCall.handleVerifyPost() {
                 sessions.clear<Temp2FASession>()
                 respondText(
                     "<div class='error-message'>Too Many Failed Attempts</div>",
-                    ContentType.Text.Html
+                    ContentType.Text.Html,
                 )
                 return@timed
             }
-            
+
             respondText(
                 "<div class='error-message'>Invalid or expired code</div>",
-                ContentType.Text.Html
+                ContentType.Text.Html,
             )
             return@timed
         }
 
         TwoFAData.deleteByUserId(record.userId)
-        sessions.clear<Temp2FASession>()
 
-        val userQuery = UserData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${UserColumns.ID.name} = ?",
-                listOf(record.userId)
+        val alreadyLoggedIn = loggedIn().logged_in
+
+        val userQuery =
+            UserData.queryDatabase(
+                whereArgs =
+                    WhereArgs(
+                        "${UserColumns.ID.name} = ?",
+                        listOf(record.userId),
+                    ),
             )
-        )
 
         if (userQuery.isEmpty()) {
             return@timed respondText(
                 "<div class='error-message'>User not found</div>",
-                ContentType.Text.Html
+                ContentType.Text.Html,
             )
         }
 
         val user = userQuery.first().dataClass
-        val adminQuery = AdminData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${AdminColumns.LOGIN_ID.name} = ?",
-                listOf(user.loginId)
+        val adminQuery =
+            AdminData.queryDatabase(
+                whereArgs =
+                    WhereArgs(
+                        "${AdminColumns.LOGIN_ID.name} = ?",
+                        listOf(user.loginId),
+                    ),
             )
-        )
 
         val isAdmin = adminQuery.isNotEmpty()
-        
+
         if (user.verifiedAccount != true) {
             user.verifiedAccount = true
             user.update()
         }
 
-        sessions.set(SessionData.createSession(user.id).toTokenSession())
-        if (isAdmin) {
+        sessions.clear<Temp2FASession>()
+
+        if (!alreadyLoggedIn) {
+            sessions.set(SessionData.createSession(user.id).toTokenSession())
+        }
+
+        if (isAdmin && !alreadyLoggedIn) {
             response.headers.append("HX-Redirect", "/admin")
         } else {
             response.headers.append("HX-Redirect", "/")
         }
+
         respond(HttpStatusCode.OK)
     }
 }
 
 private suspend fun ApplicationCall.handleSendVerification() {
     timed("T5_verify_send", jsMode()) {
+        val tempSession =
+            sessions.get<Temp2FASession>()
+                ?: return@timed respondRedirect("/login")
 
-        val tempSession = sessions.get<Temp2FASession>()
-            ?: return@timed respondRedirect("/login")
-
-        val query = TwoFAData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${TwoFAColumns.SESSION_TOKEN.name} = ?",
-                listOf(tempSession.token)
+        val query =
+            TwoFAData.queryDatabase(
+                whereArgs =
+                    WhereArgs(
+                        "${TwoFAColumns.SESSION_TOKEN.name} = ?",
+                        listOf(tempSession.token),
+                    ),
             )
-        )
 
         if (query.isEmpty()) {
             return@timed respondRedirect("/login")
@@ -244,12 +280,14 @@ private suspend fun ApplicationCall.handleSendVerification() {
 
         val record = query.first().dataClass
 
-        val userQuery = UserData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${UserColumns.ID.name} = ?",
-                listOf(record.userId)
+        val userQuery =
+            UserData.queryDatabase(
+                whereArgs =
+                    WhereArgs(
+                        "${UserColumns.ID.name} = ?",
+                        listOf(record.userId),
+                    ),
             )
-        )
 
         if (userQuery.isEmpty()) {
             return@timed respondRedirect("/")
@@ -264,7 +302,7 @@ private suspend fun ApplicationCall.handleSendVerification() {
         if (record.ttl.after(Timestamp.from(Instant.now()))) {
             respondText(
                 "<div class='error-message'>Please wait before requesting another code</div>",
-                ContentType.Text.Html
+                ContentType.Text.Html,
             )
             return@timed
         }
@@ -272,9 +310,10 @@ private suspend fun ApplicationCall.handleSendVerification() {
         val code = generate2FACode()
         val hashedCode = BCrypt.hashpw(code, BCrypt.gensalt(10))
 
-        val expiration = Timestamp.from(
-            Instant.now().plus(5, ChronoUnit.MINUTES)
-        )
+        val expiration =
+            Timestamp.from(
+                Instant.now().plus(5, ChronoUnit.MINUTES),
+            )
 
         TwoFAData.deleteByUserId(user.id)
         val newToken = TwoFAData.EMPTY.generateToken()
@@ -284,12 +323,13 @@ private suspend fun ApplicationCall.handleSendVerification() {
             ttl = expiration,
             code_hash = hashedCode,
             attempts = 0,
-            sessionToken = newToken
+            sessionToken = newToken,
         ).insertIntoDatabase()
 
-        val loginQuery = LoginData.queryDatabase(
-            whereArgs = WhereArgs("${LoginColumns.ID.name} = ?", listOf(user.loginId))
-        )
+        val loginQuery =
+            LoginData.queryDatabase(
+                whereArgs = WhereArgs("${LoginColumns.ID.name} = ?", listOf(user.loginId)),
+            )
 
         if (loginQuery.isEmpty()) {
             return@timed respondRedirect("/")
