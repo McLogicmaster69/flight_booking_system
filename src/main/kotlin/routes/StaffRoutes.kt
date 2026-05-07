@@ -17,6 +17,7 @@ fun Route.staffRoutes() {
     get("/stafflogin") { call.handleStaffLoginLoad() }
     post("/stafflogin") { call.handleStaffLoginPost() }
     get("/staffdashboard") { call.handleStaffDashboardLoad() }
+    get("/staff-assignment/{token}") { call.handleGetAssignment() }
 }
 
 fun ApplicationCall.createStaffLoginStatus(message: String): String =
@@ -115,7 +116,7 @@ private suspend fun ApplicationCall.handleStaffDashboardLoad() {
             StaffFlightInfo(
                 DestinationData.getDestinationName(route.startDestination),
                 DestinationData.getDestinationName(route.endDestination),
-                "${flight.dataClass.date.toString()} ${flight.dataClass.time.toString()}",
+                "${flight.dataClass.date} ${flight.dataClass.time}",
                 route.duration.toString(),
                 flight.getColumn(AssignedFlightStaffData.EMPTY.tableName, AssignedFlightStaffColumns.SEARCH_TOKEN.name)?.columnVal as String
             )
@@ -135,6 +136,51 @@ private suspend fun ApplicationCall.handleStaffDashboardLoad() {
         fullEvaluate(template, writer, model)
         respondText(writer.toString(), ContentType.Text.Html)
     }
+}
+
+private suspend fun ApplicationCall.handleGetAssignment() {
+    timed("T3_staff_assignment", jsMode()) {
+        val token = parameters["token"]        
+        if (token == null) return@timed pageNotFoundResponse()
+
+        val assignment : AssignedFlightStaffData? = AssignedFlightStaffData.queryDatabase(token).firstOrNull()?.dataClass
+        if (assignment == null) return@timed pageNotFoundResponse()
+
+        val flight : FlightData? = FlightData.queryDatabase(assignment.flightId).firstOrNull()?.dataClass
+        if (flight == null) return@timed pageNotFoundResponse()
+
+        val route : RouteData? = RouteData.queryDatabase(flight.routeId).firstOrNull()?.dataClass
+        if (route == null) return@timed pageNotFoundResponse()
+
+        val model = mapOf(
+            "title" to "Result",
+            "inNav" to true,
+            "start" to DestinationData.getDestinationName(route.startDestination),
+            "end" to DestinationData.getDestinationName(route.endDestination),
+            "date" to "${flight.date} ${flight.time}",
+            "duration" to route.duration.toString()
+        )
+        
+        val writer = StringWriter()
+        val pebble = getEngine()
+        val template = pebble.getTemplate("staff/staffAssignment.peb")
+        fullEvaluate(template, writer, model)
+        respondText(writer.toString(), ContentType.Text.Html)
+    }
+}
+
+private suspend fun ApplicationCall.pageNotFoundResponse() {
+    val writer = StringWriter()
+    val pebble = getEngine()
+    val template = pebble.getTemplate("staff/pageNotFound.peb")
+
+    val errorModel = mapOf(
+        "title" to "Error",
+        "inNav" to true
+    )
+
+    fullEvaluate(template, writer, errorModel)
+    return respondText(writer.toString(), ContentType.Text.Html)
 }
 
 private suspend fun ApplicationCall.requireStaff(): StaffSessionToken? {
