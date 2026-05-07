@@ -1,17 +1,27 @@
 package utils
 
-import jakarta.mail.*
-import jakarta.mail.internet.*
-import java.util.*
+import io.github.cdimascio.dotenv.dotenv
+import jakarta.mail.Authenticator
+import jakarta.mail.Message
+import jakarta.mail.PasswordAuthentication
+import jakarta.mail.Session
+import jakarta.mail.Transport
+import jakarta.mail.internet.InternetAddress
+import jakarta.mail.internet.MimeMessage
+import java.util.Properties
 
 object EmailService {
-    private const val FROM_EMAIL = "alidos37pro@gmail.com"
-    private const val APP_PASSWORD = "oyeq zeqm bmvv qvpn"
+    private val dotenv = dotenv()
 
-    fun send2FA(
-        to: String,
-        code: String,
-    ) {
+    private val FROM_EMAIL =
+        dotenv["EMAIL_USER"]
+            ?: throw IllegalStateException("EMAIL_USER not set")
+
+    private val APP_PASSWORD =
+        dotenv["EMAIL_APP_PASSWORD"]
+            ?: throw IllegalStateException("EMAIL_APP_PASSWORD not set")
+
+    private fun createSession(): Session {
         val props =
             Properties().apply {
                 put("mail.smtp.auth", "true")
@@ -20,14 +30,20 @@ object EmailService {
                 put("mail.smtp.port", "587")
             }
 
-        val session =
-            Session.getInstance(
-                props,
-                object : Authenticator() {
-                    override fun getPasswordAuthentication(): PasswordAuthentication =
-                        PasswordAuthentication(FROM_EMAIL, APP_PASSWORD)
-                },
-            )
+        return Session.getInstance(
+            props,
+            object : Authenticator() {
+                override fun getPasswordAuthentication(): PasswordAuthentication =
+                    PasswordAuthentication(FROM_EMAIL, APP_PASSWORD)
+            },
+        )
+    }
+
+    fun send2FA(
+        to: String,
+        code: String,
+    ) {
+        val session = createSession()
 
         val message =
             MimeMessage(session).apply {
@@ -49,22 +65,7 @@ object EmailService {
         passengers: List<String>,
         rewards: List<String> = emptyList(),
     ) {
-        val props =
-            Properties().apply {
-                put("mail.smtp.auth", "true")
-                put("mail.smtp.starttls.enable", "true")
-                put("mail.smtp.host", "smtp.gmail.com")
-                put("mail.smtp.port", "587")
-            }
-
-        val session =
-            Session.getInstance(
-                props,
-                object : Authenticator() {
-                    override fun getPasswordAuthentication(): PasswordAuthentication =
-                        PasswordAuthentication(FROM_EMAIL, APP_PASSWORD)
-                },
-            )
+        val session = createSession()
 
         val passengerList = passengers.joinToString("\n") { "    - $it" }
         val rewardList = rewards.joinToString("\n") { "    - $it" }
@@ -113,22 +114,7 @@ object EmailService {
         refundAmount: Long,
         refundId: String,
     ) {
-        val props =
-            Properties().apply {
-                put("mail.smtp.auth", "true")
-                put("mail.smtp.starttls.enable", "true")
-                put("mail.smtp.host", "smtp.gmail.com")
-                put("mail.smtp.port", "587")
-            }
-
-        val session =
-            Session.getInstance(
-                props,
-                object : Authenticator() {
-                    override fun getPasswordAuthentication(): PasswordAuthentication =
-                        PasswordAuthentication(FROM_EMAIL, APP_PASSWORD)
-                },
-            )
+        val session = createSession()
 
         val formattedAmount = "£%.2f".format(refundAmount / 100.0)
 
