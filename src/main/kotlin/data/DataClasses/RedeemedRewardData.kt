@@ -16,9 +16,8 @@ data class RedeemedRewardData(
     override val id: Int = 0,
     var userId: Int = 0,
     var rewardName: String = "",
-    var redeemedAt: Timestamp = Timestamp(System.currentTimeMillis())
+    var redeemedAt: Timestamp = Timestamp(System.currentTimeMillis()),
 ) : DataClass<RedeemedRewardData>(id) {
-
     override val tableName = "redeemed_rewards"
     override val tableColumns = RedeemedRewardColumns.ALL
 
@@ -26,22 +25,23 @@ data class RedeemedRewardData(
         mapOf(
             RedeemedRewardColumns.USER_ID to userId,
             RedeemedRewardColumns.REWARD_NAME to rewardName,
-            RedeemedRewardColumns.REDEEMED_AT to redeemedAt
+            RedeemedRewardColumns.REDEEMED_AT to redeemedAt,
         )
 
     override fun mapRowToData(row: Array<Any?>): RedeemedRewardData {
         val rawRedeemedAt = row[tableColumns.indexOf(RedeemedRewardColumns.REDEEMED_AT)]
-        val redeemedAtValue = when (rawRedeemedAt) {
-            is Timestamp -> rawRedeemedAt
-            is Long -> Timestamp(rawRedeemedAt)
-            else -> throw IllegalStateException("Unexpected timestamp type: ${rawRedeemedAt?.javaClass}")
-        }
+        val redeemedAtValue =
+            when (rawRedeemedAt) {
+                is Timestamp -> rawRedeemedAt
+                is Long -> Timestamp(rawRedeemedAt)
+                else -> throw IllegalStateException("Unexpected timestamp type: ${rawRedeemedAt?.javaClass}")
+            }
 
         return RedeemedRewardData(
             id = castRowElement(row, RedeemedRewardColumns.ID),
             userId = castRowElement(row, RedeemedRewardColumns.USER_ID),
             rewardName = castRowElement(row, RedeemedRewardColumns.REWARD_NAME),
-            redeemedAt = redeemedAtValue
+            redeemedAt = redeemedAtValue,
         )
     }
 

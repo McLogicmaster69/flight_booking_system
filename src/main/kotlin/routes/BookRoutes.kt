@@ -7,24 +7,16 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
-import io.pebbletemplates.pebble.PebbleEngine
 import java.io.StringWriter
 import utils.jsMode
-import utils.logValidationError
 import utils.timed
 import auth.*
-import org.mindrot.jbcrypt.BCrypt
-import utils.EmailService
-import java.sql.Timestamp
-import java.time.Instant
-import java.time.temporal.ChronoUnit
 import java.time.LocalDate
-import java.time.LocalTime
 
 const val MAX_RESULTS = 10
 const val MAX_LAYOVERS = 10
 
-fun representAsTime(minutes : Long) : String {
+fun representAsTime(minutes: Long): String {
     val hours = minutes / 60L
     return "${hours.toString().padStart(2, '0')}h ${(minutes - hours * 60L).toString().padStart(2, '0')}m"
 }
@@ -46,13 +38,14 @@ fun getResultHTML(result : JourneyFlightTimePath) : String {
     """
 }
 
-fun getResultsHTML(results : List<JourneyFlightTimePath>) : String {
-    if (results.isEmpty())
+fun getResultsHTML(results: List<JourneyFlightTimePath>): String {
+    if (results.isEmpty()) {
         return """
         <div id="flight-results">
             <h4>No Flights Found</h4>
         </div>
         """
+    }
 
     var output = """<div id="flight-results">"""
 
@@ -76,15 +69,16 @@ private suspend fun ApplicationCall.handleBookLoad() {
         val to = request.queryParameters["to"].orEmpty()
         val depart = request.queryParameters["depart"].orEmpty()
 
-        val model = mapOf(
-            "title" to "Book",
-            "inNav" to true,
-            "destinations" to DestinationData.getDestinationNames(),
-            "fromValue" to from,
-            "toValue" to to,
-            "departValue" to depart,
-            "hasInitialSearch" to (from.isNotBlank() && to.isNotBlank() && depart.isNotBlank())
-        )
+        val model =
+            mapOf(
+                "title" to "Book",
+                "inNav" to true,
+                "destinations" to DestinationData.getDestinationNames(),
+                "fromValue" to from,
+                "toValue" to to,
+                "departValue" to depart,
+                "hasInitialSearch" to (from.isNotBlank() && to.isNotBlank() && depart.isNotBlank()),
+            )
 
         val pebble = getEngine()
         val template = pebble.getTemplate("book/index.peb")
@@ -104,23 +98,25 @@ private suspend fun ApplicationCall.handleSearchResults() {
         val tripType = parameters["tripType"].orEmpty().trim()
         val returnTime = parameters["returnDate"].orEmpty().trim()
         val date = parseSearchDate(time)
-        val layovers = when(maxLayovers) {
-            "Direct Only" -> 0
-            "1" -> 1
-            "2" -> 2
-            "Any" -> MAX_LAYOVERS
-            else -> MAX_LAYOVERS
-        }
+        val layovers =
+            when (maxLayovers) {
+                "Direct Only" -> 0
+                "1" -> 1
+                "2" -> 2
+                "Any" -> MAX_LAYOVERS
+                else -> MAX_LAYOVERS
+            }
 
         val maxDurationHours = parameters["maxDuration"]?.toDoubleOrNull()
         val maxDurationMinutes = maxDurationHours?.let { (it * 60).toLong() }
 
         val priceRange = parameters["priceRange"]?.toIntOrNull() ?: 100
-        val maxPricePence = if (priceRange >= 100) {
-            Long.MAX_VALUE
-        } else {
-            priceRange * 1000L
-        }
+        val maxPricePence =
+            if (priceRange >= 100) {
+                Long.MAX_VALUE
+            } else {
+                priceRange * 1000L
+            }
 
         val sortBy = parameters["sortBy"].orEmpty().trim()
 
@@ -155,11 +151,12 @@ private suspend fun ApplicationCall.handleSearchResults() {
 
         results = results.filter { getJourneyPrice(it) <= maxPricePence }
 
-        results = when (sortBy) {
-            "Cheapest to Most Expensive" -> results.sortedBy { getJourneyPrice(it) }
-            "Fastest to Slowest" -> results.sortedBy { it.totalMinutes }
-            else -> results.sortedBy { it.totalMinutes }
-        }
+        results =
+            when (sortBy) {
+                "Cheapest to Most Expensive" -> results.sortedBy { getJourneyPrice(it) }
+                "Fastest to Slowest" -> results.sortedBy { it.totalMinutes }
+                else -> results.sortedBy { it.totalMinutes }
+            }
 
         respondText(getResultsHTML(results), ContentType.Text.Html)
     }
@@ -170,42 +167,45 @@ private suspend fun ApplicationCall.handleGetResult() {
         val writer = StringWriter()
         val pebble = getEngine()
         val token = parameters["token"]
-        
+
         if (token == null) {
             val template = pebble.getTemplate("book/pageNotFound.peb")
 
-            val errorModel = mapOf(
-                "title" to "Error",
-                "inNav" to true
-            )
+            val errorModel =
+                mapOf(
+                    "title" to "Error",
+                    "inNav" to true,
+                )
 
             fullEvaluate(template, writer, errorModel)
             return@timed respondText(writer.toString(), ContentType.Text.Html)
         }
 
-        val search : FlightSearchInfo? = FlightSearchData.queryByToken(token)
+        val search: FlightSearchInfo? = FlightSearchData.queryByToken(token)
         if (search == null) {
             val template = pebble.getTemplate("book/pageNotFound.peb")
 
-            val errorModel = mapOf(
-                "title" to "Error",
-                "inNav" to true
-            )
+            val errorModel =
+                mapOf(
+                    "title" to "Error",
+                    "inNav" to true,
+                )
 
             fullEvaluate(template, writer, errorModel)
             return@timed respondText(writer.toString(), ContentType.Text.Html)
         }
 
-        val model = mapOf(
-            "title" to "Result",
-            "inNav" to true,
-            "start" to search.getStartDestinationName(),
-            "end" to search.getEndDestinationName(),
-            "date" to search.getDate(),
-            "layovers" to search.getLayovers(),
-            "flightInfo" to search.getFlightInfo(),
-            "token" to token
-        )
+        val model =
+            mapOf(
+                "title" to "Result",
+                "inNav" to true,
+                "start" to search.getStartDestinationName(),
+                "end" to search.getEndDestinationName(),
+                "date" to search.getDate(),
+                "layovers" to search.getLayovers(),
+                "flightInfo" to search.getFlightInfo(),
+                "token" to token,
+            )
 
         val template = pebble.getTemplate("book/result.peb")
         fullEvaluate(template, writer, model)
@@ -217,26 +217,22 @@ fun getJourneyPrice(path: JourneyFlightTimePath): Long {
     return path.totalMinutes * 50L // pence, £0.50 per minute
 }
 
-fun getJourneyPriceDisplay(path: JourneyFlightTimePath): String {
-    return "%.2f".format(getJourneyPrice(path) / 100.0)
-}
+fun getJourneyPriceDisplay(path: JourneyFlightTimePath): String = "%.2f".format(getJourneyPrice(path) / 100.0)
 
-fun parseSearchDate(value: String): LocalDate {
-    return if (value.contains("/")) {
+fun parseSearchDate(value: String): LocalDate =
+    if (value.contains("/")) {
         val parts = value.split("/")
         LocalDate.of(parts[2].toInt(), parts[1].toInt(), parts[0].toInt())
     } else {
         LocalDate.parse(value)
     }
-}
 
-fun JourneyFlightTimePath.combineWith(other: JourneyFlightTimePath): JourneyFlightTimePath {
-    return JourneyFlightTimePath(
+fun JourneyFlightTimePath.combineWith(other: JourneyFlightTimePath): JourneyFlightTimePath =
+    JourneyFlightTimePath(
         destinationIds = this.destinationIds + other.destinationIds.drop(1),
         locationNames = this.locationNames + other.locationNames.drop(1),
         flightIds = this.flightIds + other.flightIds,
         localDateTimes = this.localDateTimes + other.localDateTimes,
         timezones = this.timezones + other.timezones,
-        totalMinutes = this.totalMinutes + other.totalMinutes
+        totalMinutes = this.totalMinutes + other.totalMinutes,
     )
-}

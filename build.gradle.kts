@@ -87,5 +87,4 @@ detekt {
 // Code quality: ktlint (code style)
 // Reports violations as warnings, doesn't fail build
 configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
-    ignoreFailures.set(true) // Report but don't fail build
 }

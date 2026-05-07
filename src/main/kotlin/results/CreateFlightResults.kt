@@ -1,9 +1,7 @@
 package results
 
-import data.FlightData
-
-data class CreateFlightResults (
-    val flightId : Int? = null,
-    val returnMessage : String? = null,
-    val staffResults : StaffAssignmentResults? = null
+data class CreateFlightResults(
+    val flightId: Int? = null,
+    val returnMessage: String? = null,
+    val staffResults: StaffAssignmentResults? = null,
 )

@@ -14,30 +14,28 @@ object TicketTypes {
 }
 
 data class TicketTypeData(
-
     override val id: Int = 0,
-    var name : String = "",
-
+    var name: String = "",
 ) : DataClass<TicketTypeData>(id) {
-
     override val tableName = "ticket_types"
     override val tableColumns = TicketTypeColumns.ALL
 
     override val initialRows: List<TicketTypeData>
-        get() = listOf(
-            TicketTypeData(name = TicketTypes.ADULT),
-            TicketTypeData(name = TicketTypes.CHILD)
-        )
+        get() =
+            listOf(
+                TicketTypeData(name = TicketTypes.ADULT),
+                TicketTypeData(name = TicketTypes.CHILD),
+            )
 
-    override fun mapDataToColumns () : Map<Column<*>, Any?> =
+    override fun mapDataToColumns(): Map<Column<*>, Any?> =
         mapOf(
-            TicketTypeColumns.NAME to name
+            TicketTypeColumns.NAME to name,
         )
 
-    override fun mapRowToData(row : Array<Any?>) : TicketTypeData =
+    override fun mapRowToData(row: Array<Any?>): TicketTypeData =
         TicketTypeData(
             id = castRowElement(row, TicketTypeColumns.ID),
-            name = castRowElement(row, TicketTypeColumns.NAME)
+            name = castRowElement(row, TicketTypeColumns.NAME),
         )
 
     override fun debugData() {
@@ -45,26 +43,23 @@ data class TicketTypeData(
     }
 
     companion object {
-        val EMPTY : TicketTypeData
+        val EMPTY: TicketTypeData
             get() = TicketTypeData()
 
-        fun queryDatabase (
-            multipleJoinArgs : MultipleJoinArgs? = null,
-            whereArgs : WhereArgs? = null,
-            orderByArgs : OrderByArgs? = null,
-            limitArgs : LimitArgs? = null,
-            groupByArgs : GroupByArgs? = null   
-        ) : List<QueryResult<TicketTypeData>> {
-            return EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
-        }
+        fun queryDatabase(
+            multipleJoinArgs: MultipleJoinArgs? = null,
+            whereArgs: WhereArgs? = null,
+            orderByArgs: OrderByArgs? = null,
+            limitArgs: LimitArgs? = null,
+            groupByArgs: GroupByArgs? = null,
+        ): List<QueryResult<TicketTypeData>> =
+            EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
 
-        fun updateTable (
-            values : Map<Column<*>, Any?>,
-            whereArgs : WhereArgs
-        ) : Int = EMPTY.updateTable(values, whereArgs)
+        fun updateTable(
+            values: Map<Column<*>, Any?>,
+            whereArgs: WhereArgs,
+        ): Int = EMPTY.updateTable(values, whereArgs)
 
-        fun delete(id : Int) : Int {
-            return TicketTypeData(id = id).delete()
-        }
+        fun delete(id: Int): Int = TicketTypeData(id = id).delete()
     }
 }

@@ -1,5 +1,5 @@
 package data
 
-data class OrderByArgs (
-    val orderArgs : List<OrderArgs>
+data class OrderByArgs(
+    val orderArgs: List<OrderArgs>,
 )

@@ -10,32 +10,30 @@ object CartItemColumns {
 }
 
 data class CartItemData(
-
     override val id: Int = 0,
-    var userId : Int = 0,
-    var seatId : Int = 0
-
+    var userId: Int = 0,
+    var seatId: Int = 0,
 ) : DataClass<CartItemData>(id) {
-
     override val tableName = "cart_items"
     override val tableColumns = CartItemColumns.ALL
 
-    override val indexes : List<IndexArgs> = listOf(
-        IndexArgs("inx_cart_items_user_id", CartItemColumns.USER_ID.name),
-        IndexArgs("inx_cart_items_seat_id", CartItemColumns.SEAT_ID.name)
-    )
-
-    override fun mapDataToColumns () : Map<Column<*>, Any?> =
-        mapOf(
-            CartItemColumns.USER_ID to userId,
-            CartItemColumns.SEAT_ID to seatId
+    override val indexes: List<IndexArgs> =
+        listOf(
+            IndexArgs("inx_cart_items_user_id", CartItemColumns.USER_ID.name),
+            IndexArgs("inx_cart_items_seat_id", CartItemColumns.SEAT_ID.name),
         )
 
-    override fun mapRowToData(row : Array<Any?>) : CartItemData =
+    override fun mapDataToColumns(): Map<Column<*>, Any?> =
+        mapOf(
+            CartItemColumns.USER_ID to userId,
+            CartItemColumns.SEAT_ID to seatId,
+        )
+
+    override fun mapRowToData(row: Array<Any?>): CartItemData =
         CartItemData(
             id = castRowElement(row, CartItemColumns.ID),
             userId = castRowElement(row, CartItemColumns.USER_ID),
-            seatId = castRowElement(row, CartItemColumns.SEAT_ID)
+            seatId = castRowElement(row, CartItemColumns.SEAT_ID),
         )
 
     override fun debugData() {
@@ -43,26 +41,23 @@ data class CartItemData(
     }
 
     companion object {
-        val EMPTY : CartItemData
+        val EMPTY: CartItemData
             get() = CartItemData()
 
-        fun queryDatabase (
-            multipleJoinArgs : MultipleJoinArgs? = null,
-            whereArgs : WhereArgs? = null,
-            orderByArgs : OrderByArgs? = null,
-            limitArgs : LimitArgs? = null,
-            groupByArgs : GroupByArgs? = null   
-        ) : List<QueryResult<CartItemData>> {
-            return EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
-        }
+        fun queryDatabase(
+            multipleJoinArgs: MultipleJoinArgs? = null,
+            whereArgs: WhereArgs? = null,
+            orderByArgs: OrderByArgs? = null,
+            limitArgs: LimitArgs? = null,
+            groupByArgs: GroupByArgs? = null,
+        ): List<QueryResult<CartItemData>> =
+            EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
 
-        fun updateTable (
-            values : Map<Column<*>, Any?>,
-            whereArgs : WhereArgs
-        ) : Int = EMPTY.updateTable(values, whereArgs)
+        fun updateTable(
+            values: Map<Column<*>, Any?>,
+            whereArgs: WhereArgs,
+        ): Int = EMPTY.updateTable(values, whereArgs)
 
-        fun delete(id : Int) : Int {
-            return CartItemData(id = id).delete()
-        }
+        fun delete(id: Int): Int = CartItemData(id = id).delete()
     }
 }

@@ -3,52 +3,52 @@ package data
 import java.io.File
 import java.sql.Connection
 import java.sql.DriverManager
-import java.sql.SQLException
 import org.mindrot.jbcrypt.BCrypt
 import org.json.JSONObject
 
-fun anyToBool(i : Any?) : Boolean? = (i as? Int)?.let { it != 0 }
+fun anyToBool(i: Any?): Boolean? = (i as? Int)?.let { it != 0 }
 
 object DatabaseManager {
-    private val dbFilePath : String = "data/database.db"
-    private val adminJSONFilePath : String = "data/admin.json"
-    private val connection : Connection
-    private var initialisedTables : MutableList<DataClass<*>> = mutableListOf()
+    private val dbFilePath: String = "data/database.db"
+    private val adminJSONFilePath: String = "data/admin.json"
+    private val connection: Connection
+    private var initialisedTables: MutableList<DataClass<*>> = mutableListOf()
 
-    private val dataClasses: List<DataClass<*>> = listOf(
-        AdminData.EMPTY,
-        AdminSessionData.EMPTY,
-        AssignedFlightStaffData.EMPTY,
-        BookedSeatData.EMPTY,
-        BookerData.EMPTY,
-        BookingData.EMPTY,
-        CartItemData.EMPTY,
-        ClassData.EMPTY,
-        CountryData.EMPTY,
-        DestinationData.EMPTY,
-        FlightData.EMPTY,
-        FlightSearchData.EMPTY,
-        FlightSearchFlightData.EMPTY,
-        GuestData.EMPTY,
-        LoginData.EMPTY,
-        ManufacturerData.EMPTY,
-        PaymentMethodData.EMPTY,
-        PlaneData.EMPTY,
-        PlaneModelData.EMPTY,
-        PlaneSeatData.EMPTY,
-        RemainingSeatData.EMPTY,
-        RouteData.EMPTY,
-        ScheduleData.EMPTY,
-        SeatData.EMPTY,
-        SessionData.EMPTY,
-        StaffData.EMPTY,
-        StaffPositionData.EMPTY,
-        StaffSessionData.EMPTY,
-        TicketTypeData.EMPTY,
-        TimezoneData.EMPTY,
-        TwoFAData.EMPTY,
-        UserData.EMPTY
-    )
+    private val dataClasses: List<DataClass<*>> =
+        listOf(
+            AdminData.EMPTY,
+            AdminSessionData.EMPTY,
+            AssignedFlightStaffData.EMPTY,
+            BookedSeatData.EMPTY,
+            BookerData.EMPTY,
+            BookingData.EMPTY,
+            CartItemData.EMPTY,
+            ClassData.EMPTY,
+            CountryData.EMPTY,
+            DestinationData.EMPTY,
+            FlightData.EMPTY,
+            FlightSearchData.EMPTY,
+            FlightSearchFlightData.EMPTY,
+            GuestData.EMPTY,
+            LoginData.EMPTY,
+            ManufacturerData.EMPTY,
+            PaymentMethodData.EMPTY,
+            PlaneData.EMPTY,
+            PlaneModelData.EMPTY,
+            PlaneSeatData.EMPTY,
+            RemainingSeatData.EMPTY,
+            RouteData.EMPTY,
+            ScheduleData.EMPTY,
+            SeatData.EMPTY,
+            SessionData.EMPTY,
+            StaffData.EMPTY,
+            StaffPositionData.EMPTY,
+            StaffSessionData.EMPTY,
+            TicketTypeData.EMPTY,
+            TimezoneData.EMPTY,
+            TwoFAData.EMPTY,
+            UserData.EMPTY,
+        )
 
     init {
         connection = connect()
@@ -68,29 +68,37 @@ object DatabaseManager {
         return conn
     }
 
-    fun executeSQL(sql : String) {
+    fun executeSQL(sql: String) {
         connection.createStatement().use { stmt ->
             stmt.execute(sql)
         }
     }
 
-    fun createTable(table : String, columns : String, additional : String) {
-        if (table.isBlank()) return;
+    fun createTable(
+        table: String,
+        columns: String,
+        additional: String,
+    ) {
+        if (table.isBlank()) return
 
-        val sql = """
+        val sql =
+            """
             CREATE TABLE IF NOT EXISTS $table (
                 $columns${if (additional.isNotBlank()) ",\n$additional" else ""}
             );
-        """.trimIndent()
+            """.trimIndent()
 
         executeSQL(sql)
     }
 
-    fun createIndexes(table : String, indexes : List<IndexArgs>) {
-        if (table.isBlank()) return;
+    fun createIndexes(
+        table: String,
+        indexes: List<IndexArgs>,
+    ) {
+        if (table.isBlank()) return
 
         for (index in indexes) {
-            executeSQL("CREATE INDEX IF NOT EXISTS ${index.indexName} ON ${table}(${index.columnName})")
+            executeSQL("CREATE INDEX IF NOT EXISTS ${index.indexName} ON $table(${index.columnName})")
         }
     }
 
@@ -108,29 +116,31 @@ object DatabaseManager {
         println("Database initilisation completed")
     }
 
-    fun initialiseTable(dataClass : DataClass<*>) {
-        if (initialisedTables.any { it::class == dataClass::class })
+    fun initialiseTable(dataClass: DataClass<*>) {
+        if (initialisedTables.any { it::class == dataClass::class }) {
             return
+        }
 
         println("Initialising ${dataClass.tableName}")
 
         createTable(
             dataClass.tableName,
             dataClass.tableCreateSQL,
-            dataClass.tableAdditionalSQL
+            dataClass.tableAdditionalSQL,
         )
 
         createIndexes(
             dataClass.tableName,
-            dataClass.indexes
+            dataClass.indexes,
         )
 
-        for (requirement in dataClass.requiredTables) { // WARNING: If two tables require records from one another when initialising, this will break :)
+        // WARNING: If two tables require records from one another when initialising, this will break :)
+        for (requirement in dataClass.requiredTables) {
             initialiseTable(requirement)
         }
 
         println("Adding rows to ${dataClass.tableName}")
-            
+
         for (row in dataClass.initialRows) {
             row.insertIntoDatabase(true)
         }
@@ -142,11 +152,10 @@ object DatabaseManager {
     }
 
     fun insertIntoTable(
-        table : String,
-        values : Map<Column<*>, Any?>,
-        ignore : Boolean = false
-    ) : Int {
-
+        table: String,
+        values: Map<Column<*>, Any?>,
+        ignore: Boolean = false,
+    ): Int {
         if (values.size == 0) return -1
 
         val entries = values.entries.toList()
@@ -154,7 +163,7 @@ object DatabaseManager {
         val placeholders = List(values.size) { "?" }.joinToString(", ")
 
         val sql = "INSERT ${if (ignore) "OR IGNORE " else ""}INTO $table ($columns) VALUES ($placeholders)"
-        var id : Int = -1
+        var id: Int = -1
 
         connection.prepareStatement(sql).use { stmt ->
             entries.forEachIndexed { index, entry ->
@@ -173,12 +182,12 @@ object DatabaseManager {
     }
 
     fun updateTable(
-        table : String,
-        values : Map<Column<*>, Any?>,
-        whereArgs : WhereArgs
+        table: String,
+        values: Map<Column<*>, Any?>,
+        whereArgs: WhereArgs,
     ): Int {
         require(values.isNotEmpty()) { "No values where given to update" }
-        
+
         val entries = values.entries.toList()
         val setClause = entries.joinToString(", ") { "${it.key.name} = ?" }
         val sql = "UPDATE $table SET $setClause WHERE ${whereArgs.whereClause}"
@@ -193,15 +202,15 @@ object DatabaseManager {
             whereArgs.whereArgs.forEach {
                 stmt.setObject(index++, it)
             }
-            
+
             return stmt.executeUpdate()
         }
     }
 
     fun deleteFromTable(
-        table : String,
-        whereArgs : WhereArgs
-    ) : Int {
+        table: String,
+        whereArgs: WhereArgs,
+    ): Int {
         require(whereArgs.whereClause.isNotBlank()) { "DELETE requires a WHERE clause" }
 
         val sql = "DELETE FROM $table WHERE ${whereArgs.whereClause}"
@@ -216,45 +225,55 @@ object DatabaseManager {
     }
 
     fun queryTable(
-        table : String,
-        columns : List<String>,
-        multipleJoinArgs : MultipleJoinArgs? = null,
-        whereArgs : WhereArgs? = null,
-        orderByArgs : OrderByArgs? = null,
-        limitArgs : LimitArgs? = null,
-        groupByArgs : GroupByArgs? = null
+        table: String,
+        columns: List<String>,
+        multipleJoinArgs: MultipleJoinArgs? = null,
+        whereArgs: WhereArgs? = null,
+        orderByArgs: OrderByArgs? = null,
+        limitArgs: LimitArgs? = null,
+        groupByArgs: GroupByArgs? = null,
     ): List<Array<Any?>> {
-
         var columnStr = columns.joinToString(", ") { "$table.$it" }
         if (multipleJoinArgs != null) {
             multipleJoinArgs.joinArgs.forEach { joinArgs ->
                 columnStr += ", " + joinArgs.joinSelectColumns.joinToString(", ") { "${joinArgs.rightTableJoin}.$it" }
-            }            
+            }
         }
 
-        val sql = buildString {
-            append("SELECT $columnStr FROM $table")
+        val sql =
+            buildString {
+                append("SELECT $columnStr FROM $table")
 
-            if (multipleJoinArgs != null) {
-                multipleJoinArgs.joinArgs.forEach { joinArgs ->
-                    append(" ${joinArgs.joinType} JOIN ${joinArgs.rightTableJoin} ON ${if (joinArgs.leftTableJoin == null) table else joinArgs.leftTableJoin}.${joinArgs.leftTableJoinColumn} = ${joinArgs.rightTableJoin}.${joinArgs.rightTableJoinColumn}")
+                if (multipleJoinArgs != null) {
+                    multipleJoinArgs.joinArgs.forEach { joinArgs ->
+                        append(
+                            " ${joinArgs.joinType} JOIN ${joinArgs.rightTableJoin} ON ${if (joinArgs.leftTableJoin == null) table else joinArgs.leftTableJoin}.${joinArgs.leftTableJoinColumn} = ${joinArgs.rightTableJoin}.${joinArgs.rightTableJoinColumn}",
+                        )
+                    }
                 }
+                if (whereArgs != null) append(" WHERE (${whereArgs.whereClause})")
+                if (groupByArgs != null) {
+                    append(" GROUP BY ${groupByArgs.groupClause}")
+                    if (groupByArgs.havingArgs != null) append(" HAVING ${groupByArgs.havingArgs.havingClause}")
+                }
+                if (orderByArgs !=
+                    null
+                ) {
+                    append(
+                        " ORDER BY ${orderByArgs.orderArgs.joinToString(
+                            ", ",
+                        ) { "${it.orderColumn} ${if (it.ascending) "ASC" else "DESC"}" }}",
+                    )
+                }
+                if (limitArgs != null) append(" LIMIT ${limitArgs.limitAmount}")
             }
-            if (whereArgs != null) append(" WHERE (${whereArgs.whereClause})")
-            if (groupByArgs != null) {
-                append (" GROUP BY ${groupByArgs.groupClause}")
-                if (groupByArgs.havingArgs != null) append(" HAVING ${groupByArgs.havingArgs.havingClause}")
-            }
-            if (orderByArgs != null) append(" ORDER BY ${orderByArgs.orderArgs.joinToString(", ") { "${it.orderColumn} ${if (it.ascending) "ASC" else "DESC"}" }}")
-            if (limitArgs != null) append(" LIMIT ${limitArgs.limitAmount}")
-        }
 
         var totalSize = columns.size
         if (multipleJoinArgs != null) {
             multipleJoinArgs.joinArgs.forEach { joinArgs ->
                 totalSize += joinArgs.joinSelectColumns.size
             }
-        }            
+        }
 
         connection.prepareStatement(sql).use { stmt ->
             var objectIndex = 1
@@ -278,9 +297,10 @@ object DatabaseManager {
                 val results = mutableListOf<Array<Any?>>()
 
                 while (rs.next()) {
-                    val row = Array(totalSize) { index ->
-                        rs.getObject(index + 1)
-                    }
+                    val row =
+                        Array(totalSize) { index ->
+                            rs.getObject(index + 1)
+                        }
                     results.add(row)
                 }
 
@@ -292,7 +312,7 @@ object DatabaseManager {
     fun updateInDatabase(
         table: String,
         id: Int,
-        values: Map<Column<*>, Any?>
+        values: Map<Column<*>, Any?>,
     ) {
         if (values.isEmpty()) return
 
@@ -310,7 +330,7 @@ object DatabaseManager {
     }
 
     fun seedAdminAccount() {
-        val adminJSONFile : File = File(adminJSONFilePath)
+        val adminJSONFile: File = File(adminJSONFilePath)
         require(adminJSONFile.exists()) { "Admin JSON file cannot be found" }
 
         val adminJSONString = adminJSONFile.readText(Charsets.UTF_8).trimIndent()
@@ -319,12 +339,14 @@ object DatabaseManager {
         val adminEmail = adminJSONObject.getString("email")
         val adminPassword = adminJSONObject.getString("password")
 
-        val existing = LoginData.queryDatabase(
-            whereArgs = WhereArgs(
-                "${LoginColumns.EMAIL.name} = ?",
-                listOf(adminEmail)
+        val existing =
+            LoginData.queryDatabase(
+                whereArgs =
+                    WhereArgs(
+                        "${LoginColumns.EMAIL.name} = ?",
+                        listOf(adminEmail),
+                    ),
             )
-        )
 
         if (existing.isNotEmpty()) {
             println("Admin already exists")
@@ -335,21 +357,22 @@ object DatabaseManager {
 
         val passwordHash = BCrypt.hashpw(adminPassword, BCrypt.gensalt())
 
-        val loginId = LoginData(
-            email = adminEmail,
-            passwordHash = passwordHash
-        ).insertIntoDatabase()
+        val loginId =
+            LoginData(
+                email = adminEmail,
+                passwordHash = passwordHash,
+            ).insertIntoDatabase()
 
         UserData(
             firstName = "Admin",
             lastName = "User",
             verifiedAccount = true,
             loyaltyPoints = 0,
-            loginId = loginId
+            loginId = loginId,
         ).insertIntoDatabase()
 
         AdminData(
-            loginId = loginId
+            loginId = loginId,
         ).insertIntoDatabase()
     }
 
