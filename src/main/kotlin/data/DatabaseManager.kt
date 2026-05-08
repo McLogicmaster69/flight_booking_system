@@ -458,7 +458,7 @@ object DatabaseManager {
      */
     fun seedAdminAccount() {
         val adminJSONFile = File(adminJSONFilePath)
-        if (adminJSONFile.exists() == false){
+        if (adminJSONFile.exists() == false) {
             println("WARNING: COULD NOT FIND ADMIN JSON FILE")
             return
         }
