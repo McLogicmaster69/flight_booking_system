@@ -16,6 +16,9 @@ import utils.EmailService
 import com.stripe.model.PaymentIntent
 import com.stripe.param.PaymentIntentCreateParams
 
+/**
+ * Registers the routing paths for the entire checkout and payment flow.
+ */
 fun Route.checkoutRoutes() {
     post("/checkout") { call.handleCheckoutPost() }
     post("/payment") { call.handlePaymentPost() }
@@ -38,6 +41,9 @@ data class CheckoutFlightView(
     val leg: Int,
 )
 
+/**
+ * Handles the initial step into the checkout process, loading seat availability and rewards.
+ */
 private suspend fun ApplicationCall.handleCheckoutPost() {
     timed("T0_checkout", jsMode()) {
         val pebble = getEngine()
@@ -54,11 +60,10 @@ private suspend fun ApplicationCall.handleCheckoutPost() {
 
         val flightInfo = search.getFlightInfo()
         val ticketTypes = TicketTypeData.queryDatabase().map { it.dataClass }
-
         val classes = ClassData.queryDatabase().map { it.dataClass }
-
         val flightIds: List<Int> = search.flights.map { it.flightId }
 
+        // Ensure seats are generated for these flights before displaying the UI
         for (flightId in flightIds) {
             SeatData.generateSeatsForFlight(flightId)
         }
@@ -86,6 +91,7 @@ private suspend fun ApplicationCall.handleCheckoutPost() {
                 )
             }
 
+        // Apply loyalty rewards if a user is logged in
         val selectedRewards =
             loggedIn()
                 .session
@@ -120,13 +126,15 @@ private suspend fun ApplicationCall.handleCheckoutPost() {
     }
 }
 
+/**
+ * Handles the transition to the payment screen by parsing passenger details and calculating final costs.
+ */
 private suspend fun ApplicationCall.handlePaymentPost() {
     timed("T1_payment", jsMode()) {
         val pebble = getEngine()
         val paymentparams = receiveParameters()
 
         val typeIds = mutableListOf<Int>()
-
         val token = paymentparams["token"]
         val search = token?.let { FlightSearchData.queryByToken(it) }
 
@@ -143,9 +151,9 @@ private suspend fun ApplicationCall.handlePaymentPost() {
         val flightIds: List<Int> = search.flights.map { it.flightId }
         val legCount = flightInfo.size
         val selections = mutableListOf<PaymentLegSelection>()
-
         val tickets = (paymentparams["tickets"]?.toIntOrNull() ?: 1).coerceAtLeast(1)
 
+        // Validate that essential passenger details are provided
         for (i in 1..tickets) {
             val lastName = paymentparams["lastName$i"]
             val passport = paymentparams["passport$i"]
@@ -178,6 +186,7 @@ private suspend fun ApplicationCall.handlePaymentPost() {
         val seatIds = mutableListOf<Int?>()
         var totalAmount = 0L
 
+        // Iterate over tickets and legs to accumulate total cost and parse configurations
         for (i in 1..tickets) {
             for ((legIndex, flightId) in flightIds.withIndex()) {
                 val leg = legIndex
@@ -194,17 +203,12 @@ private suspend fun ApplicationCall.handlePaymentPost() {
                     }
                 val typeId = paymentparams["typeId${i}_$leg"]?.toIntOrNull()
 
-                if (classId == null) {
+                if (classId == null || typeId == null) {
                     respondText(
-                        "<p>Missing class selection</p>",
+                        "<p>Missing class or ticket type selection</p>",
                         ContentType.Text.Html,
                         status = HttpStatusCode.BadRequest,
                     )
-                    return@timed
-                }
-
-                if (typeId == null) {
-                    respondText("<p>Missing ticket type</p>", ContentType.Text.Html, status = HttpStatusCode.BadRequest)
                     return@timed
                 }
 
@@ -230,7 +234,6 @@ private suspend fun ApplicationCall.handlePaymentPost() {
                 }
 
                 val durationMinutes = RouteData.getDurationMinutes(flight.routeId)
-
                 val classData =
                     ClassData
                         .queryDatabase(
@@ -258,7 +261,6 @@ private suspend fun ApplicationCall.handlePaymentPost() {
         }
 
         val hasDiscount = selectedRewards.any { it.key == "discount15" }
-
         if (hasDiscount) {
             totalAmount = (totalAmount * 85L) / 100L
         }
@@ -286,7 +288,6 @@ private suspend fun ApplicationCall.handlePaymentPost() {
                             whereArgs = WhereArgs("id = ?", listOf(user.loginId)),
                         ).firstOrNull()
                         ?.dataClass
-
                 userEmail = login?.email
             }
         }
@@ -328,11 +329,13 @@ private suspend fun ApplicationCall.handlePaymentPost() {
     }
 }
 
+/**
+ * Contacts the Stripe API to generate a client secret for payment processing.
+ */
 private suspend fun ApplicationCall.handleCreatePaymentIntent() {
     timed("T2_payment_intent", jsMode()) {
         val body = receive<Map<String, String>>()
         val email = body["email"] ?: ""
-
         val amount = body["amount"]?.toLongOrNull()
 
         if (amount == null || amount <= 0) {
@@ -354,6 +357,9 @@ private suspend fun ApplicationCall.handleCreatePaymentIntent() {
     }
 }
 
+/**
+ * Persists the final booking to the database once payment intent is confirmed, deducts rewards, and sends confirmation emails.
+ */
 private suspend fun ApplicationCall.handleConfirmBooking() {
     timed("T3_confirm_booking", jsMode()) {
         val confirmparams = receiveParameters()
@@ -385,13 +391,13 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
         }
 
         val loggedState = loggedIn()
-
         val selectedRewards =
             loggedState.session
                 ?.token
                 ?.let { SELECTED_REWARDS_BY_USER[it] }
                 ?: emptyList()
 
+        // Handle Booker attribution (User vs Guest)
         val booker =
             if (loggedState.logged_in && loggedState.session != null) {
                 val token = loggedState.session.token
@@ -453,6 +459,7 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
         val bookingCount = tickets * flightIds.size
         val bookingAmount = (totalAmount / bookingCount).toInt()
 
+        // Process seats and upgrades per passenger
         for (i in 1..tickets) {
             val lastName = confirmparams["lastName$i"]
             val passport = confirmparams["passport$i"]
@@ -479,13 +486,8 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
                     }
                 val typeId = confirmparams["typeId${i}_$leg"]?.toIntOrNull()
 
-                if (classId == null) {
-                    respondText("Missing class selection", status = HttpStatusCode.BadRequest)
-                    return@timed
-                }
-
-                if (typeId == null) {
-                    respondText("Missing ticket type", status = HttpStatusCode.BadRequest)
+                if (classId == null || typeId == null) {
+                    respondText("Missing class or ticket type", status = HttpStatusCode.BadRequest)
                     return@timed
                 }
 
@@ -551,6 +553,7 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
             }
         }
 
+        // Handle points deduction and awarding
         signedInUser?.let { user ->
             val rewardCost = selectedRewards.sumOf { it.cost * it.quantity }
 
@@ -611,6 +614,9 @@ private suspend fun ApplicationCall.handleConfirmBooking() {
     }
 }
 
+/**
+ * Generates a secure, randomized 6-character alphanumeric booking reference.
+ */
 fun generateSecureBookingReference(): String {
     val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     val secureRandom = SecureRandom()
@@ -620,6 +626,9 @@ fun generateSecureBookingReference(): String {
         .joinToString("")
 }
 
+/**
+ * Serves the payment success confirmation page.
+ */
 private suspend fun ApplicationCall.handlePaymentSuccessLoad() {
     timed("T4_payment_success", jsMode()) {
         val pebble = getEngine()
@@ -637,6 +646,9 @@ private suspend fun ApplicationCall.handlePaymentSuccessLoad() {
     }
 }
 
+/**
+ * Helper formula to compute the ticket price according to flight duration, seating class, and custom seat selections.
+ */
 private fun calculateTicketPrice(
     className: String,
     durationMinutes: Long,

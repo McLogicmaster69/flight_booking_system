@@ -10,10 +10,16 @@ import utils.jsMode
 import utils.timed
 import data.*
 
+/**
+ * Registers the routing for the landing page of the application.
+ */
 fun Route.homepageRoutes() {
     get("/") { call.handleLoadPage() }
 }
 
+/**
+ * Handles generating the dynamic content for the homepage via pebble template evaluation.
+ */
 private suspend fun ApplicationCall.handleLoadPage() {
     timed("T0_homepage_load", jsMode()) {
         val pebble = getEngine()

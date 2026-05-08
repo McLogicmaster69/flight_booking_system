@@ -1,5 +1,3 @@
-// Minimal, framework-free UI helpers for the template pages.
-
 document.addEventListener("DOMContentLoaded", () => {
   if (localStorage.getItem("a11y_palette") === "colorblind") {
     document.body.classList.add("a11y-colorblind");

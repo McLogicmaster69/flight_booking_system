@@ -5,6 +5,9 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.http.*
 
+/**
+ * Sets up a simple /health endpoint used for monitoring the server status.
+ */
 fun Routing.configureHealthCheck() {
     get("/health") {
         call.respondText(

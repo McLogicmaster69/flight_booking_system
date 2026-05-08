@@ -19,6 +19,9 @@ private val dotenv = dotenv()
 val apiKey = dotenv["GEMINI_API_KEY"] ?: throw IllegalStateException("GEMINI_API_KEY not set")
 val url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey"
 
+/**
+ * Registers the routing for handling the AI chat widget and support forms.
+ */
 fun Route.chatRoutes() {
     post("/api/chat") {
         try {
@@ -50,6 +53,7 @@ fun Route.chatRoutes() {
                     ?.jsonPrimitive
                     ?.content ?: ""
 
+            // Gather context about upcoming flights to ground the AI response
             val upcomingFlights =
                 FlightData
                     .queryDatabase()
@@ -111,6 +115,7 @@ fun Route.chatRoutes() {
                     .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
                     .build()
 
+            // Retry logic for 503 errors from the external AI API
             var response: HttpResponse<String>? = null
             var attempts = 0
             val maxAttempts = 3

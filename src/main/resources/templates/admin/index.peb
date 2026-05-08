@@ -10,16 +10,9 @@
 
 <div class="card" style="padding: 24px;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
-        <h3 style="margin: 0;">Analytics & Predictions</h3>
+        <h3 style="margin: 0;">Analytics & Predictions (Last 30 Days)</h3>
 
         <div style="display: flex; gap: 12px; align-items: center;">
-            <select id="timeSelector" class="auth-input" style="width: 150px; margin: 0; padding: 8px;" onchange="updateTimePeriod()">
-                <option value="7" {% if selectedPeriod == 7 %}selected{% endif %}>Last 7 Days</option>
-                <option value="30" {% if selectedPeriod == 30 %}selected{% endif %}>Last 30 Days</option>
-                <option value="90" {% if selectedPeriod == 90 %}selected{% endif %}>Last 90 Days</option>
-                <option value="365" {% if selectedPeriod == 365 %}selected{% endif %}>Last Year</option>
-            </select>
-
             <select id="graphSelector" class="auth-input" style="width: 200px; margin: 0; padding: 8px;" onchange="updateGraph()">
                 <option value="times">Most Popular Times</option>
                 <option value="routes">Most Popular Routes</option>
@@ -93,36 +86,51 @@
             options: {
                 responsive: true,
                 scales: {
-                    y: { beginAtZero: true }
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time of Day (Hours)',
+                            font: { weight: 'bold' }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Popularity Score (Relative Volume)',
+                            font: { weight: 'bold' }
+                        }
+                    }
                 }
             }
         });
     }
 
-    // Swaps datasets inside the Chart.js instance depending on dropdown
+    // Swaps datasets and axis labels inside the Chart.js instance depending on dropdown
     function updateGraph() {
         const selector = document.getElementById('graphSelector');
+
         if (selector.value === 'times') {
             chart.data.labels = timesLabels;
             chart.data.datasets[0].data = timesData;
             chart.data.datasets[1].data = timesPredicted;
+
+            // Update X axis label contextually
+            chart.options.scales.x.title.text = 'Time of Day (24-Hour Clock)';
         } else {
             chart.data.labels = routesLabels;
             chart.data.datasets[0].data = routesData;
             chart.data.datasets[1].data = routesPredicted;
+
+            // Update X axis label contextually
+            chart.options.scales.x.title.text = 'Flight Route (Origin to Destination)';
         }
+
         chart.update();
     }
 
-    // Refreshes the page with the new time period while keeping the selected graph
-    function updateTimePeriod() {
-        const timeVal = document.getElementById('timeSelector').value;
-        const graphVal = document.getElementById('graphSelector').value;
-        window.location.href = `/admin?period=${timeVal}&graph=${graphVal}`;
-    }
-
     document.addEventListener('DOMContentLoaded', () => {
-        // Read URL params to persist the graph selector if the page was reloaded by changing the time
+        // Read URL params to persist the graph selector if the page was reloaded previously
         const urlParams = new URLSearchParams(window.location.search);
         const graphType = urlParams.get('graph');
         if (graphType) {
@@ -130,7 +138,7 @@
         }
 
         initChart();
-        updateGraph(); // Apply the correct data to the graph right away
+        updateGraph(); // Apply the correct data and axis titles right away
     });
 </script>
 {% endblock %}
