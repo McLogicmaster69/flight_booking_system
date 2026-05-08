@@ -132,6 +132,7 @@ document.querySelectorAll(".class-select").forEach(classSelect => {
             const matchesClass = option.getAttribute("data-class-id") === selectedClassId;
             option.hidden = !matchesClass;
             option.disabled = !matchesClass;
+            enforceUniqueSeats();
         }
 
         seatSelect.value = "";
@@ -176,6 +177,38 @@ document.querySelectorAll('select[name^="upgradePassenger"]').forEach(select => 
 });
 
 enforceUpgradeRules();
+</script>
+
+<script>
+function enforceUniqueSeats() {
+    const selectedSeats = Array.from(document.querySelectorAll(".seat-select"))
+        .map(select => select.value)
+        .filter(value => value !== "");
+
+    document.querySelectorAll(".seat-select").forEach(currentSelect => {
+        const currentValue = currentSelect.value;
+
+        Array.from(currentSelect.options).forEach(option => {
+            if (option.value === "") return;
+
+            const alreadySelected =
+                selectedSeats.includes(option.value) &&
+                option.value !== currentValue;
+
+            option.disabled = alreadySelected || option.hidden;
+        });
+    });
+}
+
+document.querySelectorAll(".seat-select").forEach(seatSelect => {
+    seatSelect.addEventListener("change", enforceUniqueSeats);
+});
+
+document.querySelectorAll(".class-select").forEach(classSelect => {
+    classSelect.addEventListener("change", enforceUniqueSeats);
+});
+
+enforceUniqueSeats();
 </script>
 
 {% endblock %}
