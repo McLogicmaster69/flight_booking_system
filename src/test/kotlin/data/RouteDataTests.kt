@@ -200,7 +200,7 @@ class RouteDataTests : BaseDatabaseTest() {
                 DestinationArgs(
                     ids[2],
                     ids[3],
-                )
+                ),
             )
 
         assertEquals(routeId, results)
