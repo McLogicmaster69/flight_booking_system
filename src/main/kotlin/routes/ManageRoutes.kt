@@ -14,18 +14,25 @@ import com.stripe.model.Refund
 import com.stripe.param.RefundCreateParams
 import utils.EmailService
 
+/**
+ * Registers all booking management routes.
+ */
 fun Route.manageRoutes() {
     get("/manage") { call.handleManageLoad() }
     post("/handleBookingSearch") { call.handleBookingSearch() }
     post("/manage/refund") { call.handleRefundBooking() }
 }
 
+/**
+ * Loads the manage bookings page and includes bookings for the logged-in user.
+ */
 private suspend fun ApplicationCall.handleManageLoad() {
     timed("T0_manage", jsMode()) {
         val loggedState = loggedIn()
 
         var userBookings: List<Array<Any?>> = emptyList()
 
+        // Load linked bookings when the current user is logged in.
         if (loggedState.logged_in && loggedState.session != null) {
             val token = loggedState.session.token
             val users = UserData.queryByToken(token)
@@ -61,6 +68,9 @@ private suspend fun ApplicationCall.handleManageLoad() {
     }
 }
 
+/**
+ * Searches for active bookings using a booking reference and passenger last name.
+ */
 private suspend fun ApplicationCall.handleBookingSearch() {
     timed("T1_manageSearch", jsMode()) {
         val params = receiveParameters()
@@ -75,6 +85,7 @@ private suspend fun ApplicationCall.handleBookingSearch() {
         val loggedState = loggedIn()
         var userBookings: List<Array<Any?>> = emptyList()
 
+        // Keep logged-in user's own bookings visible while showing search results.
         if (loggedState.logged_in && loggedState.session != null) {
             val token = loggedState.session.token
             val users = UserData.queryByToken(token)
@@ -127,6 +138,9 @@ private suspend fun ApplicationCall.handleBookingSearch() {
     }
 }
 
+/**
+ * Refunds a booking, releases its booked seats, marks it as refunded, and emails confirmation.
+ */
 private suspend fun ApplicationCall.handleRefundBooking() {
     timed("T2_manageRefund", jsMode()) {
         val params = receiveParameters()
@@ -172,6 +186,7 @@ private suspend fun ApplicationCall.handleRefundBooking() {
 
         val refundAmount = amountPaid
 
+        // Create a full refund in Stripe for the booking's payment intent.
         val refundParams =
             RefundCreateParams
                 .builder()
@@ -183,6 +198,7 @@ private suspend fun ApplicationCall.handleRefundBooking() {
 
         val refund = Refund.create(refundParams)
 
+        // Release seats and update booking records only after Stripe refund succeeds.
         releaseBookedSeatsForBookingIds(bookingIds)
 
         markBookingsRefunded(
@@ -201,10 +217,14 @@ private suspend fun ApplicationCall.handleRefundBooking() {
                 refundId = refund.id,
             )
         }
+
         respondRedirect("/manage")
     }
 }
 
+/**
+ * Retrieves active bookings for a specific booker and enriches them for display.
+ */
 private fun getEnrichedBookingsForBooker(bookerId: Int): List<Array<Any?>> {
     val bookingRows =
         DatabaseManager.queryTable(
@@ -223,6 +243,9 @@ private fun getEnrichedBookingsForBooker(bookerId: Int): List<Array<Any?>> {
     return enrichBookingRowsFromSeats(bookingRows)
 }
 
+/**
+ * Converts raw booking rows into display rows with flight, seat, route, class, and ticket details.
+ */
 private fun enrichBookingRowsFromSeats(bookingRows: List<Array<Any?>>): List<Array<Any?>> {
     val results = mutableListOf<Array<Any?>>()
 
@@ -231,6 +254,7 @@ private fun enrichBookingRowsFromSeats(bookingRows: List<Array<Any?>>): List<Arr
         val lastname = row[3] as? String ?: ""
         val bookingReference = row[4] as? String ?: ""
 
+        // Find the seat connected to this booking.
         val bookedSeat =
             BookedSeatData
                 .queryDatabase(
@@ -319,6 +343,9 @@ private fun enrichBookingRowsFromSeats(bookingRows: List<Array<Any?>>): List<Arr
     return results
 }
 
+/**
+ * Releases all booked seats linked to the provided booking IDs.
+ */
 private fun releaseBookedSeatsForBookingIds(bookingIds: List<Int>) {
     for (bookingId in bookingIds) {
         val bookedSeats =
@@ -336,6 +363,9 @@ private fun releaseBookedSeatsForBookingIds(bookingIds: List<Int>) {
     }
 }
 
+/**
+ * Marks each booking as fully refunded and stores the Stripe refund information.
+ */
 private fun markBookingsRefunded(
     bookingIds: List<Int>,
     refundId: String,
@@ -358,6 +388,9 @@ private fun markBookingsRefunded(
     }
 }
 
+/**
+ * Gets the email address for either a registered user booker or a guest booker.
+ */
 private fun getBookerEmail(bookerId: Int): String? {
     val booker =
         BookerData
@@ -366,6 +399,7 @@ private fun getBookerEmail(bookerId: Int): String? {
             ).firstOrNull()
             ?.dataClass ?: return null
 
+    // Registered users store their email through their login record.
     booker.userId?.let { userId ->
         val user =
             UserData
@@ -384,6 +418,7 @@ private fun getBookerEmail(bookerId: Int): String? {
         return login?.email
     }
 
+    // Guest users store their email directly on the guest record.
     booker.guestId?.let { guestId ->
         val guest =
             GuestData

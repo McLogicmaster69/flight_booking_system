@@ -13,6 +13,9 @@ import io.ktor.server.request.*
 import org.mindrot.jbcrypt.BCrypt
 import io.ktor.server.sessions.*
 
+/**
+ * Registers all staff-related routes.
+ */
 fun Route.staffRoutes() {
     get("/stafflogin") { call.handleStaffLoginLoad() }
     post("/stafflogin") { call.handleStaffLoginPost() }
@@ -20,9 +23,15 @@ fun Route.staffRoutes() {
     get("/staff-assignment/{token}") { call.handleGetAssignment() }
 }
 
+/**
+ * Creates an HTMX out-of-band status message for the staff login form.
+ */
 fun ApplicationCall.createStaffLoginStatus(message: String): String =
     """<div id="staff-log-in-status" hx-swap-oob="true" role="status" aria-live="polite" aria-atomic="true">$message</div>"""
 
+/**
+ * Loads and renders the staff login page.
+ */
 private suspend fun ApplicationCall.handleStaffLoginLoad() {
     timed("T0_staff_login", jsMode()) {
         val pebble = getEngine()
@@ -41,6 +50,9 @@ private suspend fun ApplicationCall.handleStaffLoginLoad() {
     }
 }
 
+/**
+ * Handles staff login form submission and creates a staff session if credentials are valid.
+ */
 private suspend fun ApplicationCall.handleStaffLoginPost() {
     timed("T1_staff_login_post", jsMode()) {
         val params = receiveParameters()
@@ -48,6 +60,7 @@ private suspend fun ApplicationCall.handleStaffLoginPost() {
         val email = params["staffEmail"]
         val password = params["staffPw"]
 
+        // Validate that both login fields were provided.
         if (email.isNullOrBlank() || password.isNullOrBlank()) {
             respondText(
                 createStaffLoginStatus("Incorrect email or password"),
@@ -59,6 +72,7 @@ private suspend fun ApplicationCall.handleStaffLoginPost() {
 
         val query = StaffData.queryByLogIn(email)
 
+        // Do not reveal whether the email exists.
         if (query.isEmpty()) {
             respondText(
                 createStaffLoginStatus("Incorrect email or password"),
@@ -87,6 +101,7 @@ private suspend fun ApplicationCall.handleStaffLoginPost() {
 
         val storedPassword = passwordColumn.columnVal as String
 
+        // Compare the submitted password against the stored BCrypt hash.
         if (!BCrypt.checkpw(password, storedPassword)) {
             respondText(
                 createStaffLoginStatus("Incorrect email or password"),
@@ -96,15 +111,20 @@ private suspend fun ApplicationCall.handleStaffLoginPost() {
             return@timed
         }
 
+        // Store a valid staff session and redirect through HTMX.
         sessions.set(StaffSessionData.createSession(result.dataClass.id).toTokenSession())
         response.headers.append("HX-Redirect", "/staffdashboard")
         respond(HttpStatusCode.OK)
     }
 }
 
+/**
+ * Loads the staff dashboard and displays flights assigned to the logged-in staff member.
+ */
 private suspend fun ApplicationCall.handleStaffDashboardLoad() {
     timed("T2_staff_dashboard", jsMode()) {
         requireStaff() ?: return@timed
+
         val loggedState: StaffLoggedInState = staffLoggedIn()
         if (!loggedState.logged_in || loggedState.session == null) {
             respondRedirect("/login")
@@ -146,11 +166,15 @@ private suspend fun ApplicationCall.handleStaffDashboardLoad() {
     }
 }
 
+/**
+ * Loads a public staff assignment result page using the provided assignment token.
+ */
 private suspend fun ApplicationCall.handleGetAssignment() {
     timed("T3_staff_assignment", jsMode()) {
         val token = parameters["token"]
         if (token == null) return@timed pageNotFoundResponse()
 
+        // Resolve the assignment, flight, and route from the token.
         val assignment: AssignedFlightStaffData? = AssignedFlightStaffData.queryDatabase(token).firstOrNull()?.dataClass
         if (assignment == null) return@timed pageNotFoundResponse()
 
@@ -178,6 +202,9 @@ private suspend fun ApplicationCall.handleGetAssignment() {
     }
 }
 
+/**
+ * Renders the staff page-not-found error page.
+ */
 private suspend fun ApplicationCall.pageNotFoundResponse() {
     val writer = StringWriter()
     val pebble = getEngine()
@@ -193,6 +220,9 @@ private suspend fun ApplicationCall.pageNotFoundResponse() {
     return respondText(writer.toString(), ContentType.Text.Html)
 }
 
+/**
+ * Checks that a valid staff session exists before allowing access to protected staff pages.
+ */
 private suspend fun ApplicationCall.requireStaff(): StaffSessionToken? {
     val staffSession = sessions.get<StaffSessionToken>()
 
@@ -203,6 +233,7 @@ private suspend fun ApplicationCall.requireStaff(): StaffSessionToken? {
 
     val results: List<QueryResult<StaffSessionData>> = StaffSessionData.queryDatabase(staffSession.token)
 
+    // Clear stale or invalid sessions before redirecting back to login.
     if (results.isEmpty()) {
         sessions.clear<StaffSessionToken>()
         respondRedirect("/stafflogin")

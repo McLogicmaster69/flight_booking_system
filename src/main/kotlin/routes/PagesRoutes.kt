@@ -8,11 +8,17 @@ import java.io.StringWriter
 import utils.timed
 import utils.jsMode
 
+/**
+ * Registers static page routes.
+ */
 fun Route.pagesRoutes() {
     get("/settings") { call.handleSettingsLoad() }
     get("/help") { call.handleHelpLoad() }
 }
 
+/**
+ * Renders a generic Pebble page with shared navigation and query-parameter state.
+ */
 private suspend fun ApplicationCall.render(
     template: String,
     title: String,
@@ -21,6 +27,7 @@ private suspend fun ApplicationCall.render(
     timed("T0_page_$title", jsMode()) {
         val pebble = getEngine()
 
+        // Read optional display state from query parameters.
         val isLoggedIn = request.queryParameters["loggedIn"] == "1"
         val cookiesAccepted = request.queryParameters["cookies"] == "1"
 
@@ -43,6 +50,9 @@ private suspend fun ApplicationCall.render(
     }
 }
 
+/**
+ * Loads and renders the settings page.
+ */
 private suspend fun ApplicationCall.handleSettingsLoad() {
     timed("T1_Handle_Settings_Load", jsMode()) {
         val pebble = getEngine()
@@ -63,6 +73,9 @@ private suspend fun ApplicationCall.handleSettingsLoad() {
     }
 }
 
+/**
+ * Loads and renders the help page.
+ */
 private suspend fun ApplicationCall.handleHelpLoad() {
     timed("T1_Handle_Settings_Load", jsMode()) {
         val pebble = getEngine()

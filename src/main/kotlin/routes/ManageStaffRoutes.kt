@@ -12,6 +12,9 @@ import data.*
 import io.ktor.server.request.*
 import org.mindrot.jbcrypt.BCrypt
 
+/**
+ * Registers all admin staff-management routes.
+ */
 fun Route.manageStaffRoutes() {
     get("/manageStaff") { call.handleManageStaffLoad() }
     get("/manageStaff/edit/{id}") { call.handleEditStaffLoad() }
@@ -19,6 +22,9 @@ fun Route.manageStaffRoutes() {
     post("/manageStaff/update") { call.handleUpdateStaffPost() }
 }
 
+/**
+ * Represents the staff account information shown on the manage staff page.
+ */
 data class StaffAccountView(
     val id: Int,
     val firstName: String?,
@@ -28,6 +34,9 @@ data class StaffAccountView(
     val email: String?,
 )
 
+/**
+ * Loads the manage staff page with search, pagination, and staff account details.
+ */
 private suspend fun ApplicationCall.handleManageStaffLoad() {
     timed("T0_manage_staff", jsMode()) {
         if (!requireAdmin()) return@timed
@@ -42,6 +51,7 @@ private suspend fun ApplicationCall.handleManageStaffLoad() {
             StaffData.queryDatabase().map { result ->
                 val staffMember = result.dataClass
 
+                // Look up the staff member's position name.
                 val position =
                     StaffPositionData
                         .queryDatabase(
@@ -53,6 +63,7 @@ private suspend fun ApplicationCall.handleManageStaffLoad() {
                         ).firstOrNull()
                         ?.dataClass
 
+                // Look up the staff member's login email.
                 val login =
                     LoginData
                         .queryDatabase(
@@ -74,6 +85,7 @@ private suspend fun ApplicationCall.handleManageStaffLoad() {
                 )
             }
 
+        // Filter staff by first or last name when a search term is provided.
         val filteredStaff =
             if (search.isBlank()) {
                 allStaff
@@ -87,6 +99,7 @@ private suspend fun ApplicationCall.handleManageStaffLoad() {
         val totalPages = ((filteredStaff.size + pageSize - 1) / pageSize).coerceAtLeast(1)
         val safePage = page.coerceAtMost(totalPages)
 
+        // Select only the staff records for the requested page.
         val staff =
             filteredStaff
                 .drop((safePage - 1) * pageSize)
@@ -119,6 +132,9 @@ private suspend fun ApplicationCall.handleManageStaffLoad() {
     }
 }
 
+/**
+ * Creates a new staff account from the submitted admin form.
+ */
 private suspend fun ApplicationCall.handleCreateStaffPost() {
     timed("T1_create_staff", jsMode()) {
         if (!requireAdmin()) return@timed
@@ -133,6 +149,7 @@ private suspend fun ApplicationCall.handleCreateStaffPost() {
         val homeId = params["homeId"]?.toIntOrNull()
         val currentLocation = params["currentLocation"]?.toIntOrNull()
 
+        // Ensure all required staff fields were submitted.
         if (
             firstName.isNullOrBlank() ||
             lastName.isNullOrBlank() ||
@@ -154,6 +171,7 @@ private suspend fun ApplicationCall.handleCreateStaffPost() {
             return@timed
         }
 
+        // Hash the staff member's password before saving credentials.
         val passwordHash = BCrypt.hashpw(password, BCrypt.gensalt())
 
         val loginId =
@@ -176,6 +194,9 @@ private suspend fun ApplicationCall.handleCreateStaffPost() {
     }
 }
 
+/**
+ * Updates an existing staff member's editable profile details.
+ */
 private suspend fun ApplicationCall.handleUpdateStaffPost() {
     timed("T2_update_staff", jsMode()) {
         if (!requireAdmin()) return@timed
@@ -187,6 +208,7 @@ private suspend fun ApplicationCall.handleUpdateStaffPost() {
         val lastName = params["lastName"]?.trim()
         val positionId = params["positionId"]?.toIntOrNull()
 
+        // Validate the submitted staff update values.
         if (
             staffId == null ||
             firstName.isNullOrBlank() ||
@@ -216,11 +238,15 @@ private suspend fun ApplicationCall.handleUpdateStaffPost() {
     }
 }
 
+/**
+ * Loads the edit staff page for a selected staff account.
+ */
 private suspend fun ApplicationCall.handleEditStaffLoad() {
     timed("T3_edit_staff_load", jsMode()) {
         if (!requireAdmin()) return@timed
 
         val staffId = parameters["id"]?.toIntOrNull()
+
         if (staffId == null) {
             respondRedirect("/manageStaff")
             return@timed
@@ -242,6 +268,7 @@ private suspend fun ApplicationCall.handleEditStaffLoad() {
             return@timed
         }
 
+        // Fetch the login record so the staff email can be displayed.
         val login =
             LoginData
                 .queryDatabase(

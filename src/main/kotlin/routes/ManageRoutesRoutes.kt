@@ -12,6 +12,9 @@ import data.*
 import io.ktor.server.request.*
 import java.time.LocalTime
 
+/**
+ * Registers all admin route-management routes.
+ */
 fun Route.manageRoutesRoutes() {
     get("/manageRoutes") { call.handleManageRoutesLoad() }
     get("/manageRoutes/edit/{id}") { call.handleEditRouteLoad() }
@@ -20,6 +23,9 @@ fun Route.manageRoutesRoutes() {
     post("/manageRoutes/delete") { call.handleDeleteRoutePost() }
 }
 
+/**
+ * Represents route information shown on the manage routes page.
+ */
 data class RouteView(
     val id: Int,
     val startDestination: Int,
@@ -29,6 +35,9 @@ data class RouteView(
     val duration: LocalTime,
 )
 
+/**
+ * Loads the manage routes page with search, pagination, and destination data.
+ */
 private suspend fun ApplicationCall.handleManageRoutesLoad() {
     timed("T0_manage_routes", jsMode()) {
         if (!requireAdmin()) return@timed
@@ -45,6 +54,7 @@ private suspend fun ApplicationCall.handleManageRoutesLoad() {
             RouteData.queryDatabase().map { result ->
                 val route = result.dataClass
 
+                // Look up readable destination names for the route.
                 val start = DestinationData.queryDatabase(route.startDestination).firstOrNull()?.dataClass
                 val end = DestinationData.queryDatabase(route.endDestination).firstOrNull()?.dataClass
 
@@ -58,6 +68,7 @@ private suspend fun ApplicationCall.handleManageRoutesLoad() {
                 )
             }
 
+        // Filter routes by start or end destination name when a search term is provided.
         val filteredRoutes =
             if (search.isBlank()) {
                 allRoutes
@@ -71,6 +82,7 @@ private suspend fun ApplicationCall.handleManageRoutesLoad() {
         val totalPages = ((filteredRoutes.size + pageSize - 1) / pageSize).coerceAtLeast(1)
         val safePage = page.coerceAtMost(totalPages)
 
+        // Select only the routes for the requested page.
         val routes =
             filteredRoutes
                 .drop((safePage - 1) * pageSize)
@@ -97,6 +109,9 @@ private suspend fun ApplicationCall.handleManageRoutesLoad() {
     }
 }
 
+/**
+ * Creates a new route after validating destination and duration details.
+ */
 private suspend fun ApplicationCall.handleCreateRoutePost() {
     timed("T1_create_route", jsMode()) {
         if (!requireAdmin()) return@timed
@@ -117,6 +132,7 @@ private suspend fun ApplicationCall.handleCreateRoutePost() {
             return@timed
         }
 
+        // Prevent duplicate routes with the same start and end destination.
         val existing =
             RouteData.queryDatabase(
                 whereArgs =
@@ -142,6 +158,9 @@ private suspend fun ApplicationCall.handleCreateRoutePost() {
     }
 }
 
+/**
+ * Updates an existing route after validating submitted details.
+ */
 private suspend fun ApplicationCall.handleUpdateRoutePost() {
     timed("T2_update_route", jsMode()) {
         if (!requireAdmin()) return@timed
@@ -163,6 +182,7 @@ private suspend fun ApplicationCall.handleUpdateRoutePost() {
             return@timed
         }
 
+        // Check for another route using the same start and end destination.
         val duplicate =
             RouteData.queryDatabase(
                 whereArgs =
@@ -196,6 +216,9 @@ private suspend fun ApplicationCall.handleUpdateRoutePost() {
     }
 }
 
+/**
+ * Deletes a route if no flights are currently using it.
+ */
 private suspend fun ApplicationCall.handleDeleteRoutePost() {
     timed("T3_delete_route", jsMode()) {
         if (!requireAdmin()) return@timed
@@ -207,6 +230,7 @@ private suspend fun ApplicationCall.handleDeleteRoutePost() {
             return@timed
         }
 
+        // Prevent deleting routes that are still referenced by flights.
         val flightsUsingRoute =
             FlightData.queryDatabase(
                 whereArgs =
@@ -231,11 +255,15 @@ private suspend fun ApplicationCall.handleDeleteRoutePost() {
     }
 }
 
+/**
+ * Loads the edit route page for a selected route.
+ */
 private suspend fun ApplicationCall.handleEditRouteLoad() {
     timed("T4_edit_route_load", jsMode()) {
         if (!requireAdmin()) return@timed
 
         val routeId = parameters["id"]?.toIntOrNull()
+
         if (routeId == null) {
             respondRedirect("/manageRoutes")
             return@timed
