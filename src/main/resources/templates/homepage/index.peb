@@ -58,7 +58,6 @@
             </div>
 
             <div class="homepage-search-actions">
-                <!-- Invisible dummy label guarantees the button aligns exactly with the inputs regardless of flexbox quirks -->
                 <label aria-hidden="true" style="visibility: hidden; user-select: none;">&nbsp;</label>
                 <button type="submit">SEARCH FLIGHTS</button>
             </div>
@@ -78,11 +77,19 @@
     <div class="grid">
         <div class="col-4">
             <div class="card" style="height: 100%; display: flex; flex-direction: column;">
-                <h3>Join SkyBridge Loyalty</h3>
-                <p class="muted">Earn points on every flight. Redeem your points for free checked bags, priority boarding, and exclusive lounge access.</p>
-                <div style="margin-top: auto;">
-                    <a href="/signup" class="btn" style="width: 100%;">Create Account</a>
-                </div>
+                {% if user != null %}
+                    <h3>SkyBridge Loyalty</h3>
+                    <p class="muted">You're earning points on every flight! Redeem your points for free checked bags, priority boarding, and exclusive lounge access.</p>
+                    <div style="margin-top: auto;">
+                        <a href="/rewards" class="btn" style="width: 100%;">Go to Loyalty Rewards</a>
+                    </div>
+                {% else %}
+                    <h3>Join SkyBridge Loyalty</h3>
+                    <p class="muted">Earn points on every flight. Redeem your points for free checked bags, priority boarding, and exclusive lounge access.</p>
+                    <div style="margin-top: auto;">
+                        <a href="/signup" class="btn" style="width: 100%;">Create Account</a>
+                    </div>
+                {% endif %}
             </div>
         </div>
         <div class="col-4">
