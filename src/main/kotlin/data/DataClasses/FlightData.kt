@@ -610,15 +610,18 @@ data class FlightData(
             ).size
         }
 
-        fun getMostPopularTimes(): List<LocalTime> =
+        fun getMostPopularTimes(
+            daysPrior: Long = 30L,
+            daysAdvanced: Long = 7L,
+        ): List<LocalTime> =
             (0..23)
                 .map { i ->
                     LocalTime.of(i, 0)
                 }.sortedByDescending { time ->
                     getTimePopularity(
                         time,
-                        LocalDate.now().minusMonths(1L),
-                        LocalDate.now().plusDays(7L),
+                        LocalDate.now().minusDays(daysPrior),
+                        LocalDate.now().plusDays(daysAdvanced),
                     )
                 }
     }
