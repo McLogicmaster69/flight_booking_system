@@ -1,10 +1,10 @@
-{% extends "_layout/base.peb" %}
+    {% extends "_layout/base.peb" %}
 
-{% set layout = 'admin' %}
-{% set activePage = 'manageStaff' %}
-{% set inNav = true %}
+        {% set layout = 'admin' %}
+        {% set activePage = 'manageStaff' %}
+        {% set inNav = true %}
 
-{% block content %}
+    {% block content %}
 
 <h2 class="wf-title">Manage Staff</h2>
 <div class="wf-rule"></div>
@@ -12,39 +12,36 @@
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start;">
 
     <section>
-        <h3>Existing Staff</h3>
+        <div class="card" style="margin-bottom: 24px;">
+            <h3 style="margin-top: 0;">Existing Staff</h3>
 
-        <form class="auth-form" method="get" action="/manageStaff">
-            <label class="auth-label">Search Staff</label>
-            <input
-                class="auth-input"
-                name="search"
-                type="text"
-                value="{{ search }}"
-                placeholder="Search by first or last name">
+            <form class="auth-form" method="get" action="/manageStaff">
+                <label class="auth-label">Search Staff</label>
+                <input
+                    class="auth-input"
+                    name="search"
+                    type="text"
+                    value="{{ search }}"
+                    placeholder="Search by first or last name">
 
-            <div style="margin-top: 14px;"></div>
-            <button class="wf-btn wide" type="submit" style="margin-top: 6px; margin-bottom: 12px;">
-                Search
-            </button>
-        </form>
-
-        <div class="wf-rule"></div>
+                <button class="wf-btn wide" type="submit" style="margin-top: 12px;">
+                    Search
+                </button>
+            </form>
+        </div>
 
         {% for member in staff %}
 
-            <div class="staff-flight-assignment">
-                <a href="/manageStaff/edit/{{ member.id }}" class="staff-flight-button">
-                    <h2>{{ member.firstName }} {{ member.lastName }}</h2>
+            <div class="card" style="margin-bottom: 16px;">
+                <h3 style="margin-top: 0;">{{ member.firstName }} {{ member.lastName }}</h3>
 
-                    <div class="staff-flight-info">
-                        <p>Email: {{ member.email }}</p>
-                        <p>Position: {{ member.positionName }}</p>
-                    </div>
-                </a>
+                <div class="muted">
+                    <p style="margin: 4px 0;">Email: {{ member.email }}</p>
+                    <p style="margin: 4px 0;">Position: {{ member.positionName }}</p>
+                </div>
+
+                <a class="wf-btn" href="/manageStaff/edit/{{ member.id }}" style="margin-top: 14px; display: inline-block;">Edit Staff</a>
             </div>
-
-            <br>
 
         {% else %}
 
@@ -68,54 +65,56 @@
     </section>
 
     <section>
-        <h3>Create Staff Account</h3>
+        <div class="card">
+            <h3 style="margin-top: 0;">Create Staff Account</h3>
 
-        <form
-            class="auth-form"
-            method="post"
-            action="/manageStaff/create"
-            hx-post="/manageStaff/create"
-            hx-target="#create-staff-status"
-            hx-swap="innerHTML">
+            <form
+                class="auth-form"
+                method="post"
+                action="/manageStaff/create"
+                hx-post="/manageStaff/create"
+                hx-target="#create-staff-status"
+                hx-swap="innerHTML">
 
-            <label class="auth-label">First Name</label>
-            <input class="auth-input" name="firstName" type="text" placeholder="First Name">
+                <label class="auth-label">First Name</label>
+                <input class="auth-input" name="firstName" type="text" placeholder="First Name">
 
-            <label class="auth-label">Last Name</label>
-            <input class="auth-input" name="lastName" type="text" placeholder="Last Name">
+                <label class="auth-label">Last Name</label>
+                <input class="auth-input" name="lastName" type="text" placeholder="Last Name">
 
-            <label class="auth-label">Position</label>
-            <select class="auth-input" name="positionId">
-                {% for position in positions %}
-                    <option value="{{ position.id }}">{{ position.name }}</option>
-                {% endfor %}
-            </select>
+                <label class="auth-label">Position</label>
+                <select class="auth-input" name="positionId">
+                    {% for position in positions %}
+                        <option value="{{ position.id }}">{{ position.name }}</option>
+                    {% endfor %}
+                </select>
 
-            <label class="auth-label">Home Country</label>
-            <select class="auth-input" name="homeId">
-                {% for country in countries %}
-                    <option value="{{ country.id }}">{{ country.name }}</option>
-                {% endfor %}
-            </select>
+                <label class="auth-label">Home Country</label>
+                <select class="auth-input" name="homeId">
+                    {% for country in countries %}
+                        <option value="{{ country.id }}">{{ country.name }}</option>
+                    {% endfor %}
+                </select>
 
-            <label class="auth-label">Current Location</label>
-            <select class="auth-input" name="currentLocation">
-                {% for destination in destinations %}
-                    <option value="{{ destination.id }}">{{ destination.cityName }}</option>
-                {% endfor %}
-            </select>
+                <label class="auth-label">Current Location</label>
+                <select class="auth-input" name="currentLocation">
+                    {% for destination in destinations %}
+                        <option value="{{ destination.id }}">{{ destination.cityName }}</option>
+                    {% endfor %}
+                </select>
 
-            <label class="auth-label">Email</label>
-            <input class="auth-input" name="email" type="email" placeholder="Email">
+                <label class="auth-label">Email</label>
+                <input class="auth-input" name="email" type="email" placeholder="Email">
 
-            <label class="auth-label">Password</label>
-            <input class="auth-input" name="password" type="password" placeholder="Password">
+                <label class="auth-label">Password</label>
+                <input class="auth-input" name="password" type="password" placeholder="Password">
 
-            <div style="margin-top: 14px;"></div>
-            <button class="wf-btn wide" type="submit">Create Staff Account</button>
+                <div style="margin-top: 14px;"></div>
+                <button class="wf-btn wide" type="submit">Create Staff Account</button>
 
-            <div id="create-staff-status" role="status" aria-live="polite"></div>
-        </form>
+                <div id="create-staff-status" role="status" aria-live="polite"></div>
+            </form>
+        </div>
     </section>
 
 </div>

@@ -1,58 +1,54 @@
-{% extends "_layout/base.peb" %}
+    {% extends "_layout/base.peb" %}
 
-{% set layout = 'admin' %}
-{% set activePage = 'managePlaneData' %}
-{% set inNav = true %}
+        {% set layout = 'admin' %}
+        {% set activePage = 'managePlaneData' %}
+        {% set inNav = true %}
 
-{% block content %}
+    {% block content %}
 
-<h2 class="wf-title">Manage Planes</h2>
+<h2 class="wf-title">Manage Plane Data</h2>
 <div class="wf-rule"></div>
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start;">
 
     <section>
-        <h3>Registered Models</h3>
+        <div class="card" style="margin-bottom: 24px;">
+            <h3 style="margin-top: 0;">Registered Models</h3>
 
-        <form class="auth-form" method="get" action="/managePlaneData">
-            <input type="hidden" name="manufacturerSearch" value="{{ manufacturerSearch }}">
-            <input type="hidden" name="manufacturerPage" value="{{ manufacturerPage }}">
+            <form class="auth-form" method="get" action="/managePlaneData">
+                <input type="hidden" name="manufacturerSearch" value="{{ manufacturerSearch }}">
+                <input type="hidden" name="manufacturerPage" value="{{ manufacturerPage }}">
 
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-                <label class="auth-label" style="margin-bottom: 0;">
-                    Search Models
-                </label>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <label class="auth-label" style="margin-bottom: 0;">
+                        Search Models
+                    </label>
 
-                <input
-                    class="auth-input"
-                    name="modelSearch"
-                    type="text"
-                    value="{{ modelSearch }}"
-                    placeholder="Search by model or manufacturer">
-            </div>
+                    <input
+                        class="auth-input"
+                        name="modelSearch"
+                        type="text"
+                        value="{{ modelSearch }}"
+                        placeholder="Search by model or manufacturer">
+                </div>
 
-            <div style="margin-top: 0px;"></div>
-            <button class="wf-btn wide" type="submit" style="margin: 0px 0 12px 0;">Search Models</button>
-        </form>
-
-        <div class="wf-rule"></div>
+                <button class="wf-btn wide" type="submit" style="margin-top: 12px;">Search Models</button>
+            </form>
+        </div>
 
         {% for model in models %}
 
-            <div class="staff-flight-assignment">
-                <a href="/managePlaneData/model/edit/{{ model.id }}" class="staff-flight-button">
-                    <h2>{{ model.name }}</h2>
+            <div class="card" style="margin-bottom: 16px;">
+                <h3 style="margin-top: 0;">{{ model.name }}</h3>
 
-                    <div class="staff-flight-info">
-                        <p>Manufacturer: {{ model.manufacturerName }}</p>
-                        <p>Capacity: {{ model.capacity }}</p>
-                        <p>Pilots: {{ model.pilots }}</p>
-                        <p>Attendants: {{ model.attendants }}</p>
-                    </div>
-                </a>
+                <div class="muted">
+                    <p style="margin: 4px 0;">Manufacturer: {{ model.manufacturerName }}</p>
+                    <p style="margin: 4px 0;">Capacity: {{ model.capacity }}</p>
+                    <p style="margin: 4px 0;">Pilots: {{ model.pilots }} | Attendants: {{ model.attendants }}</p>
+                </div>
+
+                <a class="wf-btn" href="/managePlaneData/model/edit/{{ model.id }}" style="margin-top: 14px; display: inline-block;">Edit Model</a>
             </div>
-
-            <br>
 
         {% else %}
 
@@ -77,40 +73,42 @@
     </section>
 
     <section>
-        <h3>Register Model</h3>
+        <div class="card">
+            <h3 style="margin-top: 0;">Register Model</h3>
 
-        <form
-            class="auth-form"
-            method="post"
-            action="/managePlaneData/model/create"
-            hx-post="/managePlaneData/model/create"
-            hx-target="#create-model-status"
-            hx-swap="innerHTML">
+            <form
+                class="auth-form"
+                method="post"
+                action="/managePlaneData/model/create"
+                hx-post="/managePlaneData/model/create"
+                hx-target="#create-model-status"
+                hx-swap="innerHTML">
 
-            <label class="auth-label">Model Name</label>
-            <input class="auth-input" name="name" type="text" placeholder="Model Name">
+                <label class="auth-label">Model Name</label>
+                <input class="auth-input" name="name" type="text" placeholder="Model Name">
 
-            <label class="auth-label">Manufacturer</label>
-            <select class="auth-input" name="manufacturerId">
-                {% for manufacturer in allManufacturers %}
-                    <option value="{{ manufacturer.id }}">{{ manufacturer.name }}</option>
-                {% endfor %}
-            </select>
+                <label class="auth-label">Manufacturer</label>
+                <select class="auth-input" name="manufacturerId">
+                    {% for manufacturer in allManufacturers %}
+                        <option value="{{ manufacturer.id }}">{{ manufacturer.name }}</option>
+                    {% endfor %}
+                </select>
 
-            <label class="auth-label">Capacity</label>
-            <input class="auth-input" name="capacity" type="number" min="1" placeholder="Capacity">
+                <label class="auth-label">Capacity</label>
+                <input class="auth-input" name="capacity" type="number" min="1" placeholder="Capacity">
 
-            <label class="auth-label">Pilots</label>
-            <input class="auth-input" name="pilots" type="number" min="1" placeholder="Pilots">
+                <label class="auth-label">Pilots</label>
+                <input class="auth-input" name="pilots" type="number" min="1" placeholder="Pilots">
 
-            <label class="auth-label">Attendants</label>
-            <input class="auth-input" name="attendants" type="number" min="0" placeholder="Attendants">
+                <label class="auth-label">Attendants</label>
+                <input class="auth-input" name="attendants" type="number" min="0" placeholder="Attendants">
 
-            <div style="margin-top: 0px;"></div>
-            <button class="wf-btn wide" type="submit">Register Model</button>
+                <div style="margin-top: 14px;"></div>
+                <button class="wf-btn wide" type="submit">Register Model</button>
 
-            <div id="create-model-status" role="status" aria-live="polite"></div>
-        </form>
+                <div id="create-model-status" role="status" aria-live="polite"></div>
+            </form>
+        </div>
     </section>
 
 </div>
@@ -120,40 +118,36 @@
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start;">
 
     <section>
-        <h3>Registered Manufacturers</h3>
+        <div class="card" style="margin-bottom: 24px;">
+            <h3 style="margin-top: 0;">Registered Manufacturers</h3>
 
-        <form class="auth-form" method="get" action="/managePlaneData">
-            <input type="hidden" name="modelSearch" value="{{ modelSearch }}">
-            <input type="hidden" name="modelPage" value="{{ modelPage }}">
+            <form class="auth-form" method="get" action="/managePlaneData">
+                <input type="hidden" name="modelSearch" value="{{ modelSearch }}">
+                <input type="hidden" name="modelPage" value="{{ modelPage }}">
 
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-                <label class="auth-label" style="margin-bottom: 0;">
-                    Search Manufacturers
-                </label>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <label class="auth-label" style="margin-bottom: 0;">
+                        Search Manufacturers
+                    </label>
 
-                <input
-                    class="auth-input"
-                    name="manufacturerSearch"
-                    type="text"
-                    value="{{ manufacturerSearch }}"
-                    placeholder="Search by manufacturer name">
-            </div>
+                    <input
+                        class="auth-input"
+                        name="manufacturerSearch"
+                        type="text"
+                        value="{{ manufacturerSearch }}"
+                        placeholder="Search by manufacturer name">
+                </div>
 
-            <div style="margin-top: 0px;"></div>
-            <button class="wf-btn wide" type="submit" style="margin: 0px 0 12px 0;">Search Manufacturers</button>
-        </form>
-
-        <div class="wf-rule"></div>
+                <button class="wf-btn wide" type="submit" style="margin-top: 12px;">Search Manufacturers</button>
+            </form>
+        </div>
 
         {% for manufacturer in manufacturers %}
 
-            <div class="staff-flight-assignment">
-                <a href="/managePlaneData/manufacturer/edit/{{ manufacturer.id }}" class="staff-flight-button">
-                    <h2>{{ manufacturer.name }}</h2>
-                </a>
+            <div class="card" style="margin-bottom: 16px;">
+                <h3 style="margin-top: 0;">{{ manufacturer.name }}</h3>
+                <a class="wf-btn" href="/managePlaneData/manufacturer/edit/{{ manufacturer.id }}" style="margin-top: 14px; display: inline-block;">Edit Manufacturer</a>
             </div>
-
-            <br>
 
         {% else %}
 
@@ -178,24 +172,26 @@
     </section>
 
     <section>
-        <h3>Register Manufacturer</h3>
+        <div class="card">
+            <h3 style="margin-top: 0;">Register Manufacturer</h3>
 
-        <form
-            class="auth-form"
-            method="post"
-            action="/managePlaneData/manufacturer/create"
-            hx-post="/managePlaneData/manufacturer/create"
-            hx-target="#create-manufacturer-status"
-            hx-swap="innerHTML">
+            <form
+                class="auth-form"
+                method="post"
+                action="/managePlaneData/manufacturer/create"
+                hx-post="/managePlaneData/manufacturer/create"
+                hx-target="#create-manufacturer-status"
+                hx-swap="innerHTML">
 
-            <label class="auth-label">Manufacturer Name</label>
-            <input class="auth-input" name="name" type="text" placeholder="Manufacturer Name">
+                <label class="auth-label">Manufacturer Name</label>
+                <input class="auth-input" name="name" type="text" placeholder="Manufacturer Name">
 
-            <div style="margin-top: 0px;"></div>
-            <button class="wf-btn wide" type="submit">Register Manufacturer</button>
+                <div style="margin-top: 14px;"></div>
+                <button class="wf-btn wide" type="submit">Register Manufacturer</button>
 
-            <div id="create-manufacturer-status" role="status" aria-live="polite"></div>
-        </form>
+                <div id="create-manufacturer-status" role="status" aria-live="polite"></div>
+            </form>
+        </div>
     </section>
 
 </div>

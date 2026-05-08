@@ -1,10 +1,10 @@
-{% extends "_layout/base.peb" %}
+    {% extends "_layout/base.peb" %}
 
-{% set layout = 'admin' %}
-{% set activePage = 'manageFlights' %}
-{% set inNav = true %}
+        {% set layout = 'admin' %}
+        {% set activePage = 'manageFlights' %}
+        {% set inNav = true %}
 
-{% block content %}
+    {% block content %}
 
 <h2 class="wf-title">Manage Flights</h2>
 <div class="wf-rule"></div>
@@ -12,57 +12,40 @@
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start;">
 
     <section>
-        <h3>Registered Flights</h3>
+        <div class="card" style="margin-bottom: 24px;">
+            <h3 style="margin-top: 0;">Registered Flights</h3>
 
-        <form class="auth-form" method="get" action="/manageFlights">
-            <label class="auth-label">Search Flights</label>
-            <input
-                class="auth-input"
-                name="search"
-                type="text"
-                value="{{ search }}"
-                placeholder="Search by route, plane, date, or time">
+            <form class="auth-form" method="get" action="/manageFlights">
+                <label class="auth-label">Search Flights</label>
+                <input
+                    class="auth-input"
+                    name="search"
+                    type="text"
+                    value="{{ search }}"
+                    placeholder="Search by route, plane, date, or time">
 
-            <button class="wf-btn wide" type="submit" style="margin: 6px 0 12px 0;">
-                Search Flights
-            </button>
-        </form>
-
-        <div class="wf-rule"></div>
+                <button class="wf-btn wide" type="submit" style="margin-top: 12px;">
+                    Search Flights
+                </button>
+            </form>
+        </div>
 
         {% for flight in flights %}
 
-            <div class="staff-flight-assignment">
-                <div class="staff-flight-button">
-                    <h2>{{ flight.routeName }}</h2>
+            <div class="card" style="margin-bottom: 16px;">
+                <h3 style="margin-top: 0;">{{ flight.routeName }}</h3>
 
-                    <div class="staff-flight-info" style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">
-                        <p style="margin: 0;">
-                            Plane: {{ flight.planeRegistrationCode }}
-                        </p>
+                <div class="muted">
+                    <p style="margin: 4px 0;">Plane: {{ flight.planeRegistrationCode }}</p>
+                    <p style="margin: 4px 0;">Date: {{ flight.date }}</p>
+                    <p style="margin: 4px 0;">Time: {{ flight.time }}</p>
+                </div>
 
-                        <p style="margin: 0;">
-                            Date: {{ flight.date }}
-                        </p>
-
-                        <p style="margin: 0;">
-                            Time: {{ flight.time }}
-                        </p>
-                    </div>
-
-                    <div style="display: flex; gap: 12px; margin-top: 14px;">
-                        <a class="wf-btn" href="/manageFlights/edit/{{ flight.id }}">
-                            Edit Flight
-                        </a>
-
-                        <a class="wf-btn" href="/manageFlights/details/{{ flight.id }}">
-                            View Reservations
-                        </a>
-                    </div>
+                <div style="display: flex; gap: 12px; margin-top: 14px; flex-wrap: wrap;">
+                    <a class="wf-btn" href="/manageFlights/edit/{{ flight.id }}">Edit Flight</a>
+                    <a class="wf-btn" href="/manageFlights/details/{{ flight.id }}">View Reservations</a>
                 </div>
             </div>
-
-            <br>
 
         {% else %}
 
@@ -86,33 +69,43 @@
     </section>
 
     <section>
-        <h3>Register Flight</h3>
+        <div class="card">
+            <h3 style="margin-top: 0;">Register Flight</h3>
 
-        <form class="auth-form" method="post" action="/manageFlights/create" hx-post="/manageFlights/create">
+            <form
+                class="auth-form"
+                method="post"
+                action="/manageFlights/create"
+                hx-post="/manageFlights/create"
+                hx-target="#create-flight-status"
+                hx-swap="innerHTML">
 
-            <label class="auth-label">Route</label>
-            <select class="auth-input" name="routeId">
-                {% for route in routes %}
-                    <option value="{{ route.id }}">{{ routeNames[route.id] }}</option>
-                {% endfor %}
-            </select>
+                <label class="auth-label">Route</label>
+                <select class="auth-input" name="routeId">
+                    {% for route in routes %}
+                        <option value="{{ route.id }}">{{ routeNames[route.id] }}</option>
+                    {% endfor %}
+                </select>
 
-            <label class="auth-label">Plane</label>
-            <select class="auth-input" name="planeId">
-                {% for plane in planes %}
-                    <option value="{{ plane.id }}">{{ plane.registrationCode }}</option>
-                {% endfor %}
-            </select>
+                <label class="auth-label">Plane</label>
+                <select class="auth-input" name="planeId">
+                    {% for plane in planes %}
+                        <option value="{{ plane.id }}">{{ plane.registrationCode }}</option>
+                    {% endfor %}
+                </select>
 
-            <label class="auth-label">Date</label>
-            <input class="auth-input" name="date" type="date">
+                <label class="auth-label">Date</label>
+                <input class="auth-input" name="date" type="date">
 
-            <label class="auth-label">Time</label>
-            <input class="auth-input" name="time" type="time" value="00:00">
+                <label class="auth-label">Time</label>
+                <input class="auth-input" name="time" type="time" value="00:00">
 
-            <div style="margin-top: 14px;"></div>
-            <button class="wf-btn wide" type="submit">Register Flight</button>
-        </form>
+                <div style="margin-top: 14px;"></div>
+                <button class="wf-btn wide" type="submit">Register Flight</button>
+
+                <div id="create-flight-status" role="status" aria-live="polite" style="margin-top: 12px;"></div>
+            </form>
+        </div>
     </section>
 
 </div>
