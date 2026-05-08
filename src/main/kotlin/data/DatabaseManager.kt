@@ -31,7 +31,7 @@ object DatabaseManager {
     /**
      * Active database connection.
      */
-    private val connection: Connection
+    private var connection: Connection? = null
 
     /**
      * Tracks tables already initialized to prevent duplicates.
@@ -39,9 +39,15 @@ object DatabaseManager {
     private var initialisedTables: MutableList<DataClass<*>> = mutableListOf()
 
     /**
+     * Signals if the database has been initialised
+     */
+    var dbInitialised : Boolean = false
+        private set
+
+    /**
      * List of all data classes managed by the database.
      */
-    private val dataClasses: List<DataClass<*>> =
+    val dataClasses: List<DataClass<*>> =
         listOf(
             AdminData.EMPTY,
             AdminSessionData.EMPTY,
@@ -80,8 +86,8 @@ object DatabaseManager {
     /**
      * Initializes the database connection on startup.
      */
-    init {
-        connection = connect()
+    fun initialise(path : String? = null) {
+        connection = connect(path ?: dbFilePath)
     }
 
     /**
@@ -89,12 +95,12 @@ object DatabaseManager {
      *
      * @return Active SQL connection.
      */
-    fun connect(): Connection {
-        val dbPath = File(dbFilePath)
+    fun connect(path : String): Connection {
+        val dbPath = File(path)
         println("SQLite DB absolute path: ${dbPath.absolutePath}")
         dbPath.parentFile?.mkdirs()
 
-        val url = "jdbc:sqlite:$dbFilePath"
+        val url = "jdbc:sqlite:$path"
         val conn = DriverManager.getConnection(url)
 
         conn.createStatement().use {
@@ -105,12 +111,19 @@ object DatabaseManager {
     }
 
     /**
+     * Closes the connection
+     */
+    fun disconnect() {
+        connection!!.close()
+    }
+
+    /**
      * Executes a raw SQL statement.
      *
      * @param sql SQL string to execute.
      */
     fun executeSQL(sql: String) {
-        connection.createStatement().use { stmt ->
+        connection!!.createStatement().use { stmt ->
             stmt.execute(sql)
         }
     }
@@ -172,6 +185,7 @@ object DatabaseManager {
         initialisedTables.clear()
         seedAdminAccount()
 
+        dbInitialised = true
         println("Database initilisation completed")
     }
 
@@ -237,7 +251,7 @@ object DatabaseManager {
 
         var id = -1
 
-        connection.prepareStatement(sql).use { stmt ->
+        connection!!.prepareStatement(sql).use { stmt ->
             entries.forEachIndexed { index, entry ->
                 stmt.setObject(index + 1, entry.value)
             }
@@ -271,7 +285,7 @@ object DatabaseManager {
         val setClause = entries.joinToString(", ") { "${it.key.name} = ?" }
         val sql = "UPDATE $table SET $setClause WHERE ${whereArgs.whereClause}"
 
-        connection.prepareStatement(sql).use { stmt ->
+        connection!!.prepareStatement(sql).use { stmt ->
             var index = 1
 
             entries.forEach {
@@ -303,7 +317,7 @@ object DatabaseManager {
 
         val sql = "DELETE FROM $table WHERE ${whereArgs.whereClause}"
 
-        connection.prepareStatement(sql).use { stmt ->
+        connection!!.prepareStatement(sql).use { stmt ->
             whereArgs.whereArgs.forEachIndexed { i, value ->
                 stmt.setObject(i + 1, value)
             }
@@ -381,7 +395,7 @@ object DatabaseManager {
             }
         }
 
-        connection.prepareStatement(sql).use { stmt ->
+        connection!!.prepareStatement(sql).use { stmt ->
             var objectIndex = 1
 
             if (whereArgs != null) {
@@ -429,7 +443,7 @@ object DatabaseManager {
         val setClause = values.keys.joinToString(", ") { "${it.name} = ?" }
         val sql = "UPDATE $table SET $setClause WHERE id = ?"
 
-        connection.prepareStatement(sql).use { stmt ->
+        connection!!.prepareStatement(sql).use { stmt ->
             values.values.forEachIndexed { index, value ->
                 stmt.setObject(index + 1, value)
             }
