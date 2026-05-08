@@ -31,39 +31,43 @@ private suspend fun ApplicationCall.handleAdminLoad() {
         val inSevenDays = now.plusDays(7)
 
         val popularTimesLabels = (0..23).map { "${it.toString().padStart(2, '0')}:00" }
-        val popularTimesData = (0..23).map { hour ->
-            FlightData.getTimePopularity(LocalTime.of(hour, 0), startDate, inSevenDays).toDouble()
-        }
+        val popularTimesData =
+            (0..23).map { hour ->
+                FlightData.getTimePopularity(LocalTime.of(hour, 0), startDate, inSevenDays).toDouble()
+            }
 
         val popularRoutesList = RouteData.getPopularRoutes(10, periodDays)
-        val popularRoutesLabels = popularRoutesList.map { result ->
-            val route = result.dataClass
-            val start = DestinationData.getDestinationName(route.startDestination).split("-")[0].trim()
-            val end = DestinationData.getDestinationName(route.endDestination).split("-")[0].trim()
-            "$start to $end"
-        }
-        val popularRoutesData = popularRoutesList.map { result ->
-            result.dataClass.getRoutePopularity(startDate, inSevenDays).toDouble()
-        }
+        val popularRoutesLabels =
+            popularRoutesList.map { result ->
+                val route = result.dataClass
+                val start = DestinationData.getDestinationName(route.startDestination).split("-")[0].trim()
+                val end = DestinationData.getDestinationName(route.endDestination).split("-")[0].trim()
+                "$start to $end"
+            }
+        val popularRoutesData =
+            popularRoutesList.map { result ->
+                result.dataClass.getRoutePopularity(startDate, inSevenDays).toDouble()
+            }
 
         val predictedTimesData = predictNextValues(popularTimesData, popularTimesData.size)
         val predictedRoutesData = predictNextValues(popularRoutesData, popularRoutesData.size)
 
         val pebble = getEngine()
-        val model = mapOf(
-            "title" to "Admin Analytics Dashboard",
-            "layout" to "admin",
-            "activePage" to "admin",
-            "inNav" to true,
-            "isAdmin" to true,
-            "selectedPeriod" to periodDays,
-            "popularTimesLabelsJson" to Json.encodeToString(popularTimesLabels),
-            "popularTimesDataJson" to Json.encodeToString(popularTimesData),
-            "predictedTimesDataJson" to Json.encodeToString(predictedTimesData),
-            "popularRoutesLabelsJson" to Json.encodeToString(popularRoutesLabels),
-            "popularRoutesDataJson" to Json.encodeToString(popularRoutesData),
-            "predictedRoutesDataJson" to Json.encodeToString(predictedRoutesData),
-        )
+        val model =
+            mapOf(
+                "title" to "Admin Analytics Dashboard",
+                "layout" to "admin",
+                "activePage" to "admin",
+                "inNav" to true,
+                "isAdmin" to true,
+                "selectedPeriod" to periodDays,
+                "popularTimesLabelsJson" to Json.encodeToString(popularTimesLabels),
+                "popularTimesDataJson" to Json.encodeToString(popularTimesData),
+                "predictedTimesDataJson" to Json.encodeToString(predictedTimesData),
+                "popularRoutesLabelsJson" to Json.encodeToString(popularRoutesLabels),
+                "popularRoutesDataJson" to Json.encodeToString(popularRoutesData),
+                "predictedRoutesDataJson" to Json.encodeToString(predictedRoutesData),
+            )
 
         val template = pebble.getTemplate("admin/index.peb")
         val writer = StringWriter()
@@ -72,7 +76,10 @@ private suspend fun ApplicationCall.handleAdminLoad() {
     }
 }
 
-private fun predictNextValues(historicalData: List<Double>, numPredictions: Int): List<Double> {
+private fun predictNextValues(
+    historicalData: List<Double>,
+    numPredictions: Int,
+): List<Double> {
     if (historicalData.isEmpty()) return List(numPredictions) { 0.0 }
     if (historicalData.size == 1) return List(numPredictions) { historicalData.first() }
 
