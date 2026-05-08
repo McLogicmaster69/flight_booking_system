@@ -77,7 +77,7 @@ object EmailService {
                 appendLine("Reference: $reference")
                 appendLine()
                 appendLine("Route:")
-                appendLine("$startLocation → $destination")
+                appendLine("$startLocation -> $destination")
                 appendLine()
                 appendLine("Departure:")
                 appendLine(dateTime)
