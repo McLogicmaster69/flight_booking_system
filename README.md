@@ -34,4 +34,4 @@ To use the system as a staff member, an admin has to first create a staff accoun
 
 ## User
 
-As a user, you can naviage to `/book` and search for available flights. As the database will be quite empty, it will be hard to find any available flights. However, on the admin page, there will be a short list of flights that are currently in the database. You can use this list of flights to book as the user. Clicking on a flight then allows you to book seats for that flight. As the website is not live, you can use fake credit card information to pay for the flight.
+As a user, you can naviage to `/book` and search for available flights. As the database will be quite empty, it will be hard to find any available flights. However, on the admin page, there will be a short list of flights that are currently in the database. You can use this list of flights to book as the user. Clicking on a flight then allows you to book seats for that flight. As the website is not live, you can use fake credit card information to pay for the flight (card number 4242 4242 4242 4242 and input any valid date and any number for the CVC and zip code.
