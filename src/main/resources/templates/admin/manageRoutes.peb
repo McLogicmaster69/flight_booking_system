@@ -1,10 +1,10 @@
-{% extends "_layout/base.peb" %}
+    {% extends "_layout/base.peb" %}
 
-{% set layout = 'admin' %}
-{% set activePage = 'manageRoutes' %}
-{% set inNav = true %}
+        {% set layout = 'admin' %}
+        {% set activePage = 'manageRoutes' %}
+        {% set inNav = true %}
 
-{% block content %}
+    {% block content %}
 
 <h2 class="wf-title">Manage Routes</h2>
 <div class="wf-rule"></div>
@@ -12,37 +12,35 @@
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start;">
 
     <section>
-        <h3>Registered Routes</h3>
+        <div class="card" style="margin-bottom: 24px;">
+            <h3 style="margin-top: 0;">Registered Routes</h3>
 
-        <form class="auth-form" method="get" action="/manageRoutes">
-            <label class="auth-label">Search Routes</label>
-            <input
-                class="auth-input"
-                name="search"
-                type="text"
-                value="{{ search }}"
-                placeholder="Search by start or end destination">
+            <form class="auth-form" method="get" action="/manageRoutes">
+                <label class="auth-label">Search Routes</label>
+                <input
+                    class="auth-input"
+                    name="search"
+                    type="text"
+                    value="{{ search }}"
+                    placeholder="Search by start or end destination">
 
-            <button class="wf-btn wide" type="submit" style="margin-top: 6px; margin-bottom: 12px;">
-                Search Routes
-            </button>
-        </form>
-
-        <div class="wf-rule"></div>
+                <button class="wf-btn wide" type="submit" style="margin-top: 12px;">
+                    Search Routes
+                </button>
+            </form>
+        </div>
 
         {% for route in routes %}
 
-            <div class="staff-flight-assignment">
-                <a href="/manageRoutes/edit/{{ route.id }}" class="staff-flight-button">
-                    <h2>{{ route.startDestinationName }} to {{ route.endDestinationName }}</h2>
+            <div class="card" style="margin-bottom: 16px;">
+                <h3 style="margin-top: 0;">{{ route.startDestinationName }} to {{ route.endDestinationName }}</h3>
 
-                    <div class="staff-flight-info">
-                        <p>Duration: {{ route.duration }}</p>
-                    </div>
-                </a>
+                <div class="muted">
+                    <p style="margin: 4px 0;">Duration: {{ route.duration }}</p>
+                </div>
+
+                <a class="wf-btn" href="/manageRoutes/edit/{{ route.id }}" style="margin-top: 14px; display: inline-block;">Edit Route</a>
             </div>
-
-            <br>
 
         {% else %}
 
@@ -66,30 +64,32 @@
     </section>
 
     <section>
-        <h3>Register Route</h3>
+        <div class="card">
+            <h3 style="margin-top: 0;">Register Route</h3>
 
-        <form class="auth-form" method="post" action="/manageRoutes/create" hx-post="/manageRoutes/create">
+            <form class="auth-form" method="post" action="/manageRoutes/create" hx-post="/manageRoutes/create">
 
-            <label class="auth-label">Start Destination</label>
-            <select class="auth-input" name="startDestination">
-                {% for destination in destinations %}
-                    <option value="{{ destination.id }}">{{ destination.cityName }}</option>
-                {% endfor %}
-            </select>
+                <label class="auth-label">Start Destination</label>
+                <select class="auth-input" name="startDestination">
+                    {% for destination in destinations %}
+                        <option value="{{ destination.id }}">{{ destination.cityName }}</option>
+                    {% endfor %}
+                </select>
 
-            <label class="auth-label">End Destination</label>
-            <select class="auth-input" name="endDestination">
-                {% for destination in destinations %}
-                    <option value="{{ destination.id }}">{{ destination.cityName }}</option>
-                {% endfor %}
-            </select>
+                <label class="auth-label">End Destination</label>
+                <select class="auth-input" name="endDestination">
+                    {% for destination in destinations %}
+                        <option value="{{ destination.id }}">{{ destination.cityName }}</option>
+                    {% endfor %}
+                </select>
 
-            <label class="auth-label">Duration</label>
-            <input class="auth-input" name="duration" type="time" value="00:00">
+                <label class="auth-label">Duration</label>
+                <input class="auth-input" name="duration" type="time" value="00:00">
 
-            <div style="margin-top: 14px;"></div>
-            <button class="wf-btn wide" type="submit">Register Route</button>
-        </form>
+                <div style="margin-top: 14px;"></div>
+                <button class="wf-btn wide" type="submit">Register Route</button>
+            </form>
+        </div>
     </section>
 
 </div>

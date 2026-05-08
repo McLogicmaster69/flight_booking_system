@@ -1,85 +1,165 @@
-{% extends "_layout/base.peb" %}
+    {% extends "_layout/base.peb" %}
+        {% set activePage = 'manage' %}
+        {% set inNav = true %}
 
-{% set activePage = 'manage' %}
-{% set inNav = true %}
+    {% block content %}
+<h2 class="wf-title">Manage Bookings</h2>
+<div class="wf-rule"></div>
 
-{% block content %}
+<div class="card" style="margin-bottom: 40px; border-top: 4px solid #005eb8; padding: 32px;">
+    <div style="margin-bottom: 24px;">
+        <h3 style="margin: 0 0 8px 0; font-size: 1.5rem; display: flex; align-items: center; gap: 10px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#005eb8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            Retrieve Your Itinerary
+        </h3>
+        <p class="muted" style="margin: 0; font-size: 0.95rem;">Enter your booking reference and last name to view your flight details or request a refund.</p>
+    </div>
 
-<h2>Manage Bookings</h2>
+    <form method="post" action="/handleBookingSearch" aria-label="Find a booking" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; align-items: end; background: rgba(128, 128, 128, 0.05); padding: 24px; border-radius: 12px; border: 1px solid rgba(128, 128, 128, 0.2);">
 
-<div>
-  <h3 style="margin-top: 0;">Find a Booking</h3>
-  <div></div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label class="auth-label" style="font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; margin: 0;">Booking Reference (PNR)</label>
+            <input class="auth-input" type="text" name="ref" placeholder="e.g. XYZ123" aria-label="Reference number" style="height: 48px; font-size: 1rem; margin: 0;">
+        </div>
 
-  <form method="post" action="/handleBookingSearch" aria-label="Find a booking">
-    <div><input class="general-input" type="text" name="ref" placeholder="Ref Number Input" aria-label="Reference number"></div>
-    <div><input class="general-input" type="text" name="last" placeholder="Last Name Input" aria-label="Last name"></div>
-    <div style="flex:0 0 auto;"><button type="submit">FIND BOOKING</button></div>
-  </form>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label class="auth-label" style="font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; margin: 0;">Passenger Last Name</label>
+            <input class="auth-input" type="text" name="last" placeholder="e.g. Smith" aria-label="Last name" style="height: 48px; font-size: 1rem; margin: 0;">
+        </div>
+
+        <button class="wf-btn" type="submit" style="height: 48px; font-size: 1rem; font-weight: 600; background-color: #005eb8; transition: background-color 0.2s; margin: 0;">
+            Find Booking
+        </button>
+    </form>
 </div>
 
 <div class="booking-results">
     {% for row in searchResults %}
-        <div class="booking-card">
+    <div class="card" style="margin-bottom: 24px; padding: 0; overflow: hidden;">
+        <div style="background-color: #005eb8; color: white; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 600; font-size: 1.1rem; letter-spacing: 1px;">PNR: {{ row[0] }}</span>
+            <span style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">{{ row[6] }}</span>
+        </div>
 
-            <div class="booking-header">
-                <strong>Booking Reference :</strong> {{ row[0] }}
+        <div style="padding: 24px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+                <div style="text-align: left; width: 40%;">
+                    <p class="muted" style="margin: 0 0 4px 0; font-size: 0.85rem; text-transform: uppercase;">Departure</p>
+                    <h3 style="margin: 0; font-size: 1.5rem;">{{ row[7] }}</h3>
+                </div>
+
+                <div style="flex: 1; text-align: center; padding: 0 16px; display: flex; align-items: center;">
+                    <div style="flex: 1; border-bottom: 2px dashed rgba(128, 128, 128, 0.4);"></div>
+                    <span style="padding: 0 12px; font-size: 1.2rem; color: #005eb8;">✈</span>
+                    <div style="flex: 1; border-bottom: 2px dashed rgba(128, 128, 128, 0.4);"></div>
+                </div>
+
+                <div style="text-align: right; width: 40%;">
+                    <p class="muted" style="margin: 0 0 4px 0; font-size: 0.85rem; text-transform: uppercase;">Arrival</p>
+                    <h3 style="margin: 0; font-size: 1.5rem;">{{ row[8] }}</h3>
+                </div>
             </div>
 
-            <div class="booking-body">
-              <p><strong>Name :</strong> {{ row[1] }}</p>
-              <p><strong>From :</strong> {{ row[7] }}</p>
-              <p><strong>To :</strong> {{ row[8] }}</p>
-              <p><strong>Date :</strong> {{ row[2] }}</p>
-              <p><strong>Time :</strong> {{ row[3] }}</p>
-              <p><strong>Seat :</strong> {{ row[4] }}</p>
-              <p><strong>Class :</strong> {{ row[5] }}</p>
-              <p><strong>Ticket Type :</strong> {{ row[6] }}</p>
-          </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 16px; background: rgba(128, 128, 128, 0.05); padding: 16px; border-radius: 8px; margin-bottom: 24px; border: 1px solid rgba(128, 128, 128, 0.2);">
+                <div>
+                    <p class="muted" style="margin: 0 0 4px 0; font-size: 0.8rem;">Passenger</p>
+                    <p style="margin: 0; font-weight: 500;">{{ row[1] }}</p>
+                </div>
+                <div>
+                    <p class="muted" style="margin: 0 0 4px 0; font-size: 0.8rem;">Date</p>
+                    <p style="margin: 0; font-weight: 500;">{{ row[2] }}</p>
+                </div>
+                <div>
+                    <p class="muted" style="margin: 0 0 4px 0; font-size: 0.8rem;">Time</p>
+                    <p style="margin: 0; font-weight: 500;">{{ row[3] }}</p>
+                </div>
+                <div>
+                    <p class="muted" style="margin: 0 0 4px 0; font-size: 0.8rem;">Class</p>
+                    <p style="margin: 0; font-weight: 500;">{{ row[5] }}</p>
+                </div>
+                <div>
+                    <p class="muted" style="margin: 0 0 4px 0; font-size: 0.8rem;">Seat</p>
+                    <p style="margin: 0; font-weight: 700; font-size: 1.1rem; color: #005eb8;">{{ row[4] }}</p>
+                </div>
+            </div>
 
-          <form method="post" action="/manage/refund">
-            <input type="hidden" name="bookingRef" value="{{ row[0] }}">
-            <input type="hidden" name="last" value="{{ row[1] }}">
-            <button type="submit" onclick="return confirm('Cancel this booking and issue a full refund?');">
-              Cancel booking and refund
-            </button>
-          </form>
-
+            <form method="post" action="/manage/refund" style="display: flex; justify-content: flex-end;">
+                <input type="hidden" name="bookingRef" value="{{ row[0] }}">
+                <input type="hidden" name="last" value="{{ row[1] }}">
+                <button type="submit" style="background: transparent; color: #dc2626; border: 1px solid #dc2626; padding: 8px 16px; border-radius: 6px; font-weight: 500; cursor: pointer; transition: all 0.2s ease;" onclick="return confirm('Are you sure you want to cancel this booking and issue a full refund?');" onmouseover="this.style.backgroundColor='rgba(220, 38, 38, 0.1)'" onmouseout="this.style.backgroundColor='transparent'">
+                    Cancel Booking
+                </button>
+            </form>
         </div>
+    </div>
     {% endfor %}
 </div>
 
 {% if logged_in and userBookings is not empty %}
-  <h3>Your Current Bookings</h3>
+    <h3 style="margin-top: 40px; margin-bottom: 24px;">Your Current Bookings</h3>
+    <div class="booking-results">
+        {% for booking in userBookings %}
+        <div class="card" style="margin-bottom: 24px; padding: 0; overflow: hidden;">
+            <div style="background-color: #005eb8; color: white; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 600; font-size: 1.1rem; letter-spacing: 1px;">PNR: {{ booking[0] }}</span>
+                <span style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">{{ booking[6] }}</span>
+            </div>
 
-  <div class="booking-results">
-    {% for booking in userBookings %}
-      <div class="booking-card">
-        <div class="booking-header">
-          <strong>Booking Reference :</strong> {{ booking[0] }}
+            <div style="padding: 24px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+                    <div style="text-align: left; width: 40%;">
+                        <p class="muted" style="margin: 0 0 4px 0; font-size: 0.85rem; text-transform: uppercase;">Departure</p>
+                        <h3 style="margin: 0; font-size: 1.5rem;">{{ booking[7] }}</h3>
+                    </div>
+
+                    <div style="flex: 1; text-align: center; padding: 0 16px; display: flex; align-items: center;">
+                        <div style="flex: 1; border-bottom: 2px dashed rgba(128, 128, 128, 0.4);"></div>
+                        <span style="padding: 0 12px; font-size: 1.2rem; color: #005eb8;">✈</span>
+                        <div style="flex: 1; border-bottom: 2px dashed rgba(128, 128, 128, 0.4);"></div>
+                    </div>
+
+                    <div style="text-align: right; width: 40%;">
+                        <p class="muted" style="margin: 0 0 4px 0; font-size: 0.85rem; text-transform: uppercase;">Arrival</p>
+                        <h3 style="margin: 0; font-size: 1.5rem;">{{ booking[8] }}</h3>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 16px; background: rgba(128, 128, 128, 0.05); padding: 16px; border-radius: 8px; margin-bottom: 24px; border: 1px solid rgba(128, 128, 128, 0.2);">
+                    <div>
+                        <p class="muted" style="margin: 0 0 4px 0; font-size: 0.8rem;">Passenger</p>
+                        <p style="margin: 0; font-weight: 500;">{{ booking[1] }}</p>
+                    </div>
+                    <div>
+                        <p class="muted" style="margin: 0 0 4px 0; font-size: 0.8rem;">Date</p>
+                        <p style="margin: 0; font-weight: 500;">{{ booking[2] }}</p>
+                    </div>
+                    <div>
+                        <p class="muted" style="margin: 0 0 4px 0; font-size: 0.8rem;">Time</p>
+                        <p style="margin: 0; font-weight: 500;">{{ booking[3] }}</p>
+                    </div>
+                    <div>
+                        <p class="muted" style="margin: 0 0 4px 0; font-size: 0.8rem;">Class</p>
+                        <p style="margin: 0; font-weight: 500;">{{ booking[5] }}</p>
+                    </div>
+                    <div>
+                        <p class="muted" style="margin: 0 0 4px 0; font-size: 0.8rem;">Seat</p>
+                        <p style="margin: 0; font-weight: 700; font-size: 1.1rem; color: #005eb8;">{{ booking[4] }}</p>
+                    </div>
+                </div>
+
+                <form method="post" action="/manage/refund" style="display: flex; justify-content: flex-end;">
+                    <input type="hidden" name="bookingRef" value="{{ booking[0] }}">
+                    <input type="hidden" name="last" value="{{ booking[1] }}">
+                    <button type="submit" style="background: transparent; color: #dc2626; border: 1px solid #dc2626; padding: 8px 16px; border-radius: 6px; font-weight: 500; cursor: pointer; transition: all 0.2s ease;" onclick="return confirm('Are you sure you want to cancel this booking and issue a full refund?');" onmouseover="this.style.backgroundColor='rgba(220, 38, 38, 0.1)'" onmouseout="this.style.backgroundColor='transparent'">
+                        Cancel Booking
+                    </button>
+                </form>
+            </div>
         </div>
-
-        <div class="booking-body">
-            <p><strong>Name :</strong> {{ booking[1] }}</p>
-            <p><strong>From :</strong> {{ booking[7] }}</p>
-            <p><strong>To :</strong> {{ booking[8] }}</p>
-            <p><strong>Date :</strong> {{ booking[2] }}</p>
-            <p><strong>Time :</strong> {{ booking[3] }}</p>
-            <p><strong>Seat :</strong> {{ booking[4] }}</p>
-            <p><strong>Class :</strong> {{ booking[5] }}</p>
-            <p><strong>Ticket Type :</strong> {{ booking[6] }}</p>
-        </div>
-
-        <form method="post" action="/manage/refund">
-            <input type="hidden" name="bookingRef" value="{{ booking[0] }}">
-            <input type="hidden" name="last" value="{{ booking[1] }}">
-            <button type="submit" onclick="return confirm('Cancel this booking and issue a full refund?');">
-              Cancel booking and refund
-            </button>
-        </form>
-      </div>
-    {% endfor %}
-  </div>
+        {% endfor %}
+    </div>
 {% endif %}
-
-{% endblock %}
+    {% endblock %}

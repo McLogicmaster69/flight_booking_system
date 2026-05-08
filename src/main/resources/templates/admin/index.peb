@@ -1,9 +1,41 @@
-{% extends "_layout/base.peb" %}
+    {% extends "_layout/base.peb" %}
+        {% set layout = 'admin' %}
+        {% set activePage = 'admin' %}
+        {% set inNav = true %}
 
-{% set layout = 'admin' %}
-{% set activePage = 'admin' %}
-{% set inNav = true %}
+    {% block content %}
+<h2 class="wf-title">Admin Dashboard</h2>
+<div class="wf-rule"></div>
 
-{% block content %}
+<div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
+    <div class="card flight-search-card">
+        <h3>Manage Flights</h3>
+        <p class="muted">Schedule, edit, and cancel flights, and view reservations.</p>
+        <a href="/manageFlights" class="wf-btn" style="margin-top: 14px; display: inline-block;">Go to Flights</a>
+    </div>
 
+    <div class="card flight-search-card">
+        <h3>Manage Planes</h3>
+        <p class="muted">Register and track the current locations of physical planes.</p>
+        <a href="/managePlanes" class="wf-btn" style="margin-top: 14px; display: inline-block;">Go to Planes</a>
+    </div>
+
+    <div class="card flight-search-card">
+        <h3>Manage Plane Data</h3>
+        <p class="muted">Add and update plane manufacturers and generic models.</p>
+        <a href="/managePlaneData" class="wf-btn" style="margin-top: 14px; display: inline-block;">Go to Plane Data</a>
+    </div>
+
+    <div class="card flight-search-card">
+        <h3>Manage Routes</h3>
+        <p class="muted">Configure destinations, journey paths, and flight durations.</p>
+        <a href="/manageRoutes" class="wf-btn" style="margin-top: 14px; display: inline-block;">Go to Routes</a>
+    </div>
+
+    <div class="card flight-search-card">
+        <h3>Manage Staff</h3>
+        <p class="muted">Create staff accounts, assign roles, and manage personnel.</p>
+        <a href="/manageStaff" class="wf-btn" style="margin-top: 14px; display: inline-block;">Go to Staff</a>
+    </div>
+</div>
 {% endblock %}
