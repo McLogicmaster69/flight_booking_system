@@ -3,32 +3,63 @@ package data
 import java.time.LocalTime
 import java.time.LocalDate
 
+/**
+ * Column definitions for the routes table.
+ */
 object RouteColumns {
+    /** Primary key for the routes table. */
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
+
+    /** Starting destination ID for the route. */
     val START_DESTINATION =
         Column<Int>("start_destination", "INTEGER NOT NULL REFERENCES ${DestinationData.EMPTY.tableName}(id)")
+
+    /** Ending destination ID for the route. */
     val END_DESTINATION =
         Column<Int>("end_destination", "INTEGER NOT NULL REFERENCES ${DestinationData.EMPTY.tableName}(id)")
+
+    /** Duration of the route as a time value. */
     val DURATION = Column<String>("duration", "STRING NOT NULL")
 
+    /** All route table columns. */
     val ALL = listOf(ID, START_DESTINATION, END_DESTINATION, DURATION)
+
+    /** Column names only, used for projections and joins. */
     val COLUMN_NAMES = ALL.map { it.name }
 }
 
+/**
+ * Represents a flight route between two destinations.
+ *
+ * @property id Unique database identifier
+ * @property startDestination Starting destination ID
+ * @property endDestination Ending destination ID
+ * @property duration Flight duration
+ */
 data class RouteData(
     override val id: Int = 0,
     var startDestination: Int = 0,
     var endDestination: Int = 0,
     var duration: LocalTime = LocalTime.parse("00:00"),
 ) : DataClass<RouteData>(id) {
+    /** Database table name. */
     override val tableName = "routes"
+
+    /** Columns belonging to the routes table. */
     override val tableColumns = RouteColumns.ALL
+
+    /**
+     * Prevents duplicate routes between the same two destinations.
+     */
     override val tableAdditionalSQL = """
         UNIQUE (
             ${RouteColumns.START_DESTINATION.name},
             ${RouteColumns.END_DESTINATION.name}
         )"""
 
+    /**
+     * Indexes used to optimize route lookups.
+     */
     override val indexes: List<IndexArgs> =
         listOf(
             IndexArgs("inx_routes_start_destination", RouteColumns.START_DESTINATION.name),
@@ -39,6 +70,9 @@ data class RouteData(
             ),
         )
 
+    /**
+     * Initial seed routes inserted into the database.
+     */
     override val initialRows: List<RouteData>
         get() =
             listOf(
@@ -74,6 +108,9 @@ data class RouteData(
                 ),
             )
 
+    /**
+     * Tables that must exist before routes are created.
+     */
     override val requiredTables: List<DataClass<*>>
         get() =
             listOf(
@@ -81,6 +118,9 @@ data class RouteData(
                 PlaneData.EMPTY,
             )
 
+    /**
+     * Maps this route into database column values.
+     */
     override fun mapDataToColumns(): Map<Column<*>, Any?> =
         mapOf(
             RouteColumns.START_DESTINATION to startDestination,
@@ -88,6 +128,9 @@ data class RouteData(
             RouteColumns.DURATION to duration,
         )
 
+    /**
+     * Converts a database row into a `RouteData` instance.
+     */
     override fun mapRowToData(row: Array<Any?>): RouteData =
         RouteData(
             id = castRowElement(row, RouteColumns.ID),
@@ -96,10 +139,21 @@ data class RouteData(
             duration = castTimeRowElement(row, RouteColumns.DURATION),
         )
 
+    /**
+     * Prints a human-readable representation for debugging.
+     */
     override fun debugData() {
         println("Route data: (\"$id\", \"$startDestination\", \"$endDestination\", \"$duration\")")
     }
 
+    /**
+     * Calculates how popular this route is within a date range,
+     * based on booked seats.
+     *
+     * @param startDate Start of the date range (inclusive)
+     * @param endDate End of the date range (exclusive)
+     * @return Number of booked seats on this route
+     */
     fun getRoutePopularity(
         startDate: LocalDate,
         endDate: LocalDate,
@@ -150,9 +204,13 @@ data class RouteData(
     }
 
     companion object {
+        /** Empty instance used for static database access. */
         val EMPTY: RouteData
             get() = RouteData()
 
+        /**
+         * Generic route query wrapper.
+         */
         fun queryDatabase(
             multipleJoinArgs: MultipleJoinArgs? = null,
             whereArgs: WhereArgs? = null,
@@ -162,13 +220,22 @@ data class RouteData(
         ): List<QueryResult<RouteData>> =
             EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
 
+        /**
+         * Updates routes matching the given WHERE clause.
+         */
         fun updateTable(
             values: Map<Column<*>, Any?>,
             whereArgs: WhereArgs,
         ): Int = EMPTY.updateTable(values, whereArgs)
 
+        /**
+         * Deletes a route by ID.
+         */
         fun delete(id: Int): Int = RouteData(id = id).delete()
 
+        /**
+         * Queries a route using destination IDs.
+         */
         fun queryDatabase(
             destinationArgs: DestinationArgs,
             multipleJoinArgs: MultipleJoinArgs? = null,
@@ -178,6 +245,9 @@ data class RouteData(
             return EMPTY.queryDatabase(multipleJoinArgs, WhereArgs(whereClause, whereArgs))
         }
 
+        /**
+         * Queries a route using city and country names.
+         */
         fun queryDatabase(
             startCity: String,
             startCountry: String,
@@ -185,22 +255,16 @@ data class RouteData(
             endCountry: String,
             multipleJoinArgs: MultipleJoinArgs? = null,
         ): List<QueryResult<RouteData>> {
-            val startDestinationResults: List<QueryResult<DestinationData>> =
-                DestinationData.queryDatabase(
-                    startCity,
-                    startCountry,
-                )
+            val startDestinationResults =
+                DestinationData.queryDatabase(startCity, startCountry)
             if (startDestinationResults.isEmpty()) {
-                return emptyList<QueryResult<RouteData>>()
+                return emptyList()
             }
 
-            val endDestinationResults: List<QueryResult<DestinationData>> =
-                DestinationData.queryDatabase(
-                    endCity,
-                    endCountry,
-                )
+            val endDestinationResults =
+                DestinationData.queryDatabase(endCity, endCountry)
             if (endDestinationResults.isEmpty()) {
-                return emptyList<QueryResult<RouteData>>()
+                return emptyList()
             }
 
             return queryDatabase(
@@ -212,6 +276,9 @@ data class RouteData(
             )
         }
 
+        /**
+         * Queries a route using "Country - City" formatted strings.
+         */
         fun queryDatabase(
             start: String,
             end: String,
@@ -219,15 +286,15 @@ data class RouteData(
         ): List<QueryResult<RouteData>> {
             val startElements = start.split(" - ")
             if (startElements.size != 2) {
-                return emptyList<QueryResult<RouteData>>()
+                return emptyList()
             }
 
             val endElements = end.split(" - ")
             if (endElements.size != 2) {
-                return emptyList<QueryResult<RouteData>>()
+                return emptyList()
             }
 
-            val query: List<QueryResult<RouteData>> =
+            val query =
                 queryDatabase(
                     startElements[0],
                     startElements[1],
@@ -249,9 +316,15 @@ data class RouteData(
             )
         }
 
+        /**
+         * Queries a route by its ID.
+         */
         fun queryDatabase(id: Int): List<QueryResult<RouteData>> =
             queryDatabase(whereArgs = WhereArgs("${RouteColumns.ID.name} = ?", listOf(id)))
 
+        /**
+         * Computes all destination paths up to a given number of layovers.
+         */
         fun getPathByLayovers(
             destinationArgs: DestinationArgs,
             layovers: Int = 2,
@@ -280,11 +353,13 @@ data class RouteData(
             }
 
             return currentPaths
-                .filter {
-                    it.last() == destinationArgs.endDestination
-                }.distinct()
+                .filter { it.last() == destinationArgs.endDestination }
+                .distinct()
         }
 
+        /**
+         * Computes paths using city and country names.
+         */
         fun getPathByLayovers(
             startCity: String,
             startCountry: String,
@@ -292,22 +367,16 @@ data class RouteData(
             endCountry: String,
             layovers: Int = 2,
         ): List<List<Int>> {
-            val startDestinationResults: List<QueryResult<DestinationData>> =
-                DestinationData.queryDatabase(
-                    startCity,
-                    startCountry,
-                )
+            val startDestinationResults =
+                DestinationData.queryDatabase(startCity, startCountry)
             if (startDestinationResults.isEmpty()) {
-                return emptyList<List<Int>>()
+                return emptyList()
             }
 
-            val endDestinationResults: List<QueryResult<DestinationData>> =
-                DestinationData.queryDatabase(
-                    endCity,
-                    endCountry,
-                )
+            val endDestinationResults =
+                DestinationData.queryDatabase(endCity, endCountry)
             if (endDestinationResults.isEmpty()) {
-                return emptyList<List<Int>>()
+                return emptyList()
             }
 
             return getPathByLayovers(
@@ -319,6 +388,9 @@ data class RouteData(
             )
         }
 
+        /**
+         * Computes paths using "Country - City" formatted strings.
+         */
         fun getPathByLayovers(
             start: String,
             end: String,
@@ -326,15 +398,15 @@ data class RouteData(
         ): List<List<Int>> {
             val startElements = start.split(" - ")
             if (startElements.size != 2) {
-                return emptyList<List<Int>>()
+                return emptyList()
             }
 
             val endElements = end.split(" - ")
             if (endElements.size != 2) {
-                return emptyList<List<Int>>()
+                return emptyList()
             }
 
-            val query: List<List<Int>> =
+            val query =
                 getPathByLayovers(
                     startElements[0],
                     startElements[1],
@@ -356,11 +428,14 @@ data class RouteData(
             )
         }
 
+        /**
+         * Builds `JourneyRoute` objects from computed destination paths.
+         */
         fun getJourneyRoutes(
             destinationArgs: DestinationArgs,
             layovers: Int = 2,
         ): List<JourneyRoute> {
-            val path: List<List<Int>> = getPathByLayovers(destinationArgs, layovers)
+            val path = getPathByLayovers(destinationArgs, layovers)
             return path.map { routeIds ->
                 JourneyRoute(
                     routeIds,
@@ -389,6 +464,9 @@ data class RouteData(
             }
         }
 
+        /**
+         * Builds journey routes using city and country names.
+         */
         fun getJourneyRoutes(
             startCity: String,
             startCountry: String,
@@ -396,22 +474,16 @@ data class RouteData(
             endCountry: String,
             layovers: Int = 2,
         ): List<JourneyRoute> {
-            val startDestinationResults: List<QueryResult<DestinationData>> =
-                DestinationData.queryDatabase(
-                    startCity,
-                    startCountry,
-                )
+            val startDestinationResults =
+                DestinationData.queryDatabase(startCity, startCountry)
             if (startDestinationResults.isEmpty()) {
-                return emptyList<JourneyRoute>()
+                return emptyList()
             }
 
-            val endDestinationResults: List<QueryResult<DestinationData>> =
-                DestinationData.queryDatabase(
-                    endCity,
-                    endCountry,
-                )
+            val endDestinationResults =
+                DestinationData.queryDatabase(endCity, endCountry)
             if (endDestinationResults.isEmpty()) {
-                return emptyList<JourneyRoute>()
+                return emptyList()
             }
 
             return getJourneyRoutes(
@@ -423,6 +495,9 @@ data class RouteData(
             )
         }
 
+        /**
+         * Builds journey routes using "Country - City" formatted strings.
+         */
         fun getJourneyRoutes(
             start: String,
             end: String,
@@ -430,15 +505,15 @@ data class RouteData(
         ): List<JourneyRoute> {
             val startElements = start.split(" - ")
             if (startElements.size != 2) {
-                return emptyList<JourneyRoute>()
+                return emptyList()
             }
 
             val endElements = end.split(" - ")
             if (endElements.size != 2) {
-                return emptyList<JourneyRoute>()
+                return emptyList()
             }
 
-            val query: List<JourneyRoute> =
+            val query =
                 getJourneyRoutes(
                     startElements[0],
                     startElements[1],
@@ -460,6 +535,9 @@ data class RouteData(
             )
         }
 
+        /**
+         * Returns the duration of a route by ID.
+         */
         fun getDuration(id: Int): LocalTime {
             val query = queryDatabase(id)
             if (query.isEmpty()) {
@@ -468,30 +546,38 @@ data class RouteData(
             return query.first().dataClass.duration
         }
 
+        /**
+         * Returns the duration of a route in minutes.
+         */
         fun getDurationMinutes(id: Int): Long {
-            val time: LocalTime = getDuration(id)
+            val time = getDuration(id)
             return time.minute + time.hour * 60L
         }
 
+        /**
+         * Retrieves the route ID for the given destination pair.
+         */
         fun getRouteId(destinationArgs: DestinationArgs): Int {
-            val query: List<QueryResult<RouteData>> = queryDatabase(destinationArgs)
+            val query = queryDatabase(destinationArgs)
             if (query.isEmpty()) {
                 println("Could not find route ${destinationArgs.startDestination} to ${destinationArgs.endDestination}")
                 return -1
             }
-
             return query.first().dataClass.id
         }
 
+        /**
+         * Returns the most popular routes over a recent time period.
+         */
         fun getPopularRoutes(
             amount: Int,
             daysPrior: Long,
         ): List<QueryResult<RouteData>> {
-            val startDate: LocalDate = LocalDate.now().minusDays(daysPrior)
+            val startDate = LocalDate.now().minusDays(daysPrior)
 
             return queryDatabase()
                 .sortedByDescending { route ->
-                    route.dataClass.getRoutePopularity(startDate, LocalDate.now().plusDays(7L))
+                    route.dataClass.getRoutePopularity(startDate, LocalDate.now().plusDays(7))
                 }.take(amount)
         }
     }

@@ -6,33 +6,70 @@ import java.time.LocalDateTime
 import java.time.Duration
 import results.StaffAssignmentResults
 
+/**
+ * Minimum required rest time (in hours) between two flights
+ * for a staff member to be considered available.
+ */
 const val HOURS_BETWEEN_FLIGHT: Int = 3
 
+/**
+ * Database column definitions for the assigned_flight_staff table.
+ *
+ * This table represents the assignment of staff members to flights,
+ * including a secure search token for lookup or validation.
+ */
 object AssignedFlightStaffColumns {
+    /** Primary key */
     val ID = Column<Int>("id", "INTEGER PRIMARY KEY AUTOINCREMENT")
+
+    /** Foreign key referencing the flight */
     val FLIGHT_ID = Column<Int>("flight_id", "INTEGER NOT NULL REFERENCES ${FlightData.EMPTY.tableName}(id)")
+
+    /** Foreign key referencing the staff member */
     val STAFF_ID = Column<Int>("staff_id", "INTEGER NOT NULL REFERENCES ${StaffData.EMPTY.tableName}(id)")
+
+    /** Secure token used for searching or validation */
     val SEARCH_TOKEN = Column<String>("search_token", "STRING NOT NULL")
 
+    /** All columns in this table */
     val ALL = listOf(ID, FLIGHT_ID, STAFF_ID, SEARCH_TOKEN)
+
+    /** Column names only, in declaration order */
     val COLUMN_NAMES = ALL.map { it.name }
 }
 
+/**
+ * Represents an assignment of a staff member to a flight.
+ *
+ * @property id Primary key
+ * @property flightId ID of the flight
+ * @property staffId ID of the staff member
+ * @property searchToken Secure token associated with the assignment
+ */
 data class AssignedFlightStaffData(
     override val id: Int = 0,
     var flightId: Int = 0,
     var staffId: Int = 0,
     var searchToken: String = "",
 ) : DataClass<AssignedFlightStaffData>(id) {
+    /** Name of the database table */
     override val tableName = "assigned_flight_staff"
+
+    /** Columns used by the table */
     override val tableColumns = AssignedFlightStaffColumns.ALL
 
+    /**
+     * Indexes to improve lookup performance by flight or staff member.
+     */
     override val indexes: List<IndexArgs> =
         listOf(
             IndexArgs("inx_assigned_flight_staff_flight_id", AssignedFlightStaffColumns.FLIGHT_ID.name),
             IndexArgs("inx_assigned_flight_staff_staff_id", AssignedFlightStaffColumns.STAFF_ID.name),
         )
 
+    /**
+     * Maps this data class into database column values.
+     */
     override fun mapDataToColumns(): Map<Column<*>, Any?> =
         mapOf(
             AssignedFlightStaffColumns.FLIGHT_ID to flightId,
@@ -40,6 +77,9 @@ data class AssignedFlightStaffData(
             AssignedFlightStaffColumns.SEARCH_TOKEN to searchToken,
         )
 
+    /**
+     * Converts a database row into an AssignedFlightStaffData instance.
+     */
     override fun mapRowToData(row: Array<Any?>): AssignedFlightStaffData =
         AssignedFlightStaffData(
             id = castRowElement(row, AssignedFlightStaffColumns.ID),
@@ -48,14 +88,23 @@ data class AssignedFlightStaffData(
             searchToken = castRowElement(row, AssignedFlightStaffColumns.SEARCH_TOKEN),
         )
 
+    /**
+     * Prints the contents of this object for debugging purposes.
+     */
     override fun debugData() {
         println("Assigned Flight Staff data: (\"$id\", \"$flightId\", \"$staffId\", \"$searchToken\")")
     }
 
     companion object {
+        /**
+         * Empty instance used for static-style database operations.
+         */
         val EMPTY: AssignedFlightStaffData
             get() = AssignedFlightStaffData()
 
+        /**
+         * Queries the database with optional joins, filters, ordering, grouping, and limits.
+         */
         fun queryDatabase(
             multipleJoinArgs: MultipleJoinArgs? = null,
             whereArgs: WhereArgs? = null,
@@ -65,22 +114,40 @@ data class AssignedFlightStaffData(
         ): List<QueryResult<AssignedFlightStaffData>> =
             EMPTY.queryDatabase(multipleJoinArgs, whereArgs, orderByArgs, limitArgs, groupByArgs)
 
+        /**
+         * Queries assignments by search token.
+         */
         fun queryDatabase(token: String): List<QueryResult<AssignedFlightStaffData>> =
             queryDatabase(whereArgs = WhereArgs("${AssignedFlightStaffColumns.SEARCH_TOKEN} = ?", listOf(token)))
 
+        /**
+         * Updates records in the table matching the given conditions.
+         */
         fun updateTable(
             values: Map<Column<*>, Any?>,
             whereArgs: WhereArgs,
         ): Int = EMPTY.updateTable(values, whereArgs)
 
+        /**
+         * Deletes an assignment by ID.
+         */
         fun delete(id: Int): Int = AssignedFlightStaffData(id = id).delete()
 
+        /**
+         * Retrieves all staff assignments for a given flight.
+         */
         fun queryByFlightID(id: Int): List<QueryResult<AssignedFlightStaffData>> =
             queryDatabase(whereArgs = WhereArgs("${AssignedFlightStaffColumns.FLIGHT_ID.name} = ?", listOf(id)))
 
+        /**
+         * Retrieves all flight assignments for a given staff member.
+         */
         fun queryByStaffID(id: Int): List<QueryResult<AssignedFlightStaffData>> =
             queryDatabase(whereArgs = WhereArgs("${AssignedFlightStaffColumns.STAFF_ID.name} = ?", listOf(id)))
 
+        /**
+         * Retrieves all upcoming flights assigned to a specific staff member.
+         */
         fun getFlightsAssignedToStaff(id: Int): List<QueryResult<FlightData>> {
             val joinArgs: MultipleJoinArgs =
                 MultipleJoinArgs(
@@ -111,6 +178,14 @@ data class AssignedFlightStaffData(
             )
         }
 
+        /**
+         * Calculates a suitability score for assigning a staff member to a flight.
+         *
+         * The score is based on:
+         * - Home country match
+         * - Time since last assignment
+         * - Number of recent assignments
+         */
         fun scoreStaffMember(
             staff: StaffData,
             flight: FlightData,
@@ -124,6 +199,7 @@ data class AssignedFlightStaffData(
                     .firstOrNull()
                     ?.dataClass
                     ?.id ?: -2
+
             val pastAssignments: List<QueryResult<AssignedFlightStaffData>> =
                 queryDatabase(
                     multipleJoinArgs =
@@ -161,43 +237,42 @@ data class AssignedFlightStaffData(
                 )
 
             if (staff.homeId == endCountry) points += 30
+
             if (pastAssignments.isEmpty()) {
                 points += 25
             } else {
                 points += Duration
                     .between(
-                        LocalDateTime.of(
-                            flight.date,
-                            flight.time,
-                        ),
+                        LocalDateTime.of(flight.date, flight.time),
                         LocalDateTime.of(
                             LocalDate.parse(
                                 pastAssignments
                                     .first()
-                                    .getColumn(
-                                        FlightData.EMPTY.tableName,
-                                        FlightColumns.DATE.name,
-                                    )!!
+                                    .getColumn(FlightData.EMPTY.tableName, FlightColumns.DATE.name)!!
                                     .columnVal as String,
                             ),
                             LocalTime.parse(
                                 pastAssignments
                                     .first()
-                                    .getColumn(
-                                        FlightData.EMPTY.tableName,
-                                        FlightColumns.TIME.name,
-                                    )!!
+                                    .getColumn(FlightData.EMPTY.tableName, FlightColumns.TIME.name)!!
                                     .columnVal as String,
                             ),
                         ),
                     ).toHours()
                     .toInt() / 2
+
                 points -= pastAssignments.size
             }
 
             return points
         }
 
+        /**
+         * Automatically assigns pilots and flight attendants to a flight
+         * based on availability and scoring rules.
+         *
+         * @return A StaffAssignmentResults object describing the outcome.
+         */
         fun assignStaffToFlight(
             flightId: Int,
             pilots: Int,
