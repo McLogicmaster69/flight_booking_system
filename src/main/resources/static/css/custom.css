@@ -460,6 +460,7 @@ footer {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  pointer-events: none;
 }
 
 #chat-toggle {
@@ -477,6 +478,7 @@ footer {
   align-items: center;
   justify-content: center;
   padding: 0;
+  pointer-events: auto;
 }
 
 #chat-toggle:hover {
@@ -502,6 +504,7 @@ footer {
   transform-origin: bottom right;
   margin-bottom: 16px;
   border: 1px solid var(--line);
+  pointer-events: auto;
 }
 
 #chat-window.hidden {
