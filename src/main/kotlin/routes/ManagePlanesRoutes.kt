@@ -13,6 +13,9 @@ import io.ktor.server.request.*
 import java.time.LocalDate
 import java.time.LocalTime
 
+/**
+ * Registers routing for handling the management of individual, physical planes belonging to the airline.
+ */
 fun Route.managePlanesRoutes() {
     get("/managePlanes") { call.handleManagePlanesLoad() }
     get("/managePlanes/edit/{id}") { call.handleEditPlaneLoad() }
@@ -32,6 +35,9 @@ data class PlaneView(
     val currentLocationTime: LocalTime,
 )
 
+/**
+ * Loads the core dashboard view allowing admins to see the active fleet, their current locations, and filter via search.
+ */
 private suspend fun ApplicationCall.handleManagePlanesLoad() {
     timed("T0_manage_planes", jsMode()) {
         if (!requireAdmin()) return@timed
@@ -124,6 +130,9 @@ private suspend fun ApplicationCall.handleManagePlanesLoad() {
     }
 }
 
+/**
+ * Validates and registers a newly acquired physical plane to the database.
+ */
 private suspend fun ApplicationCall.handleCreatePlanePost() {
     timed("T1_create_plane", jsMode()) {
         if (!requireAdmin()) return@timed
@@ -174,6 +183,9 @@ private suspend fun ApplicationCall.handleCreatePlanePost() {
     }
 }
 
+/**
+ * Adjusts properties like registration code or physical positioning of a registered plane.
+ */
 private suspend fun ApplicationCall.handleUpdatePlanePost() {
     timed("T2_update_plane", jsMode()) {
         if (!requireAdmin()) return@timed
@@ -234,6 +246,9 @@ private suspend fun ApplicationCall.handleUpdatePlanePost() {
     }
 }
 
+/**
+ * Removes a specific aircraft from the fleet, failing safely if flights are currently utilizing it.
+ */
 private suspend fun ApplicationCall.handleDeletePlanePost() {
     timed("T3_delete_plane", jsMode()) {
         if (!requireAdmin()) return@timed
@@ -269,6 +284,9 @@ private suspend fun ApplicationCall.handleDeletePlanePost() {
     }
 }
 
+/**
+ * Handles generating the page form populated with current data for modifying a registered plane.
+ */
 private suspend fun ApplicationCall.handleEditPlaneLoad() {
     timed("T4_edit_plane_load", jsMode()) {
         if (!requireAdmin()) return@timed

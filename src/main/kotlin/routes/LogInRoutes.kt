@@ -20,6 +20,9 @@ import java.time.temporal.ChronoUnit
 
 const val MAX_ATTEMPTS = 5
 
+/**
+ * Registers routing for user authentication flows, including login, logout, and 2FA.
+ */
 fun Route.logInRoutes() {
     get("/login") { call.handleLogInLoad() }
     post("/login") { call.handleLogInPost() }
@@ -29,9 +32,15 @@ fun Route.logInRoutes() {
     post("/send-verification") { call.handleSendVerification() }
 }
 
+/**
+ * Formats a generic login status message suitable for HTML injection.
+ */
 fun ApplicationCall.createLoginStatus(message: String): String =
     """<div id="log-in-status" hx-swap-oob="true" role="status" aria-live="polite" aria-atomic="true">$message</div>"""
 
+/**
+ * Serves the login page to unauthenticated users, or redirects them to home if they are already logged in.
+ */
 private suspend fun ApplicationCall.handleLogInLoad() {
     timed("T0_log_in", jsMode()) {
         val pebble = getEngine()
@@ -54,6 +63,9 @@ private suspend fun ApplicationCall.handleLogInLoad() {
     }
 }
 
+/**
+ * Processes login credentials, verifies the password against a bcrypt hash, and prepares a 2FA session.
+ */
 private suspend fun ApplicationCall.handleLogInPost() {
     timed("T1_log_in_post", jsMode()) {
         val params = receiveParameters()
@@ -111,6 +123,7 @@ private suspend fun ApplicationCall.handleLogInPost() {
                 Instant.now().plus(5, ChronoUnit.MINUTES),
             )
 
+        // Clear existing 2FA tokens for user to avoid overlap
         TwoFAData.deleteByUserId(result.dataClass.id)
         val token = TwoFAData.EMPTY.generateToken()
 
@@ -131,6 +144,9 @@ private suspend fun ApplicationCall.handleLogInPost() {
     }
 }
 
+/**
+ * Clears user sessions to securely log out the active account.
+ */
 private suspend fun ApplicationCall.handleLogOut() {
     timed("T2_log_out", jsMode()) {
         sessions.clear<SessionToken>()
@@ -140,6 +156,9 @@ private suspend fun ApplicationCall.handleLogOut() {
     }
 }
 
+/**
+ * Serves the Two-Factor Authentication verification page.
+ */
 private suspend fun ApplicationCall.handleVerifyLoad() {
     timed("T3_verify", jsMode()) {
         val pebble = getEngine()
@@ -156,6 +175,9 @@ private suspend fun ApplicationCall.handleVerifyLoad() {
     }
 }
 
+/**
+ * Validates an entered 2FA code against the hash saved in the database, locking the account if max attempts are exceeded.
+ */
 private suspend fun ApplicationCall.handleVerifyPost() {
     timed("T4_verify_post", jsMode()) {
         val tempSession =
@@ -259,6 +281,9 @@ private suspend fun ApplicationCall.handleVerifyPost() {
     }
 }
 
+/**
+ * Resends a newly generated 2FA verification code to the active temporary session's registered email.
+ */
 private suspend fun ApplicationCall.handleSendVerification() {
     timed("T5_verify_send", jsMode()) {
         val tempSession =
@@ -345,6 +370,9 @@ private suspend fun ApplicationCall.handleSendVerification() {
     }
 }
 
+/**
+ * Generates a purely numeric 6-character authentication code utilizing a secure random engine.
+ */
 fun generate2FACode(): String {
     val chars = "0123456789"
     val secureRandom = SecureRandom()

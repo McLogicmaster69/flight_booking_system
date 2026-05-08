@@ -11,6 +11,9 @@ import auth.*
 import data.*
 import io.ktor.server.request.*
 
+/**
+ * Configures the administrative routes for managing structural Plane Models and Manufacturers.
+ */
 fun Route.managePlaneDataRoutes() {
     get("/managePlaneData") { call.handleManagePlaneDataLoad() }
     get("/managePlaneData/model/edit/{id}") { call.handleEditPlaneModelLoad() }
@@ -33,6 +36,9 @@ data class PlaneModelView(
     val attendants: Int,
 )
 
+/**
+ * Renders the primary dashboard for viewing and paging plane metadata (Manufacturers and Models).
+ */
 private suspend fun ApplicationCall.handleManagePlaneDataLoad() {
     timed("T0_manage_plane_data", jsMode()) {
         if (!requireAdmin()) return@timed
@@ -135,6 +141,9 @@ private suspend fun ApplicationCall.handleManagePlaneDataLoad() {
     }
 }
 
+/**
+ * Persists a new abstract Plane Model to the system.
+ */
 private suspend fun ApplicationCall.handleCreatePlaneModelPost() {
     timed("T1_create_plane_model", jsMode()) {
         if (!requireAdmin()) return@timed
@@ -185,6 +194,9 @@ private suspend fun ApplicationCall.handleCreatePlaneModelPost() {
     }
 }
 
+/**
+ * Processes an update request modifying the attributes of a pre-existing Plane Model.
+ */
 private suspend fun ApplicationCall.handleUpdatePlaneModelPost() {
     timed("T2_update_plane_model", jsMode()) {
         if (!requireAdmin()) return@timed
@@ -245,6 +257,9 @@ private suspend fun ApplicationCall.handleUpdatePlaneModelPost() {
     }
 }
 
+/**
+ * Submits a query to delete an existing Plane Model given no active flights reference it.
+ */
 private suspend fun ApplicationCall.handleDeletePlaneModelPost() {
     timed("T3_delete_plane_model", jsMode()) {
         if (!requireAdmin()) return@timed
@@ -280,6 +295,9 @@ private suspend fun ApplicationCall.handleDeletePlaneModelPost() {
     }
 }
 
+/**
+ * Persists a new Plane Manufacturer entity to the system.
+ */
 private suspend fun ApplicationCall.handleCreateManufacturerPost() {
     timed("T4_create_manufacturer", jsMode()) {
         if (!requireAdmin()) return@timed
@@ -312,6 +330,9 @@ private suspend fun ApplicationCall.handleCreateManufacturerPost() {
     }
 }
 
+/**
+ * Modifies an existing Plane Manufacturer's metadata.
+ */
 private suspend fun ApplicationCall.handleUpdateManufacturerPost() {
     timed("T5_update_manufacturer", jsMode()) {
         if (!requireAdmin()) return@timed
@@ -357,6 +378,9 @@ private suspend fun ApplicationCall.handleUpdateManufacturerPost() {
     }
 }
 
+/**
+ * Submits a query to delete an existing Manufacturer, protected from deletion if active Plane Models depend on it.
+ */
 private suspend fun ApplicationCall.handleDeleteManufacturerPost() {
     timed("T6_delete_manufacturer", jsMode()) {
         if (!requireAdmin()) return@timed
@@ -392,6 +416,9 @@ private suspend fun ApplicationCall.handleDeleteManufacturerPost() {
     }
 }
 
+/**
+ * Loads the edit template for modifying a Plane Model profile.
+ */
 private suspend fun ApplicationCall.handleEditPlaneModelLoad() {
     timed("T7_edit_plane_model_load", jsMode()) {
         if (!requireAdmin()) return@timed
@@ -434,6 +461,9 @@ private suspend fun ApplicationCall.handleEditPlaneModelLoad() {
     }
 }
 
+/**
+ * Loads the edit template for modifying a Manufacturer profile.
+ */
 private suspend fun ApplicationCall.handleEditManufacturerLoad() {
     timed("T8_edit_manufacturer_load", jsMode()) {
         if (!requireAdmin()) return@timed

@@ -16,11 +16,17 @@ import java.time.LocalDate
 const val MAX_RESULTS = 10
 const val MAX_LAYOVERS = 10
 
+/**
+ * Converts a duration in minutes into a human-readable string formatted as 'Xh Ym'.
+ */
 fun representAsTime(minutes: Long): String {
     val hours = minutes / 60L
     return "${hours.toString().padStart(2, '0')}h ${(minutes - hours * 60L).toString().padStart(2, '0')}m"
 }
 
+/**
+ * Generates the HTML snippet for a single flight search result.
+ */
 fun getResultHTML(result: JourneyFlightTimePath): String {
     val searchData: FlightSearchData = FlightSearchData.queryOrAddFlightPath(result)
     return """
@@ -38,6 +44,9 @@ fun getResultHTML(result: JourneyFlightTimePath): String {
     """
 }
 
+/**
+ * Generates the HTML snippet for a list of flight search results, respecting the MAX_RESULTS limit.
+ */
 fun getResultsHTML(results: List<JourneyFlightTimePath>): String {
     if (results.isEmpty()) {
         return """
@@ -57,12 +66,18 @@ fun getResultsHTML(results: List<JourneyFlightTimePath>): String {
     return output + "</div>"
 }
 
+/**
+ * Registers the routing for flight booking operations.
+ */
 fun Route.bookRoutes() {
     get("/book") { call.handleBookLoad() }
     post("/book-search") { call.handleSearchResults() }
     get("/book/{token}") { call.handleGetResult() }
 }
 
+/**
+ * Handles the initial load of the booking page, populating form fields if query parameters exist.
+ */
 private suspend fun ApplicationCall.handleBookLoad() {
     timed("T0_book", jsMode()) {
         val from = request.queryParameters["from"].orEmpty()
@@ -88,6 +103,9 @@ private suspend fun ApplicationCall.handleBookLoad() {
     }
 }
 
+/**
+ * Processes search form submissions, filtering and sorting flights based on user criteria.
+ */
 private suspend fun ApplicationCall.handleSearchResults() {
     timed("T1_book_search", jsMode()) {
         val parameters = receiveParameters()
@@ -120,6 +138,7 @@ private suspend fun ApplicationCall.handleSearchResults() {
 
         val sortBy = parameters["sortBy"].orEmpty().trim()
 
+        // Handle round trips by combining outbound and inbound flight paths
         var results: List<JourneyFlightTimePath> =
             if (tripType == "roundTrip") {
                 if (returnTime.isBlank()) {
@@ -145,6 +164,7 @@ private suspend fun ApplicationCall.handleSearchResults() {
                 FlightData.getJourneyFlight(start, end, date, layovers)
             }
 
+        // Apply filters based on search constraints
         if (maxDurationMinutes != null) {
             results = results.filter { it.totalMinutes <= maxDurationMinutes }
         }
@@ -162,6 +182,9 @@ private suspend fun ApplicationCall.handleSearchResults() {
     }
 }
 
+/**
+ * Loads a specific flight selection result based on a unique token.
+ */
 private suspend fun ApplicationCall.handleGetResult() {
     timed("T2_book_result", jsMode()) {
         val writer = StringWriter()
@@ -170,13 +193,7 @@ private suspend fun ApplicationCall.handleGetResult() {
 
         if (token == null) {
             val template = pebble.getTemplate("book/pageNotFound.peb")
-
-            val errorModel =
-                mapOf(
-                    "title" to "Error",
-                    "inNav" to true,
-                )
-
+            val errorModel = mapOf("title" to "Error", "inNav" to true)
             fullEvaluate(template, writer, errorModel)
             return@timed respondText(writer.toString(), ContentType.Text.Html)
         }
@@ -184,13 +201,7 @@ private suspend fun ApplicationCall.handleGetResult() {
         val search: FlightSearchInfo? = FlightSearchData.queryByToken(token)
         if (search == null) {
             val template = pebble.getTemplate("book/pageNotFound.peb")
-
-            val errorModel =
-                mapOf(
-                    "title" to "Error",
-                    "inNav" to true,
-                )
-
+            val errorModel = mapOf("title" to "Error", "inNav" to true)
             fullEvaluate(template, writer, errorModel)
             return@timed respondText(writer.toString(), ContentType.Text.Html)
         }
@@ -213,12 +224,21 @@ private suspend fun ApplicationCall.handleGetResult() {
     }
 }
 
+/**
+ * Calculates the base price for a journey in pence based on total flight minutes.
+ */
 fun getJourneyPrice(path: JourneyFlightTimePath): Long {
     return path.totalMinutes * 50L // pence, £0.50 per minute
 }
 
+/**
+ * Returns a formatted string representation of the journey price in pounds.
+ */
 fun getJourneyPriceDisplay(path: JourneyFlightTimePath): String = "%.2f".format(getJourneyPrice(path) / 100.0)
 
+/**
+ * Parses dates from the search form string, accommodating different date formats.
+ */
 fun parseSearchDate(value: String): LocalDate =
     if (value.contains("/")) {
         val parts = value.split("/")
@@ -227,6 +247,9 @@ fun parseSearchDate(value: String): LocalDate =
         LocalDate.parse(value)
     }
 
+/**
+ * Combines two journey paths, dropping the redundant overlapping destination.
+ */
 fun JourneyFlightTimePath.combineWith(other: JourneyFlightTimePath): JourneyFlightTimePath =
     JourneyFlightTimePath(
         destinationIds = this.destinationIds + other.destinationIds.drop(1),

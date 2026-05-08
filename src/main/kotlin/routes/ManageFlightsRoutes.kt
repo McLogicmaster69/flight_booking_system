@@ -16,6 +16,9 @@ import com.stripe.model.Refund
 import com.stripe.param.RefundCreateParams
 import utils.EmailService
 
+/**
+ * Registers routing for administrators to handle CRUD operations and view details for all flights.
+ */
 fun Route.manageFlightsRoutes() {
     get("/manageFlights") { call.handleManageFlightsLoad() }
     get("/manageFlights/edit/{id}") { call.handleEditFlightLoad() }
@@ -45,6 +48,9 @@ data class FlightReservationView(
     val refundStatus: String?,
 )
 
+/**
+ * Handles rendering the main dashboard to view and search existing flights using pagination logic.
+ */
 private suspend fun ApplicationCall.handleManageFlightsLoad() {
     timed("T0_manage_flights", jsMode()) {
         if (!requireAdmin()) return@timed
@@ -137,6 +143,9 @@ private suspend fun ApplicationCall.handleManageFlightsLoad() {
     }
 }
 
+/**
+ * Creates a new scheduled flight ensuring no exact duplicates exist in the database.
+ */
 private suspend fun ApplicationCall.handleCreateFlightPost() {
     timed("T1_create_flight", jsMode()) {
         if (!requireAdmin()) return@timed
@@ -179,6 +188,9 @@ private suspend fun ApplicationCall.handleCreateFlightPost() {
     }
 }
 
+/**
+ * Updates properties of an existing scheduled flight via ID lookup.
+ */
 private suspend fun ApplicationCall.handleUpdateFlightPost() {
     timed("T2_update_flight", jsMode()) {
         if (!requireAdmin()) return@timed
@@ -230,6 +242,9 @@ private suspend fun ApplicationCall.handleUpdateFlightPost() {
     }
 }
 
+/**
+ * Completes a flight deletion, safely removing associated seats, updating refunds via Stripe API, and notifying customers.
+ */
 private suspend fun ApplicationCall.handleDeleteFlightPost() {
     timed("T3_delete_flight", jsMode()) {
         if (!requireAdmin()) return@timed
@@ -284,6 +299,7 @@ private suspend fun ApplicationCall.handleDeleteFlightPost() {
                     ).firstOrNull()
             }
 
+        // Group rows to aggregate refundable portions correctly
         val refundableGroups =
             bookingRows
                 .filter { row ->
@@ -314,6 +330,7 @@ private suspend fun ApplicationCall.handleDeleteFlightPost() {
                 continue
             }
 
+            // Issue Stripe Refund Request
             val refundParams =
                 RefundCreateParams
                     .builder()
@@ -356,6 +373,7 @@ private suspend fun ApplicationCall.handleDeleteFlightPost() {
             }
         }
 
+        // Clean up database dependencies before deleting the flight parent table record
         for (bookedSeat in bookedSeats) {
             BookedSeatData.delete(bookedSeat.id)
         }
@@ -390,6 +408,9 @@ private suspend fun ApplicationCall.handleDeleteFlightPost() {
     }
 }
 
+/**
+ * Prepares the edit flight view template by resolving the specific flight details needed for form rendering.
+ */
 private suspend fun ApplicationCall.handleEditFlightLoad() {
     timed("T4_edit_flight_load", jsMode()) {
         if (!requireAdmin()) return@timed
@@ -449,6 +470,9 @@ private suspend fun ApplicationCall.handleEditFlightLoad() {
     }
 }
 
+/**
+ * Loads the deep-dive administration view for an individual flight, including an attached list of current reservations.
+ */
 private suspend fun ApplicationCall.handleFlightDetailsLoad() {
     timed("T5_flight_details_load", jsMode()) {
         if (!requireAdmin()) return@timed
@@ -577,6 +601,9 @@ private suspend fun ApplicationCall.handleFlightDetailsLoad() {
     }
 }
 
+/**
+ * Extracts the associated email string for a given booker profile ID across User and Guest references.
+ */
 private fun getBookerEmail(bookerId: Int): String? {
     val booker =
         BookerData
