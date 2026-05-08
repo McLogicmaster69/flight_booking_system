@@ -1,6 +1,5 @@
 package tests.data
 
-import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
@@ -8,32 +7,13 @@ import org.junit.jupiter.api.*
 import data.DatabaseManager
 import data.TimezoneData
 
-class DataclassTests {
-    companion object {
-        @JvmStatic
-        @BeforeAll
-        fun setupDatabase() {
-            DatabaseManager.initialise(TEST_PATH)
-            DatabaseManager.createTables()
-        }
-
-        @JvmStatic
-        @AfterAll
-        fun deleteDatabase() {
-            DatabaseManager.disconnect()
-            val file = File(TEST_PATH)
-            file.delete()
-        }
-    }
-
+class DataclassTests : BaseDatabaseTest() {
     @Test
-    @Order(1)
     fun `check database has been initialised`() {
         assertTrue(DatabaseManager.dbInitialised)
     }
 
     @Test
-    @Order(2)
     fun `check dataclasses can query`() {
         for (dataclass in DatabaseManager.dataClasses) {
             dataclass.queryDatabase()
@@ -41,7 +21,6 @@ class DataclassTests {
     }
 
     @Test
-    @Order(3)
     fun `check insert`() {
         val results =
             TimezoneData(
@@ -53,7 +32,6 @@ class DataclassTests {
     }
 
     @Test
-    @Order(4)
     fun `check update`() {
         val id =
             TimezoneData(
@@ -72,7 +50,6 @@ class DataclassTests {
     }
 
     @Test
-    @Order(5)
     fun `check delete`() {
         val id =
             TimezoneData(
