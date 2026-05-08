@@ -1,6 +1,7 @@
 package routes
 
 import data.*
+import io.github.cdimascio.dotenv.dotenv
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -13,7 +14,8 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 
-val apiKey = "AIzaSyAXdJc6G5jfV1WKYJnh-2590sPqhnGHySQ"
+private val dotenv = dotenv()
+val apiKey = dotenv["GEMINI_API_KEY"] ?: throw IllegalStateException("GEMINI_API_KEY not set")
 val url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey"
 
 fun Route.chatRoutes() {
