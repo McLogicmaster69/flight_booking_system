@@ -11,6 +11,9 @@ import utils.jsMode
 import utils.timed
 import auth.*
 
+/**
+ * Represents a reward option that can be redeemed using loyalty points.
+ */
 data class RewardTier(
     val key: String,
     val name: String,
@@ -18,6 +21,9 @@ data class RewardTier(
     val supportsQuantity: Boolean = false,
 )
 
+/**
+ * Represents a reward selected by a user during redemption.
+ */
 data class SelectedReward(
     val key: String,
     val name: String,
@@ -25,6 +31,9 @@ data class SelectedReward(
     val quantity: Int = 1,
 )
 
+/**
+ * Defines all available loyalty reward tiers.
+ */
 val REWARD_TIERS =
     listOf(
         RewardTier("lounge", "Lounge Access Voucher", 5000),
@@ -34,23 +43,34 @@ val REWARD_TIERS =
         RewardTier("discount15", "15% Off Next Purchase", 40000),
     )
 
+/**
+ * Stores the rewards selected by each user session before booking.
+ */
 val SELECTED_REWARDS_BY_USER = mutableMapOf<String, List<SelectedReward>>()
 
+/**
+ * Registers all loyalty rewards-related routes.
+ */
 fun Route.rewardsRoutes() {
     get("/rewards") { call.handleRewardsLoad() }
     post("/rewards/redeem") { call.handleRewardsRedeem() }
     get("/test/add-points") { call.handleTestAddPoints() }
 }
 
+/**
+ * Loads the loyalty rewards page and separates rewards into available and upcoming options.
+ */
 private suspend fun ApplicationCall.handleRewardsLoad() {
     timed("T0_rewards", jsMode()) {
         val loggedState: LoggedInState = loggedIn()
+
         if (!loggedState.logged_in || loggedState.session == null) {
             respondRedirect("/login")
             return@timed
         }
 
         val userQuery = UserData.queryByToken(loggedState.session.token)
+
         if (userQuery.isEmpty()) {
             respondRedirect("/login")
             return@timed
@@ -58,6 +78,7 @@ private suspend fun ApplicationCall.handleRewardsLoad() {
 
         val user = userQuery.first().dataClass
 
+        // Split rewards based on whether the user has enough loyalty points.
         val availableRewards = REWARD_TIERS.filter { it.cost <= user.loyaltyPoints }
         val upcomingRewards = REWARD_TIERS.filter { it.cost > user.loyaltyPoints }
 
@@ -78,6 +99,9 @@ private suspend fun ApplicationCall.handleRewardsLoad() {
     }
 }
 
+/**
+ * Handles reward redemption and stores the selected rewards for the current booking flow.
+ */
 private suspend fun ApplicationCall.handleRewardsRedeem() {
     timed("T1_rewards_redeem", jsMode()) {
         val loggedState = loggedIn()
@@ -101,6 +125,7 @@ private suspend fun ApplicationCall.handleRewardsRedeem() {
         val params = receiveParameters()
         val selected = mutableListOf<SelectedReward>()
 
+        // Build the selected rewards list from submitted form fields.
         for (tier in REWARD_TIERS) {
             if (params["reward_${tier.key}"] == "on") {
                 val quantity =
@@ -133,18 +158,25 @@ private suspend fun ApplicationCall.handleRewardsRedeem() {
             return@timed
         }
 
+        // Save the selected rewards against the session token for use during booking.
         SELECTED_REWARDS_BY_USER[loggedState.session.token] = selected
 
         respondRedirect("/book")
     }
 }
 
+/**
+ * Adds test loyalty points to the logged-in user account.
+ */
 private suspend fun ApplicationCall.handleTestAddPoints() {
     timed("T2_test_add_points", jsMode()) {
         val loggedState = loggedIn()
+
         if (loggedState.logged_in && loggedState.session != null) {
             val user = UserData.queryByToken(loggedState.session.token).firstOrNull()?.dataClass
+
             if (user != null) {
+                // Use the provided amount query parameter, or default to 5000 points.
                 val amount = request.queryParameters["amount"]?.toIntOrNull() ?: 5000
                 user.awardPoints(amount)
 
@@ -155,6 +187,7 @@ private suspend fun ApplicationCall.handleTestAddPoints() {
                 return@timed
             }
         }
+
         respondText(
             "Error: You must be logged in to add test points.",
             ContentType.Text.Plain,

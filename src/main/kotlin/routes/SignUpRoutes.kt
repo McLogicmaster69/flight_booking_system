@@ -12,14 +12,23 @@ import utils.timed
 import data.*
 import org.mindrot.jbcrypt.BCrypt
 
+/**
+ * Registers all sign-up related routes.
+ */
 fun Route.signUpRoutes() {
     get("/signup") { call.handleSignUpLoad() }
     post("/signup") { call.handleSignUpPost() }
 }
 
+/**
+ * Creates an HTMX out-of-band status message for the sign-up form.
+ */
 fun ApplicationCall.createSignUpStatus(message: String): String =
     """<div id="sign-up-status" hx-swap-oob="true" role="status" aria-live="polite" aria-atomic="true">$message</div>"""
 
+/**
+ * Loads and renders the user sign-up page.
+ */
 private suspend fun ApplicationCall.handleSignUpLoad() {
     timed("T0_sign_in", jsMode()) {
         val pebble = getEngine()
@@ -37,6 +46,9 @@ private suspend fun ApplicationCall.handleSignUpLoad() {
     }
 }
 
+/**
+ * Handles user registration form submission and creates a new account.
+ */
 private suspend fun ApplicationCall.handleSignUpPost() {
     timed("T1_sign_up_post", jsMode()) {
         val params = receiveParameters()
@@ -46,6 +58,7 @@ private suspend fun ApplicationCall.handleSignUpPost() {
         val email = params["signupEmail"]
         val password = params["signupPassword"]
 
+        // Validate that a first name was provided.
         if (firstname.isNullOrBlank()) {
             respondText(
                 createSignUpStatus("Please fill in a first name"),
@@ -55,6 +68,7 @@ private suspend fun ApplicationCall.handleSignUpPost() {
             return@timed
         }
 
+        // Validate that a last name was provided.
         if (lastname.isNullOrBlank()) {
             respondText(
                 createSignUpStatus("Please fill in a last name"),
@@ -64,6 +78,7 @@ private suspend fun ApplicationCall.handleSignUpPost() {
             return@timed
         }
 
+        // Validate that an email address was provided.
         if (email.isNullOrBlank()) {
             respondText(
                 createSignUpStatus("Please fill in an email"),
@@ -73,6 +88,7 @@ private suspend fun ApplicationCall.handleSignUpPost() {
             return@timed
         }
 
+        // Validate that a password was provided.
         if (password.isNullOrBlank()) {
             respondText(
                 createSignUpStatus("Please fill in a password"),
@@ -82,7 +98,10 @@ private suspend fun ApplicationCall.handleSignUpPost() {
             return@timed
         }
 
+        // Hash the user's password before storing it.
         val passwordHash = BCrypt.hashpw(password, BCrypt.gensalt())
+
+        // Check whether an account already exists with this email.
         val query: List<QueryResult<UserData>> = UserData.queryByLogIn(email)
 
         if (query.size > 0) {
@@ -94,12 +113,22 @@ private suspend fun ApplicationCall.handleSignUpPost() {
             return@timed
         }
 
+        // Create login credentials and user profile records.
         val loginId: Int = LoginData(email = email, passwordHash = passwordHash).insertIntoDatabase()
+
         val userData: UserData =
-            UserData(firstName = firstname, lastName = lastname, verifiedAccount = false, loginId = loginId)
+            UserData(
+                firstName = firstname,
+                lastName = lastname,
+                verifiedAccount = false,
+                loginId = loginId,
+            )
+
         val userId: Int = userData.insertIntoDatabase()
 
+        // Automatically log the user in after successful registration.
         sessions.set(SessionData.createSession(userId).toTokenSession())
+
         response.headers.append("HX-Redirect", "/")
         respond(HttpStatusCode.OK)
     }

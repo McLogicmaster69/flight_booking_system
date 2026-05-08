@@ -10,17 +10,25 @@ import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeMessage
 import java.util.Properties
 
+/**
+ * Handles all outgoing application email functionality.
+ */
 object EmailService {
     private val dotenv = dotenv()
 
+    // Email account used to send all application emails.
     private val FROM_EMAIL =
         dotenv["EMAIL_USER"]
             ?: throw IllegalStateException("EMAIL_USER not set")
 
+    // Gmail app password used for SMTP authentication.
     private val APP_PASSWORD =
         dotenv["EMAIL_APP_PASSWORD"]
             ?: throw IllegalStateException("EMAIL_APP_PASSWORD not set")
 
+    /**
+     * Creates and configures a Jakarta Mail SMTP session.
+     */
     private fun createSession(): Session {
         val props =
             Properties().apply {
@@ -39,6 +47,9 @@ object EmailService {
         )
     }
 
+    /**
+     * Sends a two-factor authentication verification code email.
+     */
     fun send2FA(
         to: String,
         code: String,
@@ -50,12 +61,18 @@ object EmailService {
                 setFrom(InternetAddress(FROM_EMAIL))
                 setRecipients(Message.RecipientType.TO, InternetAddress.parse(to))
                 subject = "Your verification code"
-                setText("Your login verification code is: $code\n\nIt expires in 5 minutes.")
+
+                setText(
+                    "Your login verification code is: $code\n\nIt expires in 5 minutes.",
+                )
             }
 
         Transport.send(message)
     }
 
+    /**
+     * Sends a booking confirmation email with booking and passenger details.
+     */
     fun sendBookingConfirmation(
         to: String,
         reference: String,
@@ -70,6 +87,7 @@ object EmailService {
         val passengerList = passengers.joinToString("\n") { "    - $it" }
         val rewardList = rewards.joinToString("\n") { "    - $it" }
 
+        // Build the email body dynamically based on rewards and passengers.
         val body =
             buildString {
                 appendLine("Booking Confirmation")
@@ -108,6 +126,9 @@ object EmailService {
         Transport.send(message)
     }
 
+    /**
+     * Sends a booking refund confirmation email.
+     */
     fun sendRefundConfirmation(
         to: String,
         reference: String,
@@ -116,6 +137,7 @@ object EmailService {
     ) {
         val session = createSession()
 
+        // Convert refund amount from pence/cents into currency format.
         val formattedAmount = "£%.2f".format(refundAmount / 100.0)
 
         val body =
@@ -145,6 +167,9 @@ object EmailService {
         Transport.send(message)
     }
 
+    /**
+     * Sends a support request or bug report email to the application support inbox.
+     */
     fun sendSupportEmail(
         userEmail: String,
         messageText: String,
@@ -154,9 +179,15 @@ object EmailService {
         val message =
             MimeMessage(session).apply {
                 setFrom(InternetAddress(FROM_EMAIL))
+
+                // Support emails are sent directly back to the application's inbox.
                 setRecipients(Message.RecipientType.TO, InternetAddress.parse(FROM_EMAIL))
+
                 subject = "Bug Report / Support Request from $userEmail"
-                setText("From: $userEmail\n\nMessage:\n$messageText")
+
+                setText(
+                    "From: $userEmail\n\nMessage:\n$messageText",
+                )
             }
 
         Transport.send(message)
