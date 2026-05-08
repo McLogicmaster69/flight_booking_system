@@ -3,7 +3,7 @@ package data
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.Duration
-import data.DAYS_IN_ADVANCE
+import results.CreateFlightResults
 
 const val DAYS_IN_ADVANCE = 14
 
@@ -169,54 +169,27 @@ data class ScheduleData(
         )
     }
 
-    fun updateFlights() {
+    fun updateFlights(): Boolean {
         println("Update flights for schedule id $id")
-        if (dayGap < 1) return
-
-        val flights: List<QueryResult<FlightData>> =
-            FlightData.queryDatabase(
-                whereArgs =
-                    WhereArgs(
-                        "${FlightColumns.SCHEDULE_ID.name} = ?",
-                        listOf(id),
-                    ),
-                orderByArgs =
-                    OrderByArgs(
-                        orderArgs =
-                            listOf(
-                                OrderArgs("${FlightData.EMPTY.tableName}.${FlightColumns.DATE.name}", false),
-                                OrderArgs("${FlightData.EMPTY.tableName}.${FlightColumns.TIME.name}", false),
-                            ),
-                    ),
-                limitArgs = LimitArgs(1),
-            )
-
-        val nextPlannedFlightDate: LocalDate =
-            if (flights.isEmpty()) {
-                startDate
-            } else {
-                flights
-                    .first()
-                    .dataClass.date
-                    .plusDays(dayGap.toLong())
-            }
+        if (dayGap < 1) return false
 
         val nextActualFlightDate: LocalDate =
-            if (nextPlannedFlightDate.isBefore(LocalDate.now())) {
+            if (startDate.isBefore(LocalDate.now())) {
                 LocalDate.now().plusDays(
                     dayGap - (
                         Duration
                             .between(
-                                nextPlannedFlightDate.atStartOfDay(),
+                                startDate.atStartOfDay(),
                                 LocalDate.now().atStartOfDay(),
                             ).toDays() % dayGap
                     ),
                 )
             } else {
-                nextPlannedFlightDate
+                startDate
             }
 
         var dayShift: Long = 0L
+        var changeMade: Boolean = false
 
         while (
             Duration
@@ -225,16 +198,49 @@ data class ScheduleData(
                     nextActualFlightDate.plusDays(dayShift).atStartOfDay(),
                 ).toDays() <= DAYS_IN_ADVANCE
         ) {
-            println("Creating flight on ${nextActualFlightDate.plusDays(dayShift)}")
-            FlightData.createFlight(
-                routeId,
-                modelId,
-                nextActualFlightDate.plusDays(dayShift),
-                time,
-                id,
-            )
+            val flightDate = nextActualFlightDate.plusDays(dayShift)
+            println("Creating flight on $flightDate")
+
+            val flights: List<QueryResult<FlightData>> =
+                FlightData.queryDatabase(
+                    whereArgs =
+                        WhereArgs(
+                            """
+                            ${FlightColumns.SCHEDULE_ID.name} = ?
+                            AND ${FlightColumns.DATE.name} = ?
+                            """,
+                            listOf(id, flightDate),
+                        ),
+                )
+
+            if (flights.size > 0) {
+                println("Flight already exists, skipping")
+            } else {
+                val results: CreateFlightResults =
+                    FlightData.createFlight(
+                        routeId,
+                        modelId,
+                        flightDate,
+                        time,
+                        id,
+                    )
+
+                if (results.returnMessage != null) {
+                    println("Flight creation results are: ${results.returnMessage}")
+                } else if (results.staffResults != null) {
+                    println("Flight staff assignment results are: ${results.staffResults.returnMessage}")
+                    changeMade = true
+                } else {
+                    println("Flight was created successfully")
+                    changeMade = true
+                }
+            }
+
+            println("")
             dayShift += dayGap
         }
+
+        return changeMade
     }
 
     companion object {
@@ -262,6 +268,7 @@ data class ScheduleData(
 
         fun updateAllFlights() {
             println("Creating flights from schedules")
+
             val schedules: List<QueryResult<ScheduleData>> =
                 queryDatabase(
                     whereArgs =
@@ -272,7 +279,19 @@ data class ScheduleData(
                 )
 
             println("${schedules.size} active schedules found")
-            schedules.forEach { it.dataClass.updateFlights() }
+            println("")
+
+            var changeMade = false
+            var loops = 0
+
+            do {
+                changeMade = false
+                schedules.forEach { schedule ->
+                    val changed = schedule.dataClass.updateFlights()
+                    if (changed) changeMade = true
+                }
+                loops += 1
+            } while (changeMade == true && loops < 5)
         }
     }
 }
