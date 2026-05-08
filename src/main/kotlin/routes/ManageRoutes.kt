@@ -99,7 +99,11 @@ private suspend fun ApplicationCall.handleBookingSearch() {
                 columns = BookingColumns.COLUMN_NAMES,
                 whereArgs =
                     WhereArgs(
-                        "LOWER(${BookingColumns.BOOKING_REFERENCE.name}) = LOWER(?) AND LOWER(${BookingColumns.LASTNAME.name}) = LOWER(?)",
+                        """
+                        LOWER(${BookingColumns.BOOKING_REFERENCE.name}) = LOWER(?)
+                        AND LOWER(${BookingColumns.LASTNAME.name}) = LOWER(?)
+                        AND ${BookingColumns.REFUND_STATUS.name} IS NULL
+                        """.trimIndent(),
                         listOf(ref, last),
                     ),
             )
@@ -206,7 +210,14 @@ private fun getEnrichedBookingsForBooker(bookerId: Int): List<Array<Any?>> {
         DatabaseManager.queryTable(
             table = BookingData.EMPTY.tableName,
             columns = BookingColumns.COLUMN_NAMES,
-            whereArgs = WhereArgs("${BookingColumns.BOOKER_ID.name} = ?", listOf(bookerId)),
+            whereArgs =
+                WhereArgs(
+                    """
+                    ${BookingColumns.BOOKER_ID.name} = ?
+                    AND ${BookingColumns.REFUND_STATUS.name} IS NULL
+                    """.trimIndent(),
+                    listOf(bookerId),
+                ),
         )
 
     return enrichBookingRowsFromSeats(bookingRows)
