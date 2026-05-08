@@ -26,6 +26,7 @@ fun main() {
 
     StripeConfig.init()
 
+    DatabaseManager.initialise()
     DatabaseManager.createTables()
     initialTasks()
     scheduleDailyTasks()
