@@ -33,35 +33,39 @@ private suspend fun ApplicationCall.handleAdminLoad() {
 
         // Prepare Data for Most Popular Times
         val popularTimesLabels = (0..23).map { "${it.toString().padStart(2, '0')}:00" }
-        val popularTimesData = (0..23).map { hour ->
-            FlightData.getTimePopularity(LocalTime.of(hour, 0), startDate, inSevenDays)
-        }
+        val popularTimesData =
+            (0..23).map { hour ->
+                FlightData.getTimePopularity(LocalTime.of(hour, 0), startDate, inSevenDays)
+            }
 
         // Prepare Data for Most Popular Routes
         val popularRoutesList = RouteData.getPopularRoutes(10, periodDays)
-        val popularRoutesLabels = popularRoutesList.map { result ->
-            val route = result.dataClass
-            val start = DestinationData.getDestinationName(route.startDestination).split("-")[0].trim()
-            val end = DestinationData.getDestinationName(route.endDestination).split("-")[0].trim()
-            "$start to $end"
-        }
-        val popularRoutesData = popularRoutesList.map { result ->
-            result.dataClass.getRoutePopularity(startDate, inSevenDays)
-        }
+        val popularRoutesLabels =
+            popularRoutesList.map { result ->
+                val route = result.dataClass
+                val start = DestinationData.getDestinationName(route.startDestination).split("-")[0].trim()
+                val end = DestinationData.getDestinationName(route.endDestination).split("-")[0].trim()
+                "$start to $end"
+            }
+        val popularRoutesData =
+            popularRoutesList.map { result ->
+                result.dataClass.getRoutePopularity(startDate, inSevenDays)
+            }
 
         val pebble = getEngine()
-        val model = mapOf(
-            "title" to "Admin Analytics Dashboard",
-            "layout" to "admin",
-            "activePage" to "admin",
-            "inNav" to true,
-            "isAdmin" to true,
-            "selectedPeriod" to periodDays, // Track this to set the dropdown default
-            "popularTimesLabelsJson" to Json.encodeToString(popularTimesLabels),
-            "popularTimesDataJson" to Json.encodeToString(popularTimesData),
-            "popularRoutesLabelsJson" to Json.encodeToString(popularRoutesLabels),
-            "popularRoutesDataJson" to Json.encodeToString(popularRoutesData)
-        )
+        val model =
+            mapOf(
+                "title" to "Admin Analytics Dashboard",
+                "layout" to "admin",
+                "activePage" to "admin",
+                "inNav" to true,
+                "isAdmin" to true,
+                "selectedPeriod" to periodDays, // Track this to set the dropdown default
+                "popularTimesLabelsJson" to Json.encodeToString(popularTimesLabels),
+                "popularTimesDataJson" to Json.encodeToString(popularTimesData),
+                "popularRoutesLabelsJson" to Json.encodeToString(popularRoutesLabels),
+                "popularRoutesDataJson" to Json.encodeToString(popularRoutesData),
+            )
 
         val template = pebble.getTemplate("admin/index.peb")
         val writer = StringWriter()

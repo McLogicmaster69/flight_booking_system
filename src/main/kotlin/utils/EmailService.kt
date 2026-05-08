@@ -144,18 +144,20 @@ object EmailService {
 
         Transport.send(message)
     }
+
     fun sendSupportEmail(
         userEmail: String,
         messageText: String,
     ) {
         val session = createSession()
 
-        val message = MimeMessage(session).apply {
-            setFrom(InternetAddress(FROM_EMAIL))
-            setRecipients(Message.RecipientType.TO, InternetAddress.parse(FROM_EMAIL))
-            subject = "Bug Report / Support Request from $userEmail"
-            setText("From: $userEmail\n\nMessage:\n$messageText")
-        }
+        val message =
+            MimeMessage(session).apply {
+                setFrom(InternetAddress(FROM_EMAIL))
+                setRecipients(Message.RecipientType.TO, InternetAddress.parse(FROM_EMAIL))
+                subject = "Bug Report / Support Request from $userEmail"
+                setText("From: $userEmail\n\nMessage:\n$messageText")
+            }
 
         Transport.send(message)
     }

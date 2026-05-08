@@ -36,19 +36,25 @@ fun Route.chatRoutes() {
                 // Return plain HTML for the HTMX form swap
                 call.respondText(
                     "Thank you! Your bug report has been successfully sent to our support team.",
-                    ContentType.Text.Html
+                    ContentType.Text.Html,
                 )
                 return@post
             }
 
             // Otherwise, handle it as a JSON payload for the Chat Widget
             val requestBody = call.receiveText()
-            val userMessage = Json.parseToJsonElement(requestBody).jsonObject["message"]?.jsonPrimitive?.content ?: ""
+            val userMessage =
+                Json
+                    .parseToJsonElement(requestBody)
+                    .jsonObject["message"]
+                    ?.jsonPrimitive
+                    ?.content ?: ""
 
-            val upcomingFlights = FlightData
-                .queryDatabase()
-                .map { it.dataClass }
-                .take(30)
+            val upcomingFlights =
+                FlightData
+                    .queryDatabase()
+                    .map { it.dataClass }
+                    .take(30)
 
             val flightContext =
                 upcomingFlights.joinToString("\n") { flight ->
@@ -130,17 +136,19 @@ fun Route.chatRoutes() {
                 val text =
                     root["candidates"]
                         ?.jsonArray
-                        ?.get(0)?.jsonObject
-                        ?.get("content")?.jsonObject
+                        ?.get(0)
+                        ?.jsonObject
+                        ?.get("content")
+                        ?.jsonObject
                         ?.get("parts")
                         ?.jsonArray
-                        ?.get(0)?.jsonObject
+                        ?.get(0)
+                        ?.jsonObject
                         ?.get("text")
                         ?.jsonPrimitive
                         ?.content ?: "Error: Could not parse response."
 
                 call.respondText(buildJsonObject { put("reply", text) }.toString(), ContentType.Application.Json)
-
             } else if (response != null) {
                 val errorMsg = "Google API Error (${response.statusCode()}): ${response.body()}"
                 call.respondText(buildJsonObject { put("reply", errorMsg) }.toString(), ContentType.Application.Json)
