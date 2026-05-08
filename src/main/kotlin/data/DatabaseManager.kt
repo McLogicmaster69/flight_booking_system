@@ -41,7 +41,7 @@ object DatabaseManager {
     /**
      * Signals if the database has been initialised
      */
-    var dbInitialised : Boolean = false
+    var dbInitialised: Boolean = false
         private set
 
     /**
@@ -86,7 +86,7 @@ object DatabaseManager {
     /**
      * Initializes the database connection on startup.
      */
-    fun initialise(path : String? = null) {
+    fun initialise(path: String? = null) {
         connection = connect(path ?: dbFilePath)
     }
 
@@ -95,7 +95,7 @@ object DatabaseManager {
      *
      * @return Active SQL connection.
      */
-    fun connect(path : String): Connection {
+    fun connect(path: String): Connection {
         val dbPath = File(path)
         println("SQLite DB absolute path: ${dbPath.absolutePath}")
         dbPath.parentFile?.mkdirs()

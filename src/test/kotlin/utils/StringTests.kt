@@ -6,8 +6,9 @@ import util.singleLine
 
 class StringTests {
     @Test
-    fun `remove multiple lines`(){
-        val result = """
+    fun `remove multiple lines`() {
+        val result =
+            """
             Hello
             World
         """.singleLine()
@@ -16,8 +17,9 @@ class StringTests {
     }
 
     @Test
-    fun `remove start and end whitespace`(){
-        val result = """
+    fun `remove start and end whitespace`() {
+        val result =
+            """
 
             Hello
             World
