@@ -1,6 +1,5 @@
 package tests.data
 
-import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
@@ -10,34 +9,13 @@ import data.TimezoneData
 import data.TimezoneColumns
 import data.WhereArgs
 
-const val TEST_PATH: String = "data/test/testdatabase.db"
-
-class DatabaseTests {
-    companion object {
-        @JvmStatic
-        @BeforeAll
-        fun setupDatabase() {
-            DatabaseManager.initialise(TEST_PATH)
-            DatabaseManager.createTables()
-        }
-
-        @JvmStatic
-        @AfterAll
-        fun deleteDatabase() {
-            DatabaseManager.disconnect()
-            val file = File(TEST_PATH)
-            file.delete()
-        }
-    }
-
+class DatabaseTests : BaseDatabaseTest() {
     @Test
-    @Order(1)
     fun `check database has been initialised`() {
         assertTrue(DatabaseManager.dbInitialised)
     }
 
     @Test
-    @Order(2)
     fun `check query`() {
         val results =
             DatabaseManager.queryTable(
@@ -49,7 +27,6 @@ class DatabaseTests {
     }
 
     @Test
-    @Order(3)
     fun `check insert`() {
         val results =
             DatabaseManager.insertIntoTable(
@@ -64,7 +41,6 @@ class DatabaseTests {
     }
 
     @Test
-    @Order(4)
     fun `check update`() {
         DatabaseManager.insertIntoTable(
             TimezoneData.EMPTY.tableName,
@@ -90,7 +66,6 @@ class DatabaseTests {
     }
 
     @Test
-    @Order(5)
     fun `check delete`() {
         DatabaseManager.insertIntoTable(
             TimezoneData.EMPTY.tableName,
