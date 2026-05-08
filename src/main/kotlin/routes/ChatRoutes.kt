@@ -13,6 +13,7 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import utils.EmailService
 
 private val dotenv = dotenv()
 val apiKey = dotenv["GEMINI_API_KEY"] ?: throw IllegalStateException("GEMINI_API_KEY not set")
@@ -21,26 +22,39 @@ val url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-fl
 fun Route.chatRoutes() {
     post("/api/chat") {
         try {
-            val requestBody = call.receiveText()
-            val userMessage =
-                Json
-                    .parseToJsonElement(requestBody)
-                    .jsonObject["message"]
-                    ?.jsonPrimitive
-                    ?.content ?: ""
+            // Check if this is a Form submission from the Help page
+            val isForm = call.request.contentType().match(ContentType.Application.FormUrlEncoded)
 
-            val upcomingFlights =
-                FlightData
-                    .queryDatabase()
-                    .map { it.dataClass }
-                    .take(30)
+            if (isForm) {
+                val params = call.receiveParameters()
+                val email = params["email"] ?: "Unknown"
+                val message = params["message"] ?: ""
+
+                // Send an email to the admin
+                EmailService.sendSupportEmail(email, message)
+
+                // Return plain HTML for the HTMX form swap
+                call.respondText(
+                    "Thank you! Your bug report has been successfully sent to our support team.",
+                    ContentType.Text.Html
+                )
+                return@post
+            }
+
+            // Otherwise, handle it as a JSON payload for the Chat Widget
+            val requestBody = call.receiveText()
+            val userMessage = Json.parseToJsonElement(requestBody).jsonObject["message"]?.jsonPrimitive?.content ?: ""
+
+            val upcomingFlights = FlightData
+                .queryDatabase()
+                .map { it.dataClass }
+                .take(30)
 
             val flightContext =
                 upcomingFlights.joinToString("\n") { flight ->
                     val route = RouteData.queryDatabase(flight.routeId).firstOrNull()?.dataClass
                     val start = route?.startDestination?.let { DestinationData.getDestinationName(it) } ?: "Unknown"
                     val end = route?.endDestination?.let { DestinationData.getDestinationName(it) } ?: "Unknown"
-
                     val durationMins = route?.let { RouteData.getDurationMinutes(it.id) } ?: 0L
                     val price = "%.2f".format((durationMins * 50L) / 100.0)
 
@@ -49,13 +63,13 @@ fun Route.chatRoutes() {
 
             val promptText =
                 """
-                You are an official customer support agent for SkyBridge Airways. 
-                You help users book flights, manage trips, and understand the loyalty rewards program. 
-                Be polite, concise, and never break character. 
-                
+                You are an official customer support agent for SkyBridge Airways.
+                You help users book flights, manage trips, and understand the loyalty rewards program.
+                Be polite, concise, and never break character.
+
                 Here is the current available flight data you must use to answer questions:
                 $flightContext
-                
+
                 The user says: $userMessage
                 """.trimIndent()
 
@@ -116,37 +130,28 @@ fun Route.chatRoutes() {
                 val text =
                     root["candidates"]
                         ?.jsonArray
-                        ?.get(
-                            0,
-                        )?.jsonObject
-                        ?.get(
-                            "content",
-                        )?.jsonObject
+                        ?.get(0)?.jsonObject
+                        ?.get("content")?.jsonObject
                         ?.get("parts")
                         ?.jsonArray
-                        ?.get(0)
-                        ?.jsonObject
+                        ?.get(0)?.jsonObject
                         ?.get("text")
                         ?.jsonPrimitive
-                        ?.content
-                        ?: "Error: Could not parse response."
+                        ?.content ?: "Error: Could not parse response."
+
                 call.respondText(buildJsonObject { put("reply", text) }.toString(), ContentType.Application.Json)
+
             } else if (response != null) {
                 val errorMsg = "Google API Error (${response.statusCode()}): ${response.body()}"
                 call.respondText(buildJsonObject { put("reply", errorMsg) }.toString(), ContentType.Application.Json)
             } else {
-                call.respondText(
-                    buildJsonObject {
-                        put("reply", "Failed to connect to AI service.")
-                    }.toString(),
-                    ContentType.Application.Json,
-                )
+                val errorMsg = "Failed to connect to AI service."
+                call.respondText(buildJsonObject { put("reply", errorMsg) }.toString(), ContentType.Application.Json)
             }
         } catch (e: Exception) {
+            val errorMsg = "Server Exception: ${e.message}"
             call.respondText(
-                buildJsonObject {
-                    put("reply", "Server Exception: ${e.message}")
-                }.toString(),
+                buildJsonObject { put("reply", errorMsg) }.toString(),
                 ContentType.Application.Json,
             )
         }

@@ -1,41 +1,136 @@
     {% extends "_layout/base.peb" %}
+
         {% set layout = 'admin' %}
         {% set activePage = 'admin' %}
         {% set inNav = true %}
 
     {% block content %}
-<h2 class="wf-title">Admin Dashboard</h2>
+<h2 class="wf-title">Admin Analytics Dashboard</h2>
 <div class="wf-rule"></div>
 
-<div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
-    <div class="card flight-search-card">
-        <h3>Manage Flights</h3>
-        <p class="muted">Schedule, edit, and cancel flights, and view reservations.</p>
-        <a href="/manageFlights" class="wf-btn" style="margin-top: 14px; display: inline-block;">Go to Flights</a>
+<div class="card" style="padding: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+        <h3 style="margin: 0;">Analytics & Predictions</h3>
+
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <select id="timeSelector" class="auth-input" style="width: 150px; margin: 0; padding: 8px;" onchange="updateTimePeriod()">
+                <option value="7" {% if selectedPeriod == 7 %}selected{% endif %}>Last 7 Days</option>
+                <option value="30" {% if selectedPeriod == 30 %}selected{% endif %}>Last 30 Days</option>
+                <option value="90" {% if selectedPeriod == 90 %}selected{% endif %}>Last 90 Days</option>
+                <option value="365" {% if selectedPeriod == 365 %}selected{% endif %}>Last Year</option>
+            </select>
+
+            <select id="graphSelector" class="auth-input" style="width: 200px; margin: 0; padding: 8px;" onchange="updateGraph()">
+                <option value="times">Most Popular Times</option>
+                <option value="routes">Most Popular Routes</option>
+            </select>
+        </div>
     </div>
 
-    <div class="card flight-search-card">
-        <h3>Manage Planes</h3>
-        <p class="muted">Register and track the current locations of physical planes.</p>
-        <a href="/managePlanes" class="wf-btn" style="margin-top: 14px; display: inline-block;">Go to Planes</a>
-    </div>
-
-    <div class="card flight-search-card">
-        <h3>Manage Plane Data</h3>
-        <p class="muted">Add and update plane manufacturers and generic models.</p>
-        <a href="/managePlaneData" class="wf-btn" style="margin-top: 14px; display: inline-block;">Go to Plane Data</a>
-    </div>
-
-    <div class="card flight-search-card">
-        <h3>Manage Routes</h3>
-        <p class="muted">Configure destinations, journey paths, and flight durations.</p>
-        <a href="/manageRoutes" class="wf-btn" style="margin-top: 14px; display: inline-block;">Go to Routes</a>
-    </div>
-
-    <div class="card flight-search-card">
-        <h3>Manage Staff</h3>
-        <p class="muted">Create staff accounts, assign roles, and manage personnel.</p>
-        <a href="/manageStaff" class="wf-btn" style="margin-top: 14px; display: inline-block;">Go to Staff</a>
-    </div>
+    <canvas id="analyticsChart" height="100"></canvas>
 </div>
+
+<div class="grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; margin-top: 40px;">
+
+    <div class="card flight-search-card" style="text-align: center; padding: 32px 24px; display: flex; flex-direction: column; align-items: center;">
+        <div style="font-size: 36px; margin-bottom: 16px;">🛫</div>
+        <h3 style="margin: 0 0 8px 0;">Manage Flights</h3>
+        <p style="color: #666; font-size: 14px; margin-bottom: 24px; line-height: 1.4;">Schedule, monitor, and update active flight itineraries.</p>
+        <a href="/manageFlights" class="wf-btn" style="margin-top: auto; width: 100%; box-sizing: border-box;">Go to Flights</a>
+    </div>
+
+    <div class="card flight-search-card" style="text-align: center; padding: 32px 24px; display: flex; flex-direction: column; align-items: center;">
+        <div style="font-size: 36px; margin-bottom: 16px;">🗺️</div>
+        <h3 style="margin: 0 0 8px 0;">Manage Routes</h3>
+        <p style="color: #666; font-size: 14px; margin-bottom: 24px; line-height: 1.4;">Configure origin and destination paths for the network.</p>
+        <a href="/manageRoutes" class="wf-btn" style="margin-top: auto; width: 100%; box-sizing: border-box;">Go to Routes</a>
+    </div>
+
+    <div class="card flight-search-card" style="text-align: center; padding: 32px 24px; display: flex; flex-direction: column; align-items: center;">
+        <div style="font-size: 36px; margin-bottom: 16px;">👥</div>
+        <h3 style="margin: 0 0 8px 0;">Manage Staff</h3>
+        <p style="color: #666; font-size: 14px; margin-bottom: 24px; line-height: 1.4;">Assign crew members, pilots, and oversee personnel.</p>
+        <a href="/manageStaff" class="wf-btn" style="margin-top: auto; width: 100%; box-sizing: border-box;">Go to Staff</a>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // Import variables directly from the Kotlin Backend utilizing the 'raw' filter
+    const timesLabels = {{ popularTimesLabelsJson | raw }};
+    const timesData = {{ popularTimesDataJson | raw }};
+
+    // Simulate predictions with a +15% expected growth curve
+    const timesPredicted = timesData.map(val => Math.round(val * 1.15));
+
+    const routesLabels = {{ popularRoutesLabelsJson | raw }};
+    const routesData = {{ popularRoutesDataJson | raw }};
+    const routesPredicted = routesData.map(val => Math.round(val * 1.10));
+
+    const ctx = document.getElementById('analyticsChart').getContext('2d');
+    let chart;
+
+    function initChart() {
+        chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: timesLabels,
+                datasets: [
+                    {
+                        label: 'Historical Popularity',
+                        data: timesData,
+                        backgroundColor: '#005eb8'
+                    },
+                    {
+                        label: 'Predicted Next Month',
+                        data: timesPredicted,
+                        backgroundColor: '#60a5fa'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    // Swaps datasets inside the Chart.js instance depending on dropdown
+    function updateGraph() {
+        const selector = document.getElementById('graphSelector');
+        if (selector.value === 'times') {
+            chart.data.labels = timesLabels;
+            chart.data.datasets[0].data = timesData;
+            chart.data.datasets[1].data = timesPredicted;
+        } else {
+            chart.data.labels = routesLabels;
+            chart.data.datasets[0].data = routesData;
+            chart.data.datasets[1].data = routesPredicted;
+        }
+        chart.update();
+    }
+
+    // Refreshes the page with the new time period while keeping the selected graph
+    function updateTimePeriod() {
+        const timeVal = document.getElementById('timeSelector').value;
+        const graphVal = document.getElementById('graphSelector').value;
+        window.location.href = `/admin?period=${timeVal}&graph=${graphVal}`;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Read URL params to persist the graph selector if the page was reloaded by changing the time
+        const urlParams = new URLSearchParams(window.location.search);
+        const graphType = urlParams.get('graph');
+        if (graphType) {
+            document.getElementById('graphSelector').value = graphType;
+        }
+
+        initChart();
+        updateGraph(); // Apply the correct data to the graph right away
+    });
+</script>
 {% endblock %}
