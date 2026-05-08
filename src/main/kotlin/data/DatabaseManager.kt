@@ -458,8 +458,9 @@ object DatabaseManager {
      */
     fun seedAdminAccount() {
         val adminJSONFile = File(adminJSONFilePath)
-        require(adminJSONFile.exists()) {
-            "Admin JSON file cannot be found"
+        if (adminJSONFile.exists() == false){
+            println("WARNING: COULD NOT FIND ADMIN JSON FILE")
+            return
         }
 
         val adminJSONObject =
